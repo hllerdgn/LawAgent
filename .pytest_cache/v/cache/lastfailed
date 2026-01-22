@@ -1,0 +1,7 @@
+{
+  "tests/test_mevzuat_targeted_scraper.py::test_scraper_initialization": true,
+  "tests/test_mevzuat_targeted_scraper.py::test_open_site_called": true,
+  "tests/test_mevzuat_targeted_scraper.py::test_save_function": true,
+  "tests/test_mevzuat_targeted_scraper.py::test_scraper_flow": true,
+  "tests/test_mevzuat_targeted_scraper.py::test_parse_output_structure": true
+}

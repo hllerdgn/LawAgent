@@ -1,0 +1,7 @@
+[
+  "tests/test_mevzuat_targeted_scraper.py::test_open_site_called",
+  "tests/test_mevzuat_targeted_scraper.py::test_parse_output_structure",
+  "tests/test_mevzuat_targeted_scraper.py::test_save_function",
+  "tests/test_mevzuat_targeted_scraper.py::test_scraper_flow",
+  "tests/test_mevzuat_targeted_scraper.py::test_scraper_initialization"
+]
