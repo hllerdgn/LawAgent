@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+groq
+qdrant-client
+python-dotenv
+rank_bm25
+sentence-transformers
+torch
+transformers
+numpy
+pandas
+tiktoken
+requests
+scrapy
+bs4

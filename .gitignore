@@ -1,0 +1,112 @@
+# ════════════════════════════════════════════════
+# 1. PYTHON & BACKEND (FastAPI / Mürşit / RAG)
+# ════════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+venv/
+env/
+server_log.txt
+nohup.out
+
+# ════════════════════════════════════════════════
+# 2. FRONTEND (React + Vite + TypeScript)
+# ════════════════════════════════════════════════
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+
+# ════════════════════════════════════════════════
+# 3. PROJE SPESİFİK (Büyük Veri Dosyaları ve Depolama)
+# ════════════════════════════════════════════════
+# Corpus ve chunk dosyaları (büyük JSON dosyaları)
+BACKEND/src/data/*.json
+BACKEND/src/data/*.pkl
+BACKEND/src/data/qdrant_storage/
+qdrant_storage/
+*.db
+*.parquet
+*.index
+
+# ════════════════════════════════════════════════
+# 4. İŞLETİM SİSTEMİ & ARAÇLAR (Colab / Drive)
+# ════════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
+.vscode/
+.idea/
+*.swp
+
+# ════════════════════════════════════════════════
+# 5. DOCKER
+# ════════════════════════════════════════════════
+# .dockerignore GitHub'a eklensin (Docker kullanıcıları için gerekli)
+# .dockerignore  <-- bu satırı aktif etmeyin
+
+# ════════════════════════════════════════════════
+# 6. LOG DOSYALARI VE GEÇİCİ DOSYALAR
+# ════════════════════════════════════════════════
+*.log
+BACKEND/logs/
+logs/
+*.tmp
+*.temp
+
+# ════════════════════════════════════════════════
+# 7B. AÇIKÇA TAKİP EDİLECEKLER (override)
+# ════════════════════════════════════════════════
+# .env.example her zaman git'e eklensin:
+!.env.example
+!BACKEND/src/data/.gitkeep
+
+# ════════════════════════════════════════════════
+# 7. PAKET YÖNETİMİ
+# ════════════════════════════════════════════════
+# Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.json
+.pnp
+.pnp.js
+.pnp.loader.mjs
+.npm
+
+
+# ════════════════════════════════════════════════
+# 8. CACHE VE DERLEME DOSYALARI
+# ════════════════════════════════════════════════
+.cache
+.parcel-cache
+.next
+.nuxt
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+node_modules/
+dist/
+.next/
+.vercel/
+
+# ════════════════════════════════════════════════
+# 9. EDITÖR VE IDE DOSYALARI
+# ════════════════════════════════════════════════
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

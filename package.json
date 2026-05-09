@@ -1,0 +1,10 @@
+{
+  "name": "bitirme-projesi-root",
+  "private": true,
+  "scripts": {
+    "dev": "cd FRONTEND && npm run dev",
+    "build": "cd FRONTEND && npm run build",
+    "preview": "cd FRONTEND && npm run preview",
+    "install:all": "cd FRONTEND && npm install"
+  }
+}
