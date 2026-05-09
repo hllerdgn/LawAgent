@@ -1,12 +1,6 @@
 """
-generator.py — LawAgent AI Backend (v5.8 - Düzeltilmiş İçtihat Talebi Sırası)
-=======================================================================
-Proje: TÜBİTAK 2209/A
+generator.py — LawAgent AI Backend API
 
-YENİLİKLER (v5.8):
-  1. Aşama 2 (içtihat talebi) kontrolü, hukuki filtrenin ÖNÜNE alındı.
-  2. Tetikleyici ifade "emsal karar" olarak esnekleştirildi.
-  3. "Evet", "İstiyorum", "Bakalım" gibi kısa onaylar artık hukuki filtreye takılmaz.
 """
 
 import os
@@ -29,7 +23,7 @@ from pydantic import BaseModel
 
 from retriever import LegalRetriever
 
-# ─── LOGGING ────────────────────────────────────────────────────────────────
+# Logging
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +32,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("LawAgent.Generator.v5.8")
 
-# ─── ENV ────────────────────────────────────────────────────────────────────
+# Env
 
 _ENV_ADAYLARI = [
     Path("/content/drive/MyDrive/lawagent/.env"),
@@ -59,9 +53,7 @@ if not GROQ_API_KEY:
     log.warning("GROQ_API_KEY bulunamadı! .env dosyasını kontrol et.")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 1. SESSION MEMORY
-# ═══════════════════════════════════════════════════════════════════════════════
+# Session Memory
 
 
 class ConversationMemory:
@@ -110,7 +102,7 @@ class ConversationMemory:
         return "\n".join(context_lines) + "\n\n"
 
 
-# ─── HUKUKI FİLTRE ──────────────────────────────────────────────────────────
+# Hukuki Filtre
 
 _HUKUK_DISI = {
     "hava",
@@ -168,7 +160,7 @@ def is_legal_query(sorgu: str) -> bool:
     return any(sig in s for sig in _HUKUKI_SINYALLER) or len(sorgu.split()) >= 3
 
 
-# ─── İÇTİHAT TALEBİ KONTROLÜ (GÜNCELLENDİ) ─────────────────────────────────
+# İçtihat Talebi Kontrolü
 
 _ICTIHAT_ISTEGI_KELIMELERI = {
     "evet",
@@ -204,9 +196,7 @@ def is_ictihat_request(sorgu: str, history: List[Dict]) -> bool:
     return any(kelime in sorgu_temiz for kelime in _ICTIHAT_ISTEGI_KELIMELERI)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 2. QUERY INTENT ROUTER
-# ═══════════════════════════════════════════════════════════════════════════════
+# Query Intent Router
 
 
 class QueryIntentRouter:
@@ -250,9 +240,7 @@ class QueryIntentRouter:
         return best_intent, recommended_k
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 3. HALLÜSİNASYON KONTROLÜ
-# ═══════════════════════════════════════════════════════════════════════════════
+# Hallüsinasyon Kontrolü
 
 
 class HallucinationValidator:
@@ -298,7 +286,7 @@ class HallucinationValidator:
         return True, "", mentioned_articles
 
 
-# ─── QUERY REWRITE ──────────────────────────────────────────────────────────
+# Query Rewrite
 
 _MADDE_REF_RE = re.compile(
     r"\b(tbk|tkhk|ttk)\s*(?:m\.|madde)?\s*\d+\b|\b(6098|6502|6102)\b|\b(?:madde|m\.)\s*\d+\b",
@@ -333,7 +321,7 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
         return sorgu
 
 
-# ─── SISTEM PROMPTLARI (v5.8) ───────────────────────────────────────────────
+# Sistem Promptları
 _SISTEM_PROMPT_TEMPLATE = """Sen sadece Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK) ve Tüketicinin Korunması Hakkında Kanun (TKHK) alanlarında uzmanlaşmış bir AI Hukuk Asistanısın.
 
 BAĞLAM (SADECE BURADAKİ BİLGİLERİ KULLAN - Yargıtay kararı içermez):
@@ -396,7 +384,7 @@ def build_context(chunks: list, source_filter: Optional[str] = None) -> str:
     return "\n\n".join(satirlar)
 
 
-# ─── SINGLETON RETRIEVER ────────────────────────────────────────────────────
+# Singleton Retriever
 
 _retriever_instance: Optional[LegalRetriever] = None
 
@@ -410,9 +398,7 @@ def get_retriever() -> LegalRetriever:
     return _retriever_instance
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4. LEGAL GENERATOR (v5.8) - DÜZELTİLMİŞ SIRA
-# ═══════════════════════════════════════════════════════════════════════════════
+# Legal Generator
 
 
 class LegalGenerator:
@@ -426,7 +412,7 @@ class LegalGenerator:
         self.intent_router = QueryIntentRouter(self.client)
         self.hallucination_validator = HallucinationValidator(self.client)
 
-    # ─── AŞAMA 2: İÇTİHAT + MEVZUAT KAYNAKLARI BİRLİKTE ─────────────────────
+    # Aşama 2: İçtihat + Mevzuat kaynakları birlikte
     def _generate_ictihat_only(self, session_id: str) -> Dict[str, Any]:
         t0 = time.time()
         all_chunks = self.memory.get_chunks(session_id)
@@ -493,7 +479,7 @@ class LegalGenerator:
             "filtered": False,
         }
 
-    # ─── ANA GENERATE (DÜZELTİLMİŞ SIRA: Selamlama → Aşama 2 → Hukuki Filtre) ──
+    # Ana Generate
     def generate(
         self, sorgu: str, session_id: str = "default", k: Optional[int] = None
     ) -> Dict[str, Any]:
@@ -690,9 +676,7 @@ class LegalGenerator:
             }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 5. FASTAPI ENTEGRASYON
-# ═══════════════════════════════════════════════════════════════════════════════
+# FastAPI Entegrasyon
 
 
 @asynccontextmanager

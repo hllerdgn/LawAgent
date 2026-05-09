@@ -1,11 +1,5 @@
 """
-embedder.py  —  LawAgent Mursit Embedder (v10-Production)
-----------------------------------------------------------
-Değişiklikler v9 → v10:
-  - encode_single() metodu eklendi (retrieval.py monkey-patch kaldırıldı)
-  - Quantize path mantığı sadeleştirildi ve hata toleranslı hale getirildi
-  - __init__ süresi print'i düzeltildi
-  - Qdrant local/prod ayrimi QDRANT_URL env var'i ile yapiliyor
+embedder.py  —  LawAgent Mursit Embedder API
 """
 
 import argparse
@@ -38,7 +32,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
 from services.qdrant_client import get_qdrant_client
 
-# ─── PATHS ────────────────────────────────────────────────────────────────────
+# Paths
 
 BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR      = os.path.join(BASE_DIR, "data")
@@ -50,7 +44,7 @@ BATCH_SIZE    = 32
 DISTANCE_METRIC = qmodels.Distance.COSINE
 
 
-# ─── EMBEDDER ─────────────────────────────────────────────────────────────────
+# Embedder
 
 class MursitEmbedder:
     """
@@ -76,7 +70,7 @@ class MursitEmbedder:
 
         print(f"[Mursit] Hazır — {time.time()-t0:.1f}s | dim={self.vector_size}")
 
-    # ------------------------------------------------------------------
+
 
     def _load_or_quantize(self) -> None:
         transformer_module = self.st._first_module().auto_model
@@ -100,7 +94,7 @@ class MursitEmbedder:
 
         self.st._first_module().auto_model = quantized
 
-    # ------------------------------------------------------------------
+
 
     def encode(self, texts: list[str], normalize: bool = True) -> list:
         """Liste halinde metinleri vektöre çevirir → Python list of list[float]."""
@@ -133,7 +127,7 @@ class MursitEmbedder:
         print(f"[Mursit] int8 kaydedildi → {yol} ({mb:.1f} MB)")
 
 
-# ─── QDRANT HELPERS ───────────────────────────────────────────────────────────
+# Qdrant Helpers
 
 def _chunk_id_to_uint64(cid: str) -> int:
     return uuid.uuid5(uuid.NAMESPACE_DNS, str(cid)).int >> 64
@@ -177,7 +171,7 @@ def _ensure_collection(
         print(f"[Qdrant] Mevcut: {COLLECTION_NAME} ({count} kayıt)")
 
 
-# ─── EMBED CORPUS ─────────────────────────────────────────────────────────────
+# Embed Corpus
 
 def embed_corpus(
     reset: bool = False,
@@ -257,7 +251,7 @@ def embed_corpus(
     print(f"\n[Embed] Tamamlandı. {eklenen} chunk eklendi. ({time.time()-t0:.1f}s)")
 
 
-# ─── CLI ──────────────────────────────────────────────────────────────────────
+# CLI
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LawAgent Mursit Embedder v10")

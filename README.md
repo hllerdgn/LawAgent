@@ -1,163 +1,122 @@
 # ⚖️ LawAgent AI — Türk Hukuku RAG Sistemi
 
-> TÜBİTAK 2209/A kapsamında geliştirilen, Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketici Kanunu (TKHK) ve Yargıtay kararlarını kapsayan yapay zeka destekli hukuk asistanı.
+> TÜBİTAK 2209/A kapsamında geliştirilen, Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketici Kanunu (TKHK) ve Yargıtay kararlarını kapsayan yapay zeka destekli akıllı hukuk asistanı projesidir.
 
-## 🏗️ Mimari
+Bu proje iki ana bileşenden oluşmaktadır:
+1. **BACKEND (FastAPI & RAG):** Hukuki metinleri işleyen, vektör tabanlı arama yapan ve yapay zeka entegrasyonu sağlayan Python sunucusu.
+2. **FRONTEND (React & Vite):** Kullanıcıların hukuk asistanıyla etkileşime girebileceği modern ve dinamik arayüz.
+
+---
+
+## ⚠️ ÖNEMLİ BİLGİ: GitHub'dan İndirilen Dosyalar Hakkında
+
+Bu projeyi GitHub'dan indirdiğinizde, `.gitignore` kuralları gereği **hukuki veri seti (`.json` dosyaları) ve vektör veritabanı (Qdrant) indirilmez.** Bu dosyalar boyutu çok büyük olduğu için Git'te takip edilmez. 
+
+**Bu nedenle projeyi ilk kez kurduğunuzda öncelikle veri kazıma (scraping) ve vektör oluşturma (embedding) ardışık düzenini (pipeline) çalıştırmanız ZORUNLUDUR.** Aksi halde API sunucusu eksik veri hatası vererek çalışmayacaktır.
+
+---
+
+## 🚀 Kurulum ve Çalıştırma Rehberi
+
+Projeyi yerel bilgisayarınızda ayağa kaldırmak için aşağıdaki adımları sırasıyla izleyin.
+
+### 1. Ön Koşullar
+- **Python 3.11+** (Backend için)
+- **Node.js 18+** (Frontend için)
+- **Groq API Anahtarı:** LLM (Llama-3) kullanımı için [console.groq.com](https://console.groq.com) üzerinden ücretsiz bir API anahtarı almanız gerekir.
+
+### 2. Repoyu Klonlayın
+```bash
+git clone https://github.com/KULLANICI_ADI/LawAgent.git
+cd LawAgent
+```
+
+### 3. Backend Kurulumu ve Veri Tabanının Hazırlanması
+
+Öncelikle sanal ortamı kurup veritabanını sıfırdan oluşturmalıyız.
+
+```bash
+cd BACKEND
+
+# 1. Sanal ortam (venv) oluşturun ve aktif edin
+python -m venv .venv
+# Windows için: .venv\Scripts\activate
+# Mac/Linux için: source .venv/bin/activate
+
+# 2. Bağımlılıkları yükleyin
+pip install -r requirements.txt
+
+# 3. Ortam değişkenlerini yapılandırın
+# .env.example dosyasının bir kopyasını alıp adını .env yapın.
+cp .env.example .env
+# Oluşturulan .env dosyasını bir metin editörüyle açıp GROQ_API_KEY bilginizi ekleyin.
+
+# 4. VERİ TABANINI OLUŞTURUN (ZORUNLU İLK ADIM)
+# Mevzuat ve Yargıtay sitelerinden güncel veriler çekilecek, parçalanacak ve vektörleştirilecektir.
+# İşlem internet hızınıza ve bilgisayarınıza bağlı olarak birkaç dakika sürebilir.
+# Windows PowerShell için:
+.\run_pipeline.ps1
+
+# Linux/Mac Bash için:
+bash run_pipeline.sh
+
+# 5. Sunucuyu başlatın
+python src/generator.py --api
+```
+*(Sunucu başarıyla başlatıldığında `http://localhost:8000` portunda çalışacaktır. Bu terminali kapatmayın.)*
+
+### 4. Frontend Kurulumu ve Başlatılması
+
+Backend çalışmaya devam ederken, **yeni bir terminal penceresi açın** ve kullanıcı arayüzünü ayağa kaldırın.
+
+```bash
+cd FRONTEND
+
+# 1. Gerekli kütüphaneleri yükleyin
+npm install
+
+# 2. Geliştirme ortamı yapılandırması (Opsiyonel)
+# Eğer Backend localhost:8000 portunda çalışıyorsa Vite yapılandırması genellikle sorunsuz çalışır.
+# Sorun yaşarsanız FRONTEND dizinine bir .env dosyası oluşturup aşağıdaki değeri ekleyebilirsiniz:
+# VITE_API_URL=http://localhost:8000
+
+# 3. Arayüzü başlatın
+npm run dev
+```
+*(Terminalde beliren `http://localhost:5173` bağlantısına tıklayarak LawAgent web arayüzüne ulaşabilirsiniz.)*
+
+---
+
+## 📦 Mimari Yapı ve Teknolojiler
 
 ```
 LawAgent/
 ├── BACKEND/
 │   ├── src/
-│   │   ├── scraper_mevzuat/    # mevzuat.gov.tr spider (Scrapy)
-│   │   ├── scraper_yargi/      # yargitay.gov.tr spider (Scrapy)
-│   │   ├── scraper/            # preprocessing + legal_chunker
-│   │   ├── data/               # corpus JSON + Qdrant storage (gitignore'da)
-│   │   ├── embedder.py         # Mursit-Base-TR-Retrieval embedding
-│   │   ├── retriever.py        # BM25 + Dense hybrid retrieval
-│   │   └── generator.py        # Groq LLM (Llama-3.3-70b) API
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   ├── setup.ps1               # Windows ilk kurulum
-│   ├── run_pipeline.ps1        # Windows pipeline
-│   └── run_pipeline.sh         # Linux/Docker pipeline
-└── FRONTEND/                   # React + Vite + TypeScript
+│   │   ├── scraper_mevzuat/    # mevzuat.gov.tr veri kazıma (Scrapy)
+│   │   ├── scraper_yargi/      # yargitay.gov.tr veri kazıma (Scrapy)
+│   │   ├── scraper/            # Ön işleme (preprocessing) ve parçalama (chunking)
+│   │   ├── data/               # (İndirilmez!) Corpus JSON'ları ve Qdrant DB burada oluşur
+│   │   ├── embedder.py         # Mursit-Base-TR-Retrieval vektörleştirme
+│   │   ├── retriever.py        # BM25 + Dense hybrid arama motoru
+│   │   └── generator.py        # FastAPI Sunucusu & Llama-3 (Groq) entegrasyonu
+│   └── run_pipeline.ps1/sh     # Tüm veri akışını otomatize eden betikler
+└── FRONTEND/
+    ├── src/
+    │   ├── app/pages/          # Web arayüzü ana sayfaları (Home, About, vb.)
+    │   └── app/components/     # UI Bileşenleri
+    └── package.json            # Node.js yapılandırması
 ```
-
-## 🚀 Hızlı Başlangıç
-
-### Ön Koşullar
-- Python 3.11+
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Docker yöntemi için)
-- Groq API anahtarı: https://console.groq.com
-
----
-
-## 🪟 Yöntem 1: PowerShell (Windows — Önerilen)
-
-```powershell
-# 1. Repoyu klonlayın
-git clone https://github.com/KULLANICI_ADI/LawAgent.git
-cd LawAgent/BACKEND
-
-# 2. İlk kurulum (venv + bağımlılıklar + klasörler)
-.\setup.ps1
-
-# 3. .env dosyasını düzenleyin
-notepad .env
-# GROQ_API_KEY ve QDRANT_URL değerlerini girin
-
-# 4. Pipeline'ı çalıştırın (veri topla → işle → vektörleştir)
-.\run_pipeline.ps1
-
-# Scraping'i atlayıp mevcut verilerle başlamak için:
-.\run_pipeline.ps1 -SkipScrape
-
-# 5. API'yi başlatın
-python src/generator.py --api
-# → http://localhost:8000
-```
-
----
-
-## 🐧 Yöntem 2: Bash (Linux / macOS / WSL)
-
-```bash
-# 1. Repoyu klonlayın
-git clone https://github.com/KULLANICI_ADI/LawAgent.git
-cd LawAgent/BACKEND
-
-# 2. Sanal ortam
-python -m venv .venv && source .venv/bin/activate
-
-# 3. Bağımlılıklar
-pip install -r requirements.txt
-
-# 4. .env oluşturun
-cp ../.env.example .env
-nano .env  # API anahtarlarını girin
-
-# 5. Pipeline çalıştırın
-bash run_pipeline.sh
-
-# Scraping'i atlamak için:
-bash run_pipeline.sh --skip-scrape
-
-# 6. API başlatın
-python src/generator.py --api
-```
-
----
-
-## 🐳 Yöntem 3: Docker (Tüm Platformlar)
-
-```bash
-# 1. Repoyu klonlayın
-git clone https://github.com/KULLANICI_ADI/LawAgent.git
-cd LawAgent/BACKEND
-
-# 2. .env oluşturun
-cp ../.env.example .env
-# .env içinde GROQ_API_KEY ve diğer değerleri doldurun
-
-# 3. Sadece pipeline çalıştır (veri topla + işle + vektörleştir)
-docker-compose run --rm pipeline
-
-# 4. API başlat
-docker-compose up api
-
-# 3+4 birlikte (pipeline bitince API otomatik başlar):
-docker-compose up
-```
-
----
-
-## 📊 Pipeline Adımları
-
-| # | Script | Girdi | Çıktı |
-|---|--------|-------|-------|
-| 1 | `scrapy crawl mevzuat` | mevzuat.gov.tr | `src/data/mevzuat_corpus.json` |
-| 2 | `scrapy crawl yargitay` | yargitay.gov.tr | `src/data/yargitay_corpus.json` |
-| 3 | `scraper/preprocessing.py` | corpus JSON'ları | Temizlenmiş corpus |
-| 4 | `scraper/legal_chunker.py` | Temizlenmiş corpus | `src/data/chunk_corpus.json` |
-| 5 | `embedder.py` | chunk_corpus.json | Qdrant vektör DB |
-| 6 | `retriever.py` | Qdrant | `src/data/retriever_cache.pkl` |
-| → | `generator.py --api` | Retriever + Groq | FastAPI `localhost:8000` |
-
----
-
-## ⚙️ Ortam Değişkenleri
-
-`.env.example` dosyasını kopyalayarak `.env` oluşturun:
-
-```bash
-cp .env.example .env  # Linux/Mac
-copy ..\.env.example .env  # Windows
-```
-
-| Değişken | Açıklama | Nereden Alınır |
-|----------|----------|----------------|
-| `GROQ_API_KEY` | Groq LLM API anahtarı | https://console.groq.com |
-| `QDRANT_URL` | Qdrant sunucu adresi | Docker: `http://localhost:6333` |
-| `ENV` | Ortam (`development`/`production`) | - |
-| `NGROK_AUTH_TOKEN` | Ngrok tünel tokeni (isteğe bağlı) | https://dashboard.ngrok.com |
-
----
-
-## 📦 Teknolojiler
 
 | Bileşen | Teknoloji |
 |---------|-----------|
-| Web Scraping | Scrapy + BeautifulSoup4 |
-| Text Chunking | LegalChunker (özel algoritma) |
-| Embedding | `newmindai/Mursit-Base-TR-Retrieval` |
-| Vektör DB | Qdrant (local veya cloud) |
-| Retrieval | BM25 + Dense Hybrid |
-| LLM | Groq / Llama-3.3-70b |
-| API | FastAPI + Uvicorn |
-| Frontend | React + Vite + TypeScript |
+| **Frontend** | React, Vite, TypeScript, TailwindCSS |
+| **API Server** | FastAPI, Uvicorn |
+| **Web Scraping**| Scrapy, BeautifulSoup4 |
+| **Vektör DB** | Qdrant (Local) |
+| **LLM (Model)** | Llama-3.3-70b (Groq Üzerinden) |
 
 ---
 
 ## 📄 Lisans
-
-Bu proje TÜBİTAK 2209/A akademik araştırma projesi kapsamında geliştirilmiştir.
+Bu proje Bitirme Projesi kapsamında geliştirilmiştir.

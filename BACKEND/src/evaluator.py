@@ -18,14 +18,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("LawAgent.Evaluator")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# HİBRİT BENCHMARK SETİ (Mevzuat + İçtihat)
+# Hibrit Benchmark Seti (Mevzuat + İçtihat)
 # Sorgu, Beklenen Kanun, Beklenen Madde Listesi, Beklenen Karar ID (Opsiyonel)
-# ═══════════════════════════════════════════════════════════════════════════════
 BENCHMARK = [
-    # ─────────────────────────────────────────────
     # TBK — Türk Borçlar Kanunu (6098)
-    # ─────────────────────────────────────────────
     # Sözleşmenin Kurulması & İrade Sakatlıkları
     (
         "Sözleşmenin esaslı noktalarında irade uyuşması olmadan sözleşme kurulmuş sayılır mı?",
@@ -182,9 +178,7 @@ BENCHMARK = [
         ["83"],
         None,
     ),
-    # ─────────────────────────────────────────────
     # TKHK — Tüketicinin Korunması Hakkında Kanun (6502)
-    # ─────────────────────────────────────────────
     # Ayıplı Mal & Hizmet
     (
         "Ayıplı malın tespitinde 'teslim tarihinden itibaren altı ay' içinde ortaya çıkan ayıplara ilişkin ispat karinesi nasıl işler?",
@@ -292,9 +286,7 @@ BENCHMARK = [
         ["7"],
         None,
     ),
-    # ─────────────────────────────────────────────
     # TTK — Türk Ticaret Kanunu (6102)
-    # ─────────────────────────────────────────────
     # Ticari İşletme & Tacir
     (
         "Tacir sıfatının kazanılması ve tacire özgü yükümlülükler (basiretli işletme, ticaret unvanı, tescil) nelerdir?",
@@ -435,9 +427,7 @@ BENCHMARK = [
     ),
 ]
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# METRİK FONKSİYONLARI (İçtihat Destekli)
-# ═══════════════════════════════════════════════════════════════════════════════
+# Metrik Fonksiyonları (İçtihat Destekli)
 
 
 def is_hit(
@@ -500,9 +490,7 @@ def ndcg_at_k(
     return dcg / idcg if idcg > 0 else 0.0
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# DEĞERLENDİRME MOTORU
-# ═══════════════════════════════════════════════════════════════════════════════
+# Değerlendirme Motoru
 
 
 def run_evaluation(retriever: LegalRetriever, k: int = 10):
