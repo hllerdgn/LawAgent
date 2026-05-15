@@ -614,7 +614,7 @@ export function ChatbotWidget() {
 
     const sendRequest = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL || "https://hllerdgn-lawagent-backend.hf.space"}/ask`;
+        const apiUrl = `${import.meta.env.VITE_API_URL || ""}/ask`;
         const controller = new AbortController();
         abortControllerRef.current = controller;
         const timeoutId = setTimeout(() => controller.abort(), 15000);
