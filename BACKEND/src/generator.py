@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from retriever import LegalRetriever
+import pdf_processor
 
 # Logging
 
@@ -510,16 +511,7 @@ class LegalGenerator:
             log.info(f"[Aşama 2] İçtihat talebi yakalandı → session: {session_id}")
             return self._generate_ictihat_only(session_id)
 
-        # 3. HUKUKİ FİLTRE (kısa onaylar buraya düşmez çünkü Aşama 2 onları yakalar)
-        if not is_legal_query(sorgu):
-            filtered = "Ben bir Türk hukuk asistanıyım. Lütfen Türk Borçlar, Ticaret veya Tüketici hukukuyla ilgili bir soru sorunuz."
-            self.memory.add_exchange(session_id, sorgu, filtered)
-            return {
-                "answer": filtered,
-                "sources": [],
-                "filtered": True,
-                "sure_ms": int((time.time() - t0) * 1000),
-            }
+        # 3. HUKUKİ FİLTRE KALDIRILDI - Retrieval'dan sonra kontrol edilecek
 
         try:
             # Intent ve K
@@ -555,6 +547,20 @@ class LegalGenerator:
                         chunks.append(c)
                 chunks = chunks[:k]
 
+            # Site document kontrolü
+            has_site_doc = any(c.get("source") == "site_document" for c in chunks)
+
+            # 3. HUKUKİ FİLTRE (EĞER SİTE BELGESİ YOKSA)
+            if not is_legal_query(sorgu) and not has_site_doc:
+                filtered = "Ben bir hukuk ve site asistanıyım. Lütfen asistan konularıyla ilgili bir soru sorunuz."
+                self.memory.add_exchange(session_id, sorgu, filtered)
+                return {
+                    "answer": filtered,
+                    "sources": [],
+                    "filtered": True,
+                    "sure_ms": int((time.time() - t0) * 1000),
+                }
+
             # Alaka kontrolü (kapsam dışı kelimeler)
             kapsam_disi_kelimeler = [
                 "boşan",
@@ -566,7 +572,7 @@ class LegalGenerator:
                 "öldür",
                 "yarala",
             ]
-            if any(kelime in sorgu_temiz for kelime in kapsam_disi_kelimeler):
+            if not has_site_doc and any(kelime in sorgu_temiz for kelime in kapsam_disi_kelimeler):
                 is_relevant = any(
                     any(
                         kw in str(c.get("text", "")).lower()
@@ -626,13 +632,13 @@ class LegalGenerator:
             )
             self.memory.add_exchange(session_id, sorgu, yanit)
 
-            # Kaynak listesi (sadece mevzuat)
+            # Kaynak listesi
             sources = []
             for c in chunks:
                 if str(c.get("source", "")).lower() != "yargitay":
                     sources.append(
                         {
-                            "kanun": c.get("law") or "",
+                            "kanun": c.get("law") or c.get("filename") or "Mevzuat",
                             "madde": (
                                 str(c.get("article_no"))
                                 if c.get("article_no") is not None
@@ -740,6 +746,26 @@ def create_app() -> FastAPI:
             return JSONResponse(status_code=400, content={"detail": "Sorgu boş."})
         result = gen.generate(req.query, session_id=req.session_id, k=req.k)
         return result
+
+    from fastapi import UploadFile, File
+    @app.post("/upload-document")
+    async def upload_document(file: UploadFile = File(...)):
+        if not file.filename.lower().endswith(".pdf"):
+            return JSONResponse(status_code=400, content={"detail": "Sadece PDF dosyaları desteklenmektedir."})
+        try:
+            contents = await file.read()
+            # Embedder ve Qdrant instance'larını retriever'dan alıyoruz
+            retriever = get_retriever()
+            added_chunks = pdf_processor.process_and_index_pdf(
+                contents, 
+                file.filename, 
+                retriever.embedder, 
+                retriever.qdrant
+            )
+            return {"status": "ok", "message": f"{file.filename} işlendi.", "chunks_added": added_chunks}
+        except Exception as e:
+            log.exception("PDF işleme hatası")
+            return JSONResponse(status_code=500, content={"detail": f"Dosya işlenirken hata oluştu: {str(e)}"})
 
     @app.get("/health")
     async def health():

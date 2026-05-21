@@ -318,6 +318,17 @@ class LegalRetriever:
         ).points
         dense_hits = [{**p.payload, "dense_score": p.score} for p in dense_results]
 
+        # Site corpus araması (sadece dense)
+        site_hits = []
+        try:
+            site_results = self.qdrant.query_points(
+                "site_corpus", query=vec, limit=self.cfg.FINAL_K, with_payload=True
+            ).points
+            # Site belgelerini yüksek başlangıç skoruyla ekleyelim ki üst sıralara çıksınlar
+            site_hits = [{**p.payload, "skor": p.score + 10.0, "source": "site_document"} for p in site_results]
+        except Exception:
+            pass
+
         # 2. BM25 Search (Genişletilmiş query ile anahtar kelime araması)
         bm25_hits_raw = self.bm25.score(expanded_q, n=self.cfg.TOP_K_BM25)
         bm25_hits = [{**self.corpus[idx], "bm25_score": s} for idx, s in bm25_hits_raw]
@@ -344,7 +355,8 @@ class LegalRetriever:
                 c["skor"] *= self.cfg.BOOST_KANUN
 
         # Skorlara göre tekrar sırala
-        fused.sort(key=lambda x: -x["skor"])
+        fused.extend(site_hits)
+        fused.sort(key=lambda x: -x.get("skor", 0))
         return self._filter_results(fused, k)
 
     def _filter_results(self, results: List[Dict], k: int) -> List[Dict]:
@@ -365,6 +377,9 @@ class LegalRetriever:
                 if seen_dec[key] >= 1:
                     continue
                 seen_dec[key] += 1
+            elif r.get("source") == "site_document":
+                # Site belgeleri için ekstra kısıtlama koymayabiliriz
+                pass
             filtered.append(r)
             if len(filtered) >= k:
                 break
