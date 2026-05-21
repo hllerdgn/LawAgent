@@ -15,6 +15,7 @@ import { AdminBlog } from './pages/admin/AdminBlog';
 import { AdminMessages } from './pages/admin/AdminMessages';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { AdminLogin } from './pages/admin/AdminLogin';
+import { AdminDocuments } from './pages/admin/AdminDocuments';
 import { NotFound } from './pages/NotFound';
 
 export const router = createBrowserRouter([
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
         Component: AdminLayout,
         children: [
           { index: true, Component: AdminDashboard },
+          { path: 'documents', Component: AdminDocuments },
           { path: 'practice-areas', Component: AdminPracticeAreas },
           { path: 'blog', Component: AdminBlog },
           { path: 'messages', Component: AdminMessages },

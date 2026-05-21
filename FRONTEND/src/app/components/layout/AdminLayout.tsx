@@ -9,7 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  Scale
+  Scale,
+  FileUp
 } from 'lucide-react';
 
 export function AdminLayout() {
@@ -19,6 +20,7 @@ export function AdminLayout() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+    { icon: FileUp, label: 'Site Belgeleri', path: '/admin/dashboard/documents' },
     { icon: Briefcase, label: 'Çalışma Alanları', path: '/admin/dashboard/practice-areas' },
     { icon: FileText, label: 'Blog Yazıları', path: '/admin/dashboard/blog' },
     { icon: MessageSquare, label: 'Mesajlar', path: '/admin/dashboard/messages' },

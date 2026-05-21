@@ -790,6 +790,59 @@ def create_app() -> FastAPI:
             "history": history,
         }
 
+    @app.get("/admin/stats")
+    async def get_admin_stats():
+        retriever = get_retriever()
+        
+        site_docs_count = 0
+        try:
+            site_docs_count = retriever.qdrant.count("site_corpus").count
+        except Exception:
+            pass
+            
+        law_docs_count = 0
+        try:
+            from embedder import COLLECTION_NAME
+            law_docs_count = retriever.qdrant.count(COLLECTION_NAME).count
+        except Exception:
+            pass
+            
+        total_questions = 0
+        recent_queries = []
+        for session_id, messages in gen.memory.memory.items():
+            for i in range(len(messages)):
+                if messages[i]["role"] == "user":
+                    total_questions += 1
+                    ans = "Cevaplanmadı."
+                    if i + 1 < len(messages) and messages[i+1]["role"] == "assistant":
+                        ans = messages[i+1]["content"][:100] + "..."
+                    
+                    # Format date: "2026-05-21T15:30:58" -> "21-05-2026 15:30"
+                    raw_ts = messages[i]["timestamp"]
+                    formatted_date = raw_ts
+                    try:
+                        dt = datetime.fromisoformat(raw_ts)
+                        formatted_date = dt.strftime("%d-%m-%Y %H:%M")
+                    except:
+                        pass
+
+                    recent_queries.append({
+                        "name": f"Oturum {session_id[:6]}",
+                        "subject": messages[i]["content"],
+                        "answer": ans,
+                        "date": formatted_date,
+                        "raw_date": raw_ts
+                    })
+        
+        recent_queries.sort(key=lambda x: x["raw_date"], reverse=True)
+        
+        return {
+            "site_docs": site_docs_count,
+            "law_docs": law_docs_count,
+            "total_questions": total_questions,
+            "recent_queries": recent_queries[:5]
+        }
+
     return app
 
 
