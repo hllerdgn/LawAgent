@@ -8,9 +8,12 @@ import {
   Maximize2,
   Minimize2,
   StopCircle,
+  Home,
+  BookOpen,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useNavigate } from "react-router";
 
 // ---------- UTILS ----------
 const cn = (...classes: (string | boolean | undefined)[]) =>
@@ -423,7 +426,22 @@ const MessageBubble = ({
 
 // ---------- MAIN COMPONENT ----------
 export function ChatbotWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 640;
+      const manuallyClosed = sessionStorage.getItem("chatbot_closed");
+      if (isMobile && !manuallyClosed) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  const handleClose = () => {
+    sessionStorage.setItem("chatbot_closed", "true");
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
@@ -839,7 +857,7 @@ export function ChatbotWidget() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-white font-semibold text-sm">
-                    LawAgent AI
+                    {!isDesktop ? "LawAgent" : "LawAgent AI"}
                   </h2>
                   <span
                     className={`w-2 h-2 rounded-full ${
@@ -849,10 +867,36 @@ export function ChatbotWidget() {
                     }`}
                   />
                 </div>
-                <p className="text-gray-400 text-xs">Hukuki Asistan</p>
+                {isDesktop && <p className="text-gray-400 text-xs">Hukuki Asistan</p>}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {!isDesktop && (
+                <div className="flex items-center gap-1.5 mr-1">
+                  <button
+                    onClick={() => {
+                      handleClose();
+                      navigate("/");
+                    }}
+                    className="text-white hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/20 bg-white/10"
+                    title="Ana Sayfa"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-medium hidden sm:inline">Ana Sayfa</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleClose();
+                      navigate("/about");
+                    }}
+                    className="text-white hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/20 bg-white/10"
+                    title="Hakkımızda"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-medium hidden sm:inline">Hakkımızda</span>
+                  </button>
+                </div>
+              )}
               {activeTypingMessageId !== null && (
                 <button
                   onClick={handleStopGeneration}
@@ -879,7 +923,7 @@ export function ChatbotWidget() {
                 </button>
               )}
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="text-white hover:bg-white/20 p-2 rounded-lg transition-all"
                 title="Kapat"
               >
