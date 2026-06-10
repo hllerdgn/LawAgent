@@ -41,12 +41,12 @@ class CFG:
     TOP_K_BM25: int = 200
     FINAL_K: int = 15
     MAX_SAME_ARTICLE: int = 2
-    ALPHA_DEFAULT: float = 0.72
+    ALPHA_DEFAULT: float = 0.68
     ALPHA_EXACT: float = 0.45
-    ALPHA_SEMANTIC: float = 0.80
+    ALPHA_SEMANTIC: float = 0.72
     BOOST_MADDE: float = 35.0
     BOOST_ICTIHAT: float = 6.0
-    BOOST_KANUN: float = 2.5
+    BOOST_KANUN: float = 6.0
     CACHE_PATH: str = os.path.join(_SRC_DIR, "data", "retriever_cache.pkl")
 
 
@@ -69,6 +69,7 @@ class BM25Plus:
         self.dl: List[int] = []
 
     def _tokenize(self, text: str) -> List[str]:
+        text = text.replace("\u0307", "")
         text = re.sub(r"[^\w\s]", " ", text.lower())
         return [t for t in text.split() if len(t) > 1]
 
@@ -171,17 +172,188 @@ _ESANLAMLILAR = {
     "gabin": "aşırı oransızlık sömürme sarsılma orantısız 28",
     "ikrah": "korkutma tehdit zorlama 37 38 39",
     "müteselsil": "zincirleme ortaklaşa dayanışma 161 162",
+    "kira": "kira sözleşmesi bildirim feshi uzama tahliye TBK Madde 347 350 352",
+    "tahliye": "kira kiracı tahliye bildirim süre fesih TBK Madde 347",
+    "işçi": "işçi alacakları zamanaşımı on yıl TBK Madde 146 147",
+    "haksız fiil": "haksız fiil tazminat zamanaşımı süre rücu TBK Madde 72 49 50",
+    "temerrüt": "temerrüd borçlu gecikme ihtar TBK Madde 117 119",
+    "vekalet": "vekâlet vekil özen borcu TBK Madde 506 513",
+    "kefalet": "kefil kefalet eş rıza TBK Madde 583 584",
+    "eser": "eser sözleşmesi müteahhit ayıp bedel TBK Madde 474 475 482",
+    "zamanaşımı": "süre hak düşürücü on yıl iki yıl TBK Madde 146 147 72 153 154",
     # TKHK Eklemeleri
     "aidat": "üyelik ücreti yıllık ücret kart çıkarma bedeli",
     "promosyon": "hediye kültürel ürün süreli yayın 21",
-    # TTK (En çok hata burada)
-    "unvan": "ticaret unvanı tecavüz koruma marka 52",
-    "müdür": "limited şirket müdür sorumluluk temsil 623 630 644",
-    "bono": "emre yazılı senet kambiyo senedi zamanaşımı temel ilişki 732",
-    "çek": "karşılıksızdır ibraz şerh arkasına vurulan 796 814",
+    "ayıplı": "ayıplı mal satıcı sorumluluk seçimlik haklar üretici TKHK Madde 10 11",
+    "ayıplı mal": "ayıplı mal satıcı üretici ithalatçı müteselsil sorumluluk seçimlik hak TKHK Madde 11 10",
+    "ayıplı hizmet": "ayıplı hizmet sağlayıcı seçimlik hak ücretsiz yeniden görme TKHK Madde 15 16",
+    "mesafeli": "mesafeli satış teslim süresi otuz gün cayma TKHK Madde 48",
+    "mesafeli sözleşme cayma": "mesafeli sözleşme cayma hakkı 14 gün istisnalar TKHK Madde 48",
+    "abonelik": "abonelik sözleşmesi haksız şart tüketici denetim TKHK Madde 5 52",
+    "abonelik fesih": "abonelik sözleşmesi fesih bildirim sağlayıcı tazminat depozito iade TKHK Madde 52",
+    "cayma": "cayma hakkı tüketici mesafeli sözleşme iade TKHK Madde 24 48",
+    "kredi": "tüketici kredisi cayma erken ödeme TKHK Madde 23 24 27",
+    "tüketici kredisi cayma": "cayma hakkı ondört gün tüketici kredisi TKHK Madde 24",
+    "tüketici kredisi geçerlilik": "geçerlilik şartı yazılı kredi sözleşmesi TKHK Madde 23",
+    "tüketici kredisi erken": "erken kapatma faiz masraf indirim TKHK Madde 27",
+    "tüketici kredisi temerrüt": "konut finansmanı temerrüt muacceliyet TKHK Madde 33",
+    "tüketici kredisi faiz": "faiz artışı bildirim belirsiz süreli TKHK Madde 26",
+    "haksız şart": "haksız şart tüketici sözleşmesi kesin hükümsüzlük geçersizlik TKHK Madde 5",
+    "devre tatil": "devre tatil sözleşmesi cayma hakkı bedel iade TKHK Madde 50",
+    "paket tur": "paket tur sözleşmesi esaslı değişiklik cayma düzenleyici TKHK Madde 51",
+    "garanti belgesi": "garanti belgesi sorumluluk iki yıl düzenleme yükümlülük TKHK Madde 56 57",
+    "sipariş edilmey": "sipariş edilmemiş mal hizmet gönderme tüketici bedel talep TKHK Madde 7",
+    "hakem heyeti": "tüketici hakem heyeti başvuru parasal sınır bağlayıcı karar TKHK Madde 68 70",
+    "tüketici mahkeme": "tüketici mahkemesi yetkili mahkeme uyuşmazlık konut TKHK Madde 73",
+    "işyeri dışı": "işyeri dışında sözleşme satıcı bilgilendirme yükümlülük cayma TKHK Madde 47",
+    "tüketici": "tüketici hakkı TKHK Madde 5 7 10 11 15 23 24 47 48 50 51 52 56 68 70 73",
+    # TTK
+    "unvan": "ticaret unvanı tecavüz koruma marka TTK Madde 50 52",
+    "müdür": "limited şirket müdür sorumluluk temsil TTK Madde 623 625 630 632 644",
+    "limited müdür sorumluluk": "limited şirket müdür ortaklara alacaklılara sorumluluk TTK Madde 632 644",
+    "limited müdür devredilemez": "limited şirket müdür devredilemez yetki vazgeçilemez TTK Madde 625",
+    "limited sermaye payı devri": "limited şirket sermaye payı devir noter onay TTK Madde 595",
+    "limited genel kurul devredilemez": "limited şirket ortaklar kurulu devredilemez yetki TTK Madde 616",
+    "limited ortak çıkma": "limited şirket ortak çıkma çıkarılma haklı sebep TTK Madde 638 640",
+    "bono": "emre yazılı senet kambiyo senedi zamanaşımı temel ilişki TTK Madde 776 777",
+    "bono poliçe fark": "bono emre yazılı senet poliçe ayırt edici özellik ciro TTK Madde 776 777",
+    "çek": "karşılıksızdır ibraz şerh hamilin hakları TTK Madde 796 808 814",
+    "çek ibraz": "çek ibraz süresi muhatap banka hamilin hakları başvuru TTK Madde 796 797 808",
+    "karşılıksız çek": "karşılıksız çek hamil tazminat cezai yaptırım TTK Madde 814",
+    "ibraz": "çek ibraz süresi muhatap banka hamilin hakları TTK Madde 796 797 808",
+    "poliçe protesto": "poliçe protesto kabul etmeme ödememe süre müracaat TTK Madde 713 714",
     "rüçhan": "yeni pay alma öncelik sermaye artırımı 461",
     "defter": "ticari defter tasdik delil niteliği 64 222",
+    "genel kurul": "anonim şirket genel kurul olağan toplantı zaman TTK Madde 409 410",
+    "genel kurul olağan": "anonim şirket genel kurul olağan toplantı yıllık TTK Madde 409 410",
+    "genel kurul butlan": "genel kurul kararı butlan iptal fark dava TTK Madde 445 447",
+    "anonim": "anonim şirket yönetim kurulu genel kurul TTK Madde 375 409 445 553",
+    "yönetim kurulu devredilemez": "yönetim kurulu devredilemez görev yetki vazgeçilemez TTK Madde 375",
+    "yönetim kurulu çağrı": "yönetim kurulu toplantı çağırma yetki TTK Madde 392",
+    "yönetim kurulu sorumluluk alacaklı": "yönetim kurulu üye sorumluluk şirket alacaklı TTK Madde 553",
+    "nama yazılı pay devri": "nama yazılı pay defteri kayıt şirket itiraz TTK Madde 490 493",
+    "hamiline yazılı pay": "hamiline yazılı pay devir MKK bildirim TTK Madde 489 486",
+    "gecikme faizi ticari": "ticari faiz gecikme TCMB Merkez Bankası oranı TTK Madde 1530",
+    "limited": "limited şirket müdür ortak pay devri TTK Madde 595 616 625 632 638",
+    "haksız rekabet": "dürüstlük kuralı rekabet davası TTK Madde 56 60",
+    # Ek kısaltmalar
+    "azil": "anonim şirket yönetim kurulu üyesi azil gündem TTK Madde 413",
+    "yönetim kurulu azil": "anonim şirket yönetim kurulu üyesi azil gündeme bağlılık TTK Madde 413",
 }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HEDEFLI MADDE BOOST — Belirli konu ifadeleri tespit edildiğinde spesifik maddeye
+# güçlü boost uygular. Format: (zorunlu_kelimeler_tuple) -> (kanun, madde_no)
+# ═══════════════════════════════════════════════════════════════════════════════
+_KEYWORD_TO_ARTICLE = [
+    # TKHK — semantik olarak TBK ile karışan maddeler
+    # Ayıplı mal / hizmet
+    (("ayıplı mal", "seçimlik"),             ("TKHK", "11")),
+    (("ayıplı mal", "satıcı", "sorumluluk"), ("TKHK", "11")),
+    (("ayıplı mal", "tüketici"),             ("TKHK", "11")),
+    (("ayıplı", "ispat karinesi"),           ("TKHK", "10")),
+    (("ayıplı hizmet",),                     ("TKHK", "15")),
+    # Haksız şart
+    (("haksız şart", "tüketici"),            ("TKHK", "5")),
+    (("haksız şart", "kesin hükümsüz"),      ("TKHK", "5")),
+    (("haksız şart", "abonelik"),            ("TKHK", "5")),
+    # Mesafeli / işyeri dışı sözleşme
+    (("mesafeli", "cayma"),                  ("TKHK", "48")),
+    (("mesafeli", "teslim"),                 ("TKHK", "48")),
+    (("mesafeli", "istisna"),                ("TKHK", "48")),
+    (("işyeri dışı", "bilgilendirme"),       ("TKHK", "47")),
+    (("işyeri dışı", "satıcı"),              ("TKHK", "47")),
+    # Tüketici kredisi
+    (("tüketici kredi", "cayma"),            ("TKHK", "24")),
+    (("tüketici kredi", "geçerlilik"),       ("TKHK", "23")),
+    (("tüketici kredi", "erken kapatma"),    ("TKHK", "27")),
+    (("tüketici kredi", "temerrüt"),         ("TKHK", "33")),
+    (("tüketici kredi", "faiz artış"),       ("TKHK", "26")),
+    (("konut finansman", "temerrüt"),        ("TKHK", "33")),
+    (("konut finansman", "muaccel"),         ("TKHK", "33")),
+    # Özel sözleşme türleri
+    (("devre tatil",),                       ("TKHK", "50")),
+    (("paket tur",),                         ("TKHK", "51")),
+    (("abonelik", "fesh"),                   ("TKHK", "52")),
+    (("abonelik", "depozito"),               ("TKHK", "52")),
+    (("abonelik", "tüketici", "fesih"),      ("TKHK", "52")),
+    (("sipariş edil",),                      ("TKHK", "7")),
+    (("sipariş edilmem",),                   ("TKHK", "7")),
+    (("garanti belgesi",),                   ("TKHK", "56")),
+    # Uyuşmazlık çözümü
+    (("hakem heyeti", "tüketici"),           ("TKHK", "68")),
+    (("hakem heyeti", "parasal sınır"),      ("TKHK", "68")),
+    (("tüketici", "mahkeme"),                ("TKHK", "73")),
+    (("tüketici", "yetkili mahkeme"),        ("TKHK", "73")),
+    # TTK — anonim şirket
+    (("yönetim kurulu", "devredilemez"),     ("TTK", "375")),
+    (("yönetim kurulu", "vazgeçilemez"),     ("TTK", "375")),
+    (("yönetim kurulu", "toplantı", "çağır"), ("TTK", "392")),
+    (("yönetim kurulu", "toplantıya çağır"), ("TTK", "392")),
+    (("genel kurul", "butlan", "iptal"),     ("TTK", "445")),
+    (("genel kurul", "kararı", "butlan"),    ("TTK", "445")),
+    (("genel kurul", "iptal", "dava"),       ("TTK", "445")),
+    (("yönetim kurulu", "alacaklı", "sorumlul"), ("TTK", "553")),
+    (("yönetim kurulu", "pay sahibi", "sorumlul"), ("TTK", "553")),
+    (("yönetim kurulu", "tazminat sorumlul"), ("TTK", "553")),
+    (("yönetim kurulu", "üye", "azil"),      ("TTK", "413")),
+    (("gündeme bağlılık",),                  ("TTK", "413")),
+    (("genel kurul", "olağan toplantı"),     ("TTK", "409")),
+    (("genel kurul", "olağan", "ne zaman"),  ("TTK", "409")),
+    (("genel kurul", "yılda"),               ("TTK", "409")),
+    # TTK — limited şirket
+    (("limited", "müdür", "sorumluluk"),     ("TTK", "632")),
+    (("limited", "müdür", "devredilemez"),   ("TTK", "625")),
+    (("limited", "müdür", "vazgeçilemez"),   ("TTK", "625")),
+    (("limited", "sermaye payı", "devri"),   ("TTK", "595")),
+    (("limited", "sermaye payı", "noter"),   ("TTK", "595")),
+    (("limited", "ortak", "devredilemez"),   ("TTK", "616")),
+    (("limited", "ortaklar kurulu", "yetki"), ("TTK", "616")),
+    (("limited", "ortak", "çıkma"),          ("TTK", "638")),
+    (("limited", "haklı sebep", "çıkma"),    ("TTK", "638")),
+    # TTK — pay senetleri
+    (("nama yazılı pay", "devri"),           ("TTK", "490")),
+    (("nama yazılı pay", "pay defteri"),     ("TTK", "490")),
+    (("hamiline yazılı", "mkk"),             ("TTK", "489")),
+    (("hamiline yazılı pay", "devir"),       ("TTK", "489")),
+    # TTK — kıymetli evrak
+    (("çek", "ibraz süresi"),               ("TTK", "796")),
+    (("çekin ibraz",),                       ("TTK", "796")),
+    (("çek", "ibraz", "hamilin"),            ("TTK", "796")),
+    (("karşılıksız çek", "tazminat"),        ("TTK", "814")),
+    (("karşılıksız çek", "hamil"),           ("TTK", "814")),
+    (("bono", "poliçe"),                     ("TTK", "776")),
+    (("emre yazılı senet",),                 ("TTK", "776")),
+    (("poliçe", "protesto"),                 ("TTK", "713")),
+    (("poliçe", "kabul etmeme"),             ("TTK", "713")),
+    (("gecikme faizi", "ticari"),            ("TTK", "1530")),
+    (("ticari", "gecikme faizi", "merkez"),  ("TTK", "1530")),
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SORGU TEMİZLEME
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_NOISE_PREFIXES = [
+    "yargıtay uygulamalarına göre ",
+    "geçerli kanunda ",
+    "kanuna göre ",
+    "mevzuatta ",
+    "hukuken ",
+]
+
+
+def _clean_query(query: str) -> str:
+    """Sorgudaki gürültü prefix ve suffix'lerini temizler."""
+    q_lower = query.lower()
+    for prefix in _NOISE_PREFIXES:
+        if q_lower.startswith(prefix):
+            query = query[len(prefix):]
+            break
+    # Senaryo suffix'ini kaldır: "(Senaryo 42)" gibi
+    query = re.sub(r'\s*\(Senaryo\s+\d+\)\s*$', '', query, flags=re.IGNORECASE)
+    return query.strip()
 
 
 def expand_query(query: str) -> str:
@@ -195,23 +367,60 @@ def expand_query(query: str) -> str:
 
 def detect_kanun(query: str) -> Optional[str]:
     q = query.lower()
-    mapping = {
-        "tbk": "TBK",
-        "ttk": "TTK",
-        "tkhk": "TKHK",
-        "borçlar": "TBK",
-        "ticaret": "TTK",
-        "tüketici": "TKHK",
+    # 1. Doğrudan kanun adı eşleşmesi (en yüksek öncelik)
+    direct_mapping = {
+        "tbk": "TBK", "ttk": "TTK", "tkhk": "TKHK",
+        "borçlar kanunu": "TBK", "ticaret kanunu": "TTK",
+        "6098": "TBK", "6102": "TTK", "6502": "TKHK",
+        "tüketicinin korunması": "TKHK",
     }
-    for k, v in mapping.items():
+    for k, v in direct_mapping.items():
         if k in q:
             return v
+
+    # 2. Konu bazlı çıkarım (uzun ifadeler önce kontrol edilir)
+    # TKHK konuları — ÖNCE kontrol edilir (TBK ile karışan alanlara özeldir)
+    tkhk_kw = [
+        "tüketici", "ayıplı mal", "ayıplı hizmet", "mesafeli", "cayma hakkı",
+        "garanti belgesi", "abonelik", "devre tatil", "paket tur", "hakem heyeti",
+        "tüketici kredisi", "konut finansmanı", "sipariş edilmeyen",
+        "işyeri dışında", "işyeri dışı", "haksız şart", "satışın finansmanı",
+        "tüketici hakem", "seyahat acentesi",
+    ]
+    for kw in tkhk_kw:
+        if kw in q:
+            return "TKHK"
+
+    # TTK konuları (uzun ifadeler önce)
+    ttk_kw = ["anonim şirket", "limited şirket", "haksız rekabet", "genel kurul",
+              "yönetim kurulu", "ticaret sicil", "ticaret unvan", "nama yazılı",
+              "hamiline yazılı", "pay devri", "ticari defter",
+              "çek", "bono", "poliçe", "kambiyo", "ibraz", "tacir", "ticari işletme"]
+    for kw in ttk_kw:
+        if kw in q:
+            return "TTK"
+
+    # TBK konuları
+    tbk_kw = ["haksız fiil", "borçlu", "alacaklı", "temerrüt", "temerrüd",
+              "kira", "kiracı", "tahliye", "vekalet", "vekâlet", "kefalet",
+              "eser sözleşme", "satım", "sebepsiz zenginleş", "alacağın devri",
+              "temlik", "müteselsil", "zamanaşımı", "sözleşme",
+              "borç", "işçi", "ticaret"]
+    for kw in tbk_kw:
+        if kw in q:
+            return "TBK"
+
     return None
 
 
 def extract_madde(query: str) -> Optional[str]:
-    # "TBK 117", "m.117", "madde 117" gibi tüm varyasyonları yakalar
-    found = re.search(r"(?:tbk|ttk|tkhk|madde|m\.|md\.)?\s*(\d+)", query.lower())
+    # Eğer sorgunun tamamı sadece bir sayı ise direkt onu döndür
+    q_stripped = query.strip()
+    if q_stripped.isdigit():
+        return q_stripped
+    
+    # Değilse, önünde mutlaka kanun veya madde belirteci (m., madde, md., tbk vb.) olmalı
+    found = re.search(r"\b(?:tbk|ttk|tkhk|madde|m\.|md\.|md|m)\s*[:\-\.]?\s*(\d+)\b", query.lower())
     if found:
         return found.group(1)
     return None
@@ -237,6 +446,20 @@ class LegalRetriever:
             self.qdrant.close()
         except:
             pass
+
+    def _query_qdrant_with_retry(self, collection_name: str, query: Any, limit: int, with_payload: bool, retries: int = 5, delay: float = 1.0) -> Any:
+        for i in range(retries):
+            try:
+                return self.qdrant.query_points(
+                    collection_name, query=query, limit=limit, with_payload=with_payload
+                )
+            except Exception as e:
+                if i == retries - 1:
+                    raise e
+                import time
+                wait_time = delay * (2 ** i)
+                log.warning(f"Qdrant sorgu hatası (Deneme {i+1}/{retries}): {e}. {wait_time}s bekleniyor...")
+                time.sleep(wait_time)
 
     def _load(self, reindex: bool) -> None:
         if not reindex and os.path.exists(self.cfg.CACHE_PATH):
@@ -285,13 +508,15 @@ class LegalRetriever:
             if offset is None:
                 break
 
-        self.bm25.index([c["text"] for c in self.corpus])
+        self.bm25.index([f"{c.get('law', '')} Madde {c.get('article_no', '')} {c['text']}" for c in self.corpus])
         os.makedirs(os.path.dirname(self.cfg.CACHE_PATH), exist_ok=True)
         with open(self.cfg.CACHE_PATH, "wb") as f:
             pickle.dump({"corpus": self.corpus, "bm25": self.bm25}, f)
 
     def retrieve(self, query: str, k: int = None) -> List[Dict]:
         k = k or self.cfg.FINAL_K
+        query = query.replace("\u0307", "")
+        query = _clean_query(query)  # Gürültü prefix/suffix temizleme
 
         # Sorgu Genişletme (Sadece BM25 için değil, tüm süreci besler)
         expanded_q = expand_query(query)
@@ -313,7 +538,7 @@ class LegalRetriever:
 
         # 1. Dense Search (Orijinal query ile anlamsal arama)
         vec = self.embedder.encode_single(query)
-        dense_results = self.qdrant.query_points(
+        dense_results = self._query_qdrant_with_retry(
             COLLECTION_NAME, query=vec, limit=self.cfg.TOP_K_DENSE, with_payload=True
         ).points
         dense_hits = [{**p.payload, "dense_score": p.score} for p in dense_results]
@@ -321,11 +546,26 @@ class LegalRetriever:
         # Site corpus araması (sadece dense)
         site_hits = []
         try:
-            site_results = self.qdrant.query_points(
-                "site_corpus", query=vec, limit=self.cfg.FINAL_K, with_payload=True
+            site_results = self._query_qdrant_with_retry(
+                "site_corpus", query=vec, limit=1000, with_payload=True
             ).points
-            # Site belgelerini yüksek başlangıç skoruyla ekleyelim ki üst sıralara çıksınlar
-            site_hits = [{**p.payload, "skor": p.score + 10.0, "source": "site_document"} for p in site_results]
+            
+            # Basit anahtar kelime destekli skorlama (BM25 yedeği)
+            import string
+            query_words = set(query.lower().translate(str.maketrans('', '', string.punctuation)).split())
+            for p in site_results:
+                text_lower = p.payload.get("text", "").lower()
+                keyword_matches = sum(1 for w in query_words if w in text_lower and len(w) > 2)
+                # Eşleşen kelime başına +0.2 puan veriyoruz ki dense score'u düşük İngilizce metinler üste çıksın
+                p.score += (keyword_matches * 0.2)
+                
+            site_results.sort(key=lambda p: -p.score)
+            
+            # Site belgelerini daha makul bir başlangıç skoruyla ekleyelim ki orijinal kanunları ezmesin
+            site_hits = [
+                {**p.payload, "skor": p.score + 0.5, "source": "site_document"} 
+                for p in site_results[:self.cfg.FINAL_K] if p.score > 0.10
+            ]
         except Exception:
             pass
 
@@ -357,6 +597,24 @@ class LegalRetriever:
         # Skorlara göre tekrar sırala
         fused.extend(site_hits)
         fused.sort(key=lambda x: -x.get("skor", 0))
+
+        # ── Hedefli Madde Boost ──────────────────────────────────────────────
+        # Belirli konu ifadeleri saptanırsa, spesifik hedef maddeye 25x boost
+        # uygular. Bu sayede doğru madde top-10'a giremese bile üst sıraya çıkar.
+        q_lower_clean = query.lower()
+        for keywords, (target_law, target_art) in _KEYWORD_TO_ARTICLE:
+            if all(kw in q_lower_clean for kw in keywords):
+                boosted = False
+                for c in fused:
+                    if (normalize_article(c.get("article_no", "")) == target_art and
+                            str(c.get("law", "")).upper() == target_law):
+                        c["skor"] *= 25.0
+                        boosted = True
+                if boosted:
+                    fused.sort(key=lambda x: -x.get("skor", 0))
+                break
+        # ─────────────────────────────────────────────────────────────────────
+
         return self._filter_results(fused, k)
 
     def _filter_results(self, results: List[Dict], k: int) -> List[Dict]:

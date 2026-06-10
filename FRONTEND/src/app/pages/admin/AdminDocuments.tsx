@@ -1,11 +1,57 @@
-import React, { useState } from 'react';
-import { FileUp, File, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileUp, File, CheckCircle, AlertCircle, Loader2, Trash2 } from 'lucide-react';
+
+interface UploadedDocument {
+  filename: string;
+  chunk_count: number;
+  upload_date: string;
+}
 
 export function AdminDocuments() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [chunksAdded, setChunksAdded] = useState(0);
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
+  const fetchDocuments = async () => {
+    setLoadingDocs(true);
+    try {
+      const res = await fetch('http://localhost:7860/admin/documents');
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data.documents || []);
+      }
+    } catch (e) {
+      console.error("Dokümanlar getirilemedi", e);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const handleDelete = async (filename: string) => {
+    if (!window.confirm(`"${filename}" adlı belgeyi asistanın hafızasından silmek istediğinize emin misiniz?`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`http://localhost:7860/admin/documents/${filename}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchDocuments();
+      } else {
+        alert("Silme işlemi başarısız oldu.");
+      }
+    } catch (e) {
+      alert("Sunucuya bağlanılamadı.");
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -46,6 +92,7 @@ export function AdminDocuments() {
       setMessage(data.message || 'Belge başarıyla yüklendi.');
       setChunksAdded(data.chunks_added || 0);
       setSelectedFile(null);
+      fetchDocuments();
     } catch (error: any) {
       console.error('Upload error:', error);
       setStatus('error');
@@ -130,6 +177,50 @@ export function AdminDocuments() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-w-2xl">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-[var(--color-primary)]">Yüklenen Belgeler</h2>
+        </div>
+        
+        <div className="divide-y divide-gray-200">
+          {loadingDocs ? (
+            <div className="p-6 text-center text-gray-500">Yükleniyor...</div>
+          ) : documents.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              Henüz asistanın hafızasında yüklü bir site belgesi bulunmuyor.
+            </div>
+          ) : (
+            documents.map((doc, index) => {
+              const date = new Date(doc.upload_date).toLocaleDateString('tr-TR', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+              });
+              return (
+                <div key={index} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <File className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-[var(--color-primary)] font-medium mb-1">{doc.filename}</h3>
+                      <p className="text-sm text-gray-500">
+                        {doc.chunk_count} parça • {date}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleDelete(doc.filename)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Hafızadan Sil"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

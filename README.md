@@ -118,5 +118,23 @@ LawAgent/
 
 ---
 
+## 🎨 Proje Posteri (A1 Boyutu)
+
+Proje değerlendirmesi ve jüri sunumu için hazırlanan A1 boyutundaki (594x841 mm) akademik poster, HTML formatında `poster.html` dosyasında yer almaktadır. 
+
+Yüksek çözünürlüklü çıktıları (PNG ve PDF) otomatik olarak üretmek için Puppeteer betiğini çalıştırabilirsiniz:
+
+```bash
+# 1. Gerekli kütüphaneleri yükleyin (Puppeteer kurulu değilse)
+npm install puppeteer
+
+# 2. Poster çıktısını üretin
+node take_poster_screenshot.js
+```
+
+Bu işlem sonucunda aşağıdaki dosyalar güncellenecektir:
+- `lawagent_poster.png` (Ultra yüksek çözünürlüklü A1 görsel, 3600x5097 piksel)
+- `lawagent_poster.pdf` (Vektörel, jüriye sunulabilir A1 PDF belgesi)
+
 ## 📄 Lisans
 Bu proje Bitirme Projesi kapsamında geliştirilmiştir.

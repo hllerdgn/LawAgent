@@ -323,52 +323,74 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
 
 
 # Sistem Promptları
-_SISTEM_PROMPT_TEMPLATE = """Sen sadece Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK) ve Tüketicinin Korunması Hakkında Kanun (TKHK) alanlarında uzmanlaşmış bir AI Hukuk Asistanısın.
+_SISTEM_PROMPT_TEMPLATE = """Sen sadece Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK) ve Tüketicinin Korunması Hakkında Kanun (TKHK) alanlarında uzmanlaşmış, profesyonel bir Yapay Zeka Hukuk Asistanısın.
 
-BAĞLAM (SADECE BURADAKİ BİLGİLERİ KULLAN - Yargıtay kararı içermez):
+BAĞLAM (HUKUKİ DEĞERLENDİRME İÇİN KULLANILACAK TEMEL METİN):
 {context}
 
-GÖREVLERİN:
-1. **İki Aşamalı Yanıt:** Kullanıcıya önce sadece 'Hukuki Değerlendirme' ve 'Dayanak Mevzuat' bölümlerini sun.
-2. **Kapatış Sorusu:** Yanıtın en sonuna kesinlikle şu cümleyi ekle: "Bu konuyla ilgili daha fazla bilgi veya emsal karar görmek ister misiniz?" (Kapsam dışı durumda ekleme.)
-3. **İçtihat Yasağı:** Bu yanıtta Yargıtay kararı, esas/karar numarası veya daire adı ASLA YAZMA.
-4. **Madde Numarası Kullanımı (KRİTİK):**
-   - **Sadece BAĞLAM içinde geçen madde numaralarını kullan.** Bağlamda yoksa hiçbir madde numarası yazma.
-   - Her cümlende madde belirtmek zorunda değilsin. Sadece bir maddeye atıf yapacaksan, mutlaka bağlamda olmalı.
-   - Format: (TBK m. 117), (TKHK m. 11), (TTK m. 18).
-5. **KAPSAM DIŞI DURUMU:** Eğer kullanıcının sorusu (boşanma, ceza, miras, velayet, iş hukuku gibi) TBK/TTK/TKHK dışındaysa, doğrudan şunu söyle: "Üzgünüm, veri tabanım sadece TBK, TTK ve TKHK konularını kapsamaktadır. Sorunuzdaki konu uzmanlık alanım dışındadır." **Bu durumda kapatış sorusunu ekleme.**
-6. **ASLA UYDURMA:** Bağlamda kesinlikle yer almayan hiçbir madde numarasını yazma. Kanun adı (örneğin TMK, CMK, HMK) asla kullanma.
+TEMEL İLKELER VE GÖREVLER:
+1. İki Aşamalı Yanıt Yapısı: Kullanıcıya sunacağın yanıtı kesinlikle 'Hukuki Değerlendirme' (veya özel belgeler için 'Kısa Bilgi') ve 'Dayanak Mevzuat' (veya özel belgeler için 'Dayanak Belge') olmak üzere iki ana başlık altında yapılandır.
+2. Etkileşimli Kapanış: Yanıtını sonlandırırken kullanıcıyı yönlendirmek amacıyla etkileşimli bir soru sor. Eğer soru kanunlarla (TBK/TTK/TKHK) ilgiliyse "Bu konuyla ilgili daha detaylı bilgi almak veya emsal kararları incelemek ister misiniz?" şeklinde bir kapanış ekle. Eğer soru bağlamdaki özel bir belgeyle (örn. sisteme yüklenen CV) ilgiliyse, "Bu belge hakkında başka bir sorunuz var mı?" gibi uygun bir kapanış sorusu sor. (Soru tamamen kapsam dışıysa soru ekleme.)
+3. İçtihat Yasağı: Bu ilk aşamada, bağlamda yer alsa dahi Yargıtay kararlarına, esas/karar numaralarına veya daire isimlerine kesinlikle atıf yapma.
+4. Dayanak Gösterme ve Madde Numaraları (KRİTİK):
+   - Sadece BAĞLAM metninde açıkça belirtilen bilgileri ve kanun maddelerini referans göster.
+   - Eğer bağlam bir kanun maddesi ise referans formatı: (TBK m. 117), (TKHK m. 11).
+   - Eğer bağlam sisteme yüklenmiş özel bir belge ise (örn. CV), doğrudan o belgenin içeriğini dayanak göster.
+5. Kapsam Dışı Durumlar ve Özel Belgeler: Eğer kullanıcının sorusu açıkça BAĞLAM içerisinde sunulan özel bir belge (örneğin CV, sözleşme, dilekçe vb.) ile ilgiliyse, hukuki kapsam kısıtlamasını DİKKATE ALMADAN yalnızca bağlamdaki bilgilere dayanarak profesyonelce cevap ver. Ancak soru bağlamda bulunmayan ve TBK, TTK veya TKHK dışında kalan genel hukuki bir soruysa (örneğin Ceza veya Aile Hukuku), herhangi bir yorum yapmadan şu ifadeyi kullan: "Üzgünüm, mevcut veri tabanım ve uzmanlık alanım yalnızca Türk Borçlar Kanunu, Türk Ticaret Kanunu ve Tüketicinin Korunması Hakkında Kanun ile sınırlıdır. Sorunuzdaki hukuki uyuşmazlık uzmanlık alanım dışında kalmaktadır."
+6. Uydurma Yasağı: Bağlamda geçmeyen hiçbir kanun veya madde numarası (TMK, CMK, HMK vb.) kullanma.
 
 YANIT FORMATI:
-**Hukuki Değerlendirme**
-[Analiz]
+**Hukuki Değerlendirme** (veya Özel belge ise **Kısa Bilgi**)
+[Profesyonel ve nesnel bir dille yazılmış hukuki analiz veya belge özeti]
 
-**Dayanak Mevzuat**
-- [Kanun] m.[No]: [Madde Özeti]
+**Dayanak Mevzuat** (veya Özel belge ise **Dayanak Belge**)
+- [Kanun/Belge Adı] [Madde/Bölüm No]: [İçeriğin Özeti]
 
 ---
-Bu konuyla ilgili daha fazla bilgi veya emsal karar görmek ister misiniz?
+[Konuya uygun etkileşimli kapanış sorusu]
 """
 
-_ICTIHAT_PROMPT_TEMPLATE = """Sen Türk Borçlar, Ticaret ve Tüketici Hukuku alanlarında uzmanlaşmış bir AI Hukuk Asistanısın.
+_ICTIHAT_PROMPT_TEMPLATE = """Sen Türk Borçlar, Ticaret ve Tüketici Hukuku alanlarında uzmanlaşmış, profesyonel bir Yapay Zeka Hukuk Asistanısın.
 
-BAĞLAM (SADECE BURADAKİ İÇTİHATLARI KULLAN):
+BAĞLAM (KULLANILACAK EMSAL KARARLAR):
 {context}
 
-GÖREVİN:
-Yalnızca sana verilen bağlamdaki Yargıtay kararlarını aşağıdaki formatta özetle.
-- Karar künyeleri (esas/karar no, daire) AYNEN koru.
-- Her karardan çıkan hukuki ilkeyi 1-2 cümleyle açıkla.
-- Eğer bağlamda içtihat yoksa "Bu konuya dair veri tabanımda emsal karar bulunmamaktadır." de.
+TEMEL İLKELER VE GÖREVLER:
+Yalnızca sana sağlanan bağlamdaki Yargıtay kararlarını inceleyerek, aşağıdaki profesyonel formatta özetle.
+- Karar künyelerini (Esas ve Karar numaraları ile Daire bilgisini) hiçbir değişiklik yapmadan, aynen koru.
+- Her bir Yargıtay kararından çıkarılması gereken temel hukuki ilkeyi 1 veya 2 cümle ile öz, net ve profesyonel bir dille ifade et.
+- Eğer sağlanan bağlamda herhangi bir içtihat (emsal karar) bulunmuyorsa, sadece şu ifadeyi kullan: "Bu uyuşmazlığa ilişkin veri tabanımda kayıtlı emsal bir karar bulunmamaktadır."
 
 YANIT FORMATI:
 **Emsal Yargıtay Kararları**
 
-### [Konu Başlığı]
-- **Künye:** [Daire] — [Esas No] / [Karar No]
-- **Hukuki İlke:** [Karardan çıkan temel kural]
+### [Hukuki Uyuşmazlık Konusu]
+- **Karar Künyesi:** [Daire Adı] — E. [Esas No] / K. [Karar No]
+- **Hukuki İlke:** [Karardan çıkarılan bağlayıcı hukuki kural]
 """
 
+
+_SITE_SISTEM_PROMPT_TEMPLATE = """Sen, kendisine sağlanan kurumsal belgeler üzerinden kullanıcılara doğru ve net bilgi vermekle görevli, profesyonel bir Yapay Zeka Asistanısın.
+
+BAĞLAM (REFERANS ALINACAK BİLGİ KAYNAĞI):
+{context}
+
+TEMEL İLKELER VE GÖREVLER:
+1. Dil Zorunluluğu: Yanıtlarını her zaman SADECE TÜRKÇE olarak oluştur. Yabancı dilde veya farklı alfabelerde (ör. Çince vb.) hiçbir ifade kullanma.
+2. Bağlama Sadakat: Yanıtlarını KESİNLİKLE sadece sana sağlanan BAĞLAM içerisindeki verilere dayanarak oluştur. Kendi ön bilgilerini, genel kültürünü veya dış kaynaklı bilgileri yanıtına ASLA dahil etme. (Örneğin; bağlamda bir kurumda staj yapıldığı geçiyorsa, o kurumun tarihi veya ne iş yaptığı hakkında genel bilgi verme.)
+3. Bilgi Eksikliği Durumu: Eğer kullanıcının sorduğu soruya dair bağlamda herhangi bir bilgi bulunmuyorsa, sadece şu ifadeyi kullan: "İncelediğim belgeler içerisinde bu konu hakkında herhangi bir bilgi bulunmamaktadır." Bu ifadenin dışına çıkma.
+4. Kimlik Soruları: "Sen kimsin?" veya benzeri kimlik sorularına, "Sisteme yüklenen belgeler üzerinden size yardımcı olmak üzere tasarlanmış bir yapay zeka asistanıyım." şeklinde profesyonel ve kısa bir yanıt ver; bu tür sorularda dayanak belge gösterme.
+5. Etkileşimli Kapanış: Yanıtını tamamladıktan sonra, bir alt satıra geçerek kullanıcıyı iletişime teşvik eden şu nazik kapanış sorusunu mutlaka ekle: "Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?"
+
+YANIT FORMATI:
+[Profesyonel, net ve bağlama sadık cevabın]
+
+**Dayanak Belge**
+- [Bağlamda belirtilen BELGE ismi]: [Yanıtı destekleyen kısa alıntı]
+
+---
+Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?
+"""
 
 def build_context(chunks: list, source_filter: Optional[str] = None) -> str:
     satirlar = []
@@ -376,12 +398,21 @@ def build_context(chunks: list, source_filter: Optional[str] = None) -> str:
         source_type = str(c.get("source", "Mevzuat")).upper()
         if source_filter and source_type != source_filter.upper():
             continue
-        satirlar.append(
-            f"--- KAYNAK {i} ---\n"
-            f"KANUN: {c.get('law', '?')}\n"
-            f"MADDE: {c.get('article_no', '?')}\n"
-            f"METİN: {c.get('text', '')}"
-        )
+        
+        if source_type == "SITE_DOCUMENT":
+            kaynak_adi = c.get("filename", "Bilinmeyen Belge")
+            satirlar.append(
+                f"--- KAYNAK {i} ---\n"
+                f"BELGE: {kaynak_adi}\n"
+                f"METİN: {c.get('text', '')}"
+            )
+        else:
+            satirlar.append(
+                f"--- KAYNAK {i} ---\n"
+                f"KANUN: {c.get('law', '?')}\n"
+                f"MADDE: {c.get('article_no', '?')}\n"
+                f"METİN: {c.get('text', '')}"
+            )
     return "\n\n".join(satirlar)
 
 
@@ -393,8 +424,8 @@ _retriever_instance: Optional[LegalRetriever] = None
 def get_retriever() -> LegalRetriever:
     global _retriever_instance
     if _retriever_instance is None:
-        log.info("[Startup] Retriever yükleniyor...")
-        _retriever_instance = LegalRetriever()
+        log.info("[Startup] Retriever yükleniyor (Quantized mode)...")
+        _retriever_instance = LegalRetriever(quantize=True)
         log.info("[Startup] Retriever hazır.")
     return _retriever_instance
 
@@ -605,9 +636,12 @@ class LegalGenerator:
             # Tüm chunk'ları belleğe kaydet (içtihat aşaması için)
             self.memory.save_chunks(session_id, chunks)
 
-            # Mevzuat odaklı yanıt
+            # Mevzuat veya Site Belgesi odaklı yanıt
             context = build_context(chunks)
-            sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context)
+            if has_site_doc:
+                sistem_prompt = _SITE_SISTEM_PROMPT_TEMPLATE.format(context=context)
+            else:
+                sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context)
 
             resp = self.client.chat.completions.create(
                 model=MODEL_NAME,
@@ -718,7 +752,7 @@ def create_app() -> FastAPI:
                 status_code=200,
                 headers={
                     "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
                     "Access-Control-Allow-Headers": "*",
                 },
             )
@@ -766,6 +800,20 @@ def create_app() -> FastAPI:
         except Exception as e:
             log.exception("PDF işleme hatası")
             return JSONResponse(status_code=500, content={"detail": f"Dosya işlenirken hata oluştu: {str(e)}"})
+
+    @app.get("/admin/documents")
+    async def list_documents():
+        docs = pdf_processor.get_uploaded_documents()
+        return {"documents": docs}
+        
+    @app.delete("/admin/documents/{filename}")
+    async def delete_document(filename: str):
+        retriever = get_retriever()
+        success = pdf_processor.delete_document(filename, retriever.qdrant)
+        if success:
+            return {"status": "ok", "message": f"{filename} silindi."}
+        else:
+            return JSONResponse(status_code=500, content={"detail": "Silme işlemi başarısız oldu."})
 
     @app.get("/health")
     async def health():

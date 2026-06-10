@@ -1,7 +1,81 @@
 import uuid
 import fitz
+import json
+import os
+from datetime import datetime
 from typing import List
 from qdrant_client.http import models as qmodels
+
+SITE_COLLECTION_NAME = "site_corpus"
+DOCS_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "site_documents.json")
+
+def get_uploaded_documents() -> List[dict]:
+    if not os.path.exists(DOCS_FILE):
+        return []
+    try:
+        with open(DOCS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_document_metadata(filename: str, chunk_count: int):
+    docs = get_uploaded_documents()
+    # Check if already exists, if so update it
+    exists = False
+    for d in docs:
+        if d["filename"] == filename:
+            d["chunk_count"] = chunk_count
+            d["upload_date"] = datetime.now().isoformat()
+            exists = True
+            break
+    if not exists:
+        docs.append({
+            "filename": filename,
+            "chunk_count": chunk_count,
+            "upload_date": datetime.now().isoformat()
+        })
+    
+    os.makedirs(os.path.dirname(DOCS_FILE), exist_ok=True)
+    with open(DOCS_FILE, "w", encoding="utf-8") as f:
+        json.dump(docs, f, ensure_ascii=False, indent=4)
+
+def delete_document(filename: str, qdrant) -> bool:
+    try:
+        # Create index if it doesn't exist (required for filtering)
+        try:
+            qdrant.create_payload_index(
+                collection_name=SITE_COLLECTION_NAME,
+                field_name="filename",
+                field_schema=qmodels.PayloadSchemaType.KEYWORD,
+            )
+        except Exception as idx_err:
+            pass
+            
+        # Delete from Qdrant
+        qdrant.delete(
+            collection_name=SITE_COLLECTION_NAME,
+            points_selector=qmodels.FilterSelector(
+                filter=qmodels.Filter(
+                    must=[
+                        qmodels.FieldCondition(
+                            key="filename",
+                            match=qmodels.MatchValue(value=filename)
+                        )
+                    ]
+                )
+            )
+        )
+        
+        # Delete from JSON
+        docs = get_uploaded_documents()
+        docs = [d for d in docs if d["filename"] != filename]
+        with open(DOCS_FILE, "w", encoding="utf-8") as f:
+            json.dump(docs, f, ensure_ascii=False, indent=4)
+            
+        return True
+    except Exception as e:
+        print(f"Delete document error: {e}")
+        return False
 
 SITE_COLLECTION_NAME = "site_corpus"
 
@@ -61,5 +135,7 @@ def process_and_index_pdf(pdf_bytes: bytes, filename: str, embedder, qdrant) -> 
             )
         qdrant.upsert(collection_name=SITE_COLLECTION_NAME, points=points)
         total_added += len(points)
+        
+    save_document_metadata(filename, total_added)
         
     return total_added

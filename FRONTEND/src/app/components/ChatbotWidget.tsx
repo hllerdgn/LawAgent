@@ -10,6 +10,7 @@ import {
   StopCircle,
   Home,
   BookOpen,
+  FileText,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -184,6 +185,13 @@ function condenseActionText(original: string): string {
   return cleaned || original.substring(0, 35);
 }
 
+// ---------- LAW CATEGORIES ----------
+const LAW_CATEGORIES = [
+  { label: "Borçlar Hukuku", query: "Borçlar hukuku kapsamında temel haklarım nelerdir?" },
+  { label: "Ticaret Hukuku", query: "Ticaret hukuku kapsamında şirket kuruluşu nasıl yapılır?" },
+  { label: "Tüketici Hukuku", query: "Tüketici hakları nelerdir?" },
+];
+
 // ---------- TYPES ----------
 interface LawSource {
   kanun: string;
@@ -293,7 +301,7 @@ const BotMessageContent = ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#C89C5D] underline hover:opacity-80"
+            className="text-[#C89C5D] underline hover:opacity-80 font-semibold"
           >
             {children}
           </a>
@@ -305,6 +313,30 @@ const BotMessageContent = ({
   );
 };
 
+// ---------- SOURCE CHIP ----------
+const SourceChip = ({
+  source,
+  onClick,
+}: {
+  source: LawSource;
+  onClick: (source: LawSource) => void;
+}) => {
+  const label = source.madde
+    ? `${source.kanun} m. ${source.madde}`
+    : source.kanun;
+
+  return (
+    <button
+      onClick={() => onClick(source)}
+      className="source-chip-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+      title={source.ozet}
+    >
+      <FileText className="w-3 h-3 flex-shrink-0" />
+      <span className="truncate max-w-[120px]">{label}</span>
+    </button>
+  );
+};
+
 // ---------- MESSAGE BUBBLE ----------
 const MessageBubble = ({
   message,
@@ -312,6 +344,7 @@ const MessageBubble = ({
   shouldStopTyping,
   activeTypingMessageId,
   onTypingStatusChange,
+  onSourceClick,
   visibleActions,
   selectedAction,
   onActionClick,
@@ -342,7 +375,7 @@ const MessageBubble = ({
 
       <div
         className={cn(
-          "flex flex-col gap-2",
+          "flex flex-col gap-1",
           message.sender === "user"
             ? "max-w-[85%]"
             : isSystem
@@ -354,10 +387,10 @@ const MessageBubble = ({
           className={cn(
             "rounded-2xl text-[13px] leading-relaxed shadow-sm",
             message.sender === "user"
-              ? "bg-gradient-to-br from-[#0B1F3B] to-[#071628] text-white rounded-br-md px-3 py-2"
+              ? "bg-gradient-to-br from-[#0B1F3B] to-[#071628] text-white rounded-br-md px-3.5 py-2.5"
               : isSystem
                 ? "bg-gray-100 text-gray-600 text-center rounded-xl border border-gray-200 px-4 py-2"
-                : "bg-white/90 backdrop-blur-sm text-gray-800 rounded-bl-md border border-gray-100 px-3 py-2",
+                : "bg-white/95 backdrop-blur-sm text-gray-800 rounded-bl-md border border-gray-100/80 px-3.5 py-3",
           )}
         >
           {message.isLoading ? (
@@ -369,6 +402,11 @@ const MessageBubble = ({
             </div>
           ) : (
             <>
+              {message.sender === "bot" && !isSystem && (
+                <div className="font-bold text-[#0B1F3B] text-[13px] mb-1.5">
+                  LawAgent AI
+                </div>
+              )}
               {message.sender === "bot" && !isSystem ? (
                 <BotMessageContent
                   content={message.content || message.text || ""}
@@ -386,6 +424,33 @@ const MessageBubble = ({
             </>
           )}
         </div>
+
+        {/* Source chips - poster style */}
+        {message.sender === "bot" &&
+          !isSystem &&
+          !message.isLoading &&
+          message.sources &&
+          message.sources.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-1 ml-1">
+              {message.sources
+                .filter(
+                  (s, i, arr) =>
+                    arr.findIndex(
+                      (x) => x.kanun === s.kanun && x.madde === s.madde,
+                    ) === i,
+                )
+                .slice(0, 4)
+                .map((source, idx) => (
+                  <SourceChip
+                    key={idx}
+                    source={source}
+                    onClick={onSourceClick || (() => {})}
+                  />
+                ))}
+            </div>
+          )}
+
+        {/* Action buttons */}
         {message.sender === "bot" &&
           !isSystem &&
           message.actions &&
@@ -393,7 +458,7 @@ const MessageBubble = ({
           !message.isLoading &&
           !message.actionsDisabled &&
           visibleActions[message.id] && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2 mt-2">
               {message.actions.map((action, idx) => {
                 const isSelected = selectedAction[message.id] === idx;
                 const shouldHide =
@@ -458,6 +523,7 @@ export function ChatbotWidget() {
       content:
         "Merhaba! LawAgent AI hukuki asistanına hoş geldiniz. Size nasıl yardımcı olabilirim?",
       actions: [],
+      sources: [],
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -551,6 +617,10 @@ export function ChatbotWidget() {
     handleSend(action);
   };
 
+  const handleCategoryClick = (query: string) => {
+    handleSend(query);
+  };
+
   const handleSend = async (text?: string) => {
     const messageText = text || inputValue.trim();
     if (!messageText) return;
@@ -632,7 +702,7 @@ export function ChatbotWidget() {
 
     const sendRequest = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL || ""}/ask`;
+        const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:7860"}/ask`;
         const controller = new AbortController();
         abortControllerRef.current = controller;
         const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -660,6 +730,15 @@ export function ChatbotWidget() {
         let parsed = parseMessage(rawAnswer);
         const enrichedContent = enrichLegalLinks(parsed.content);
 
+        // Extract sources from API response
+        const apiSources: LawSource[] = (data.sources || []).map(
+          (s: { kanun?: string; madde?: string; ozet?: string }) => ({
+            kanun: s.kanun || "Mevzuat",
+            madde: s.madde || "",
+            ozet: s.ozet || "",
+          }),
+        );
+
         setMessages((prev) => prev.filter((msg) => msg.id !== botLoadingId));
         const newMessageId = botLoadingId;
         setMessages((prev) => [
@@ -670,7 +749,7 @@ export function ChatbotWidget() {
             content: enrichedContent,
             sender: "bot",
             actions: parsed.actions,
-            sources: [],
+            sources: apiSources,
             isLoading: false,
             actionsDisabled: false,
           },
@@ -849,25 +928,28 @@ export function ChatbotWidget() {
               : undefined
           }
         >
-          <div className="bg-gradient-to-r from-[#0B1F3B] to-[#071628] p-4 flex items-center justify-between shadow-lg">
+          {/* Header - poster style */}
+          <div className="bg-gradient-to-r from-[#1e3a5f] to-[#152b47] p-4 flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#C89C5D] to-[#B38A4D] rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-xl flex items-center justify-center shadow-md">
                 <Scale className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-white font-semibold text-sm">
+                  <h2 className="text-white font-bold text-sm tracking-wide">
                     {!isDesktop ? "LawAgent" : "LawAgent AI"}
                   </h2>
                   <span
                     className={`w-2 h-2 rounded-full ${
                       connectionStatus === "online"
-                        ? "bg-green-500 animate-pulse"
+                        ? "bg-green-400 animate-pulse"
                         : "bg-red-500"
                     }`}
                   />
                 </div>
-                {isDesktop && <p className="text-gray-400 text-xs">Hukuki Asistan</p>}
+                <p className="text-[#93c5fd] text-xs font-medium">
+                  AI Hukuk Asistanı
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -882,7 +964,9 @@ export function ChatbotWidget() {
                     title="Ana Sayfa"
                   >
                     <Home className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-medium hidden sm:inline">Ana Sayfa</span>
+                    <span className="text-[11px] font-medium hidden sm:inline">
+                      Ana Sayfa
+                    </span>
                   </button>
                   <button
                     onClick={() => {
@@ -893,7 +977,9 @@ export function ChatbotWidget() {
                     title="Hakkımızda"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-medium hidden sm:inline">Hakkımızda</span>
+                    <span className="text-[11px] font-medium hidden sm:inline">
+                      Hakkımızda
+                    </span>
                   </button>
                 </div>
               )}
@@ -931,6 +1017,26 @@ export function ChatbotWidget() {
               </button>
             </div>
           </div>
+
+          {/* Law Category Chips - poster style */}
+          <div className="category-chips-bar bg-[#f8fafc] border-b border-[#e2e8f0] px-4 py-2.5 flex-shrink-0">
+            <div className="text-[9px] font-bold text-[#94a3b8] tracking-wider uppercase mb-1.5">
+              HUKUK KATEGORİLERİ
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {LAW_CATEGORIES.map((cat, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleCategoryClick(cat.query)}
+                  className="category-chip px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#e2e8f0] bg-white text-[#475569] hover:bg-[#f1f5f9] hover:border-[#C89C5D] hover:text-[#0B1F3B] transition-all duration-200 hover:shadow-sm active:scale-95 cursor-pointer"
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Info banner */}
           <div className="bg-blue-50/50 border-b border-blue-100 px-4 py-2 text-[10px] text-blue-800 leading-tight flex items-start gap-2">
             <Info className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
             <span>
@@ -939,9 +1045,14 @@ export function ChatbotWidget() {
               iletişime geçin.
             </span>
           </div>
+
+          {/* Messages area - poster gradient style */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+            className="flex-1 overflow-y-auto p-4 space-y-4"
+            style={{
+              background: "linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)",
+            }}
           >
             {messages.map((message) => {
               const isSystem = message.sender === "system";
@@ -961,6 +1072,8 @@ export function ChatbotWidget() {
               );
             })}
           </div>
+
+          {/* Resize handle */}
           {!isFullscreen && isDesktop && (
             <div
               ref={resizeRef}
@@ -979,31 +1092,38 @@ export function ChatbotWidget() {
               </div>
             </div>
           )}
-          <div className="p-4 border-t bg-white relative">
-            <div className="flex items-center gap-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl px-3 py-2 border border-gray-200 focus-within:border-[#0B1F3B]">
-              <input
-                type="text"
-                placeholder="Hukuki sorunuzu yazın…"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                className="flex-1 bg-transparent outline-none text-sm text-gray-700"
-                disabled={connectionStatus === "offline"}
-              />
+
+          {/* Input area - poster style */}
+          <div className="p-3.5 border-t border-[#e5e7eb] bg-white">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 flex items-center bg-[#f9fafb] rounded-xl px-3.5 py-2.5 border-[1.5px] border-[#e5e7eb] focus-within:border-[#1e3a5f] transition-colors">
+                <input
+                  type="text"
+                  placeholder="Mesajınızı yazın..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-[#9ca3af]"
+                  disabled={connectionStatus === "offline"}
+                />
+              </div>
               <button
                 onClick={() => handleSend()}
                 disabled={!inputValue.trim() || connectionStatus === "offline"}
-                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gradient-to-br from-[#0B1F3B] to-[#071628] text-white hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#152b47] text-white hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-2 text-center">
-              LawAgent AI | Hukuki Asistan
+            <p className="text-[9px] text-[#94a3b8] mt-2 text-center font-medium">
+              LawAgent AI, verdiği yanıtları güvenilir hukuki kaynaklara
+              dayandırır.
             </p>
           </div>
         </div>
       )}
+
+      {/* Source Modal */}
       {showSourceModal && selectedSource && (
         <div
           className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
@@ -1015,30 +1135,36 @@ export function ChatbotWidget() {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#C89C5D] to-[#B38A4D] rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#C89C5D] to-[#B38A4D] rounded-xl flex items-center justify-center shadow-md">
                   <Scale className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-[#0B1F3B] font-bold">
-                    {selectedSource.kanun} - Madde {selectedSource.madde}
+                  <h3 className="text-[#0B1F3B] font-bold text-base">
+                    {selectedSource.kanun}
+                    {selectedSource.madde &&
+                      ` - Madde ${selectedSource.madde}`}
                   </h3>
-                  <p className="text-xs text-gray-500">Hukuki Kaynak Detayı</p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Hukuki Kaynak Detayı
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowSourceModal(false)}
-                className="text-gray-400 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-700 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border-l-4 border-[#C89C5D]">
-              <p className="text-sm text-slate-700">"{selectedSource.ozet}"</p>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                "{selectedSource.ozet}"
+              </p>
             </div>
             <div className="mt-5 flex justify-end">
               <button
                 onClick={() => setShowSourceModal(false)}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#0B1F3B] to-[#071628] text-white rounded-lg"
+                className="px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#152b47] text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all"
               >
                 Anladım
               </button>
@@ -1061,10 +1187,26 @@ export function ChatbotWidget() {
         .overflow-y-auto::-webkit-scrollbar-thumb { background: #C89C5D; border-radius: 10px; }
         .cursor-nwse-resize { cursor: nwse-resize; }
         ${isResizing ? "body { user-select: none; }" : ""}
+
+        /* Source chip styles - poster design */
+        .source-chip-btn {
+          background: #fef3c7;
+          color: #92400e;
+          border: 1px solid #fde68a;
+        }
+        .source-chip-btn:hover {
+          background: #fde68a;
+          border-color: #C89C5D;
+          box-shadow: 0 2px 8px rgba(200, 156, 93, 0.2);
+        }
+
+        /* Category chip hover effect */
+        .category-chip:hover {
+          transform: translateY(-1px);
+        }
       `}</style>
     </>
   );
 }
 
 export default ChatbotWidget;
-
