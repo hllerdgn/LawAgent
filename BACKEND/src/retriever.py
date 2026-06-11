@@ -6,7 +6,6 @@ import re
 import logging
 import atexit
 import warnings
-import copyreg
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
