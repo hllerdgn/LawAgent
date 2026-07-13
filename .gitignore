@@ -26,6 +26,7 @@ dist-ssr/
 # Corpus ve chunk dosyaları (büyük JSON dosyaları)
 BACKEND/src/data/*.json
 BACKEND/src/data/*.pkl
+BACKEND/src/data/*.pt
 BACKEND/src/data/qdrant_storage/
 qdrant_storage/
 *.db
@@ -33,7 +34,32 @@ qdrant_storage/
 *.index
 
 # ════════════════════════════════════════════════
-# 4. İŞLETİM SİSTEMİ & ARAÇLAR (Colab / Drive)
+# 4. POSTER, MEDYA VE OLUŞTURULAN DOSYALAR
+# ════════════════════════════════════════════════
+# Poster ve görsel dosyaları (oluşturulan / büyük dosyalar)
+*.pdf
+*.svg
+*.pptx
+*.docx
+lawagent_poster.png
+lawagent_qr.png
+lawagent_chatbot_screenshot.png
+poster_preview.png
+poster_preview_with_qr.png
+QR_Kodum_1-1024.png
+# Poster oluşturma araçları
+poster.html
+screenshot_chatbot.html
+take_poster_screenshot.js
+take_screenshot.js
+# Kök dizin node_modules (Puppeteer araçları için kurulmuştu)
+/package.json
+
+# İstisna: Uygulama ekran görüntüsü README için tutulacak
+!lawagent_chatbot_screenshot.png
+
+# ════════════════════════════════════════════════
+# 5. İŞLETİM SİSTEMİ & ARAÇLAR
 # ════════════════════════════════════════════════
 .DS_Store
 Thumbs.db
@@ -43,13 +69,12 @@ Thumbs.db
 *.swp
 
 # ════════════════════════════════════════════════
-# 5. DOCKER
+# 6. DOCKER
 # ════════════════════════════════════════════════
 # .dockerignore GitHub'a eklensin (Docker kullanıcıları için gerekli)
-# .dockerignore  <-- bu satırı aktif etmeyin
 
 # ════════════════════════════════════════════════
-# 6. LOG DOSYALARI VE GEÇİCİ DOSYALAR
+# 7. LOG DOSYALARI VE GEÇİCİ DOSYALAR
 # ════════════════════════════════════════════════
 *.log
 BACKEND/logs/
@@ -58,14 +83,14 @@ logs/
 *.temp
 
 # ════════════════════════════════════════════════
-# 7B. AÇIKÇA TAKİP EDİLECEKLER (override)
+# 8. AÇIKÇA TAKİP EDİLECEKLER (override)
 # ════════════════════════════════════════════════
 # .env.example her zaman git'e eklensin:
 !.env.example
 !BACKEND/src/data/.gitkeep
 
 # ════════════════════════════════════════════════
-# 7. PAKET YÖNETİMİ
+# 9. PAKET YÖNETİMİ
 # ════════════════════════════════════════════════
 # Python
 *.egg-info/
@@ -85,9 +110,8 @@ report.[0-9]*.[0-9]*.[0-9]*.json
 .pnp.loader.mjs
 .npm
 
-
 # ════════════════════════════════════════════════
-# 8. CACHE VE DERLEME DOSYALARI
+# 10. CACHE VE DERLEME DOSYALARI
 # ════════════════════════════════════════════════
 .cache
 .parcel-cache
@@ -103,7 +127,7 @@ dist/
 .vercel/
 
 # ════════════════════════════════════════════════
-# 9. EDITÖR VE IDE DOSYALARI
+# 11. EDITÖR VE IDE DOSYALARI
 # ════════════════════════════════════════════════
 .vscode/
 .idea/

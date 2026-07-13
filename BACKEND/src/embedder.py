@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import uuid
+import logging
 from pathlib import Path
 
 # services/ klasörü BACKEND/ kökünde — hangi dizinden çalıştırılırsa çalıştırılsın bulsun
@@ -32,45 +33,92 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
 from services.qdrant_client import get_qdrant_client
 
-# Paths
+# Logging Yapılandırması
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("LawAgent.Embedder")
 
-BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR      = os.path.join(BASE_DIR, "data")
-MODEL_NAME    = "newmindai/Mursit-Base-TR-Retrieval"
+# tqdm Entegrasyonu (Yüklü değilse fallback fonksiyonu çalışır)
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(iterable, desc=None, total=None, **kwargs):
+        log.info(f"{desc or 'İşlem yapılıyor'}...")
+        return iterable
+
+# Yollar ve Sabitler
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+MODEL_NAME = "newmindai/Mursit-Base-TR-Retrieval"
 COLLECTION_NAME = "lawagent_mursit"
-CHUNK_CORPUS  = os.path.join(DATA_DIR, "chunk_corpus.json")
+CHUNK_CORPUS = os.path.join(DATA_DIR, "chunk_corpus.json")
 QUANTIZE_PATH = os.path.join(DATA_DIR, "mursit_int8.pt")
-BATCH_SIZE    = 32
 DISTANCE_METRIC = qmodels.Distance.COSINE
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# AĞ TOLERANSI (QDRANT RETRY YARDIMCISI)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# Embedder
+def qdrant_retry(func, *args, retries: int = 5, delay: float = 1.0, **kwargs):
+    """Qdrant işlemleri sırasında oluşabilecek ağ kesintilerine karşı üstel geri çekilmeli retry mekanizması."""
+    for i in range(retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if i == retries - 1:
+                raise e
+            wait_time = delay * (2 ** i)
+            log.warning(f"Qdrant sorgu hatası (Deneme {i+1}/{retries}): {e}. {wait_time}s bekleniyor...")
+            time.sleep(wait_time)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MURSIT EMBEDDER SINIFI
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class MursitEmbedder:
     """
     Mursit-Base-TR-Retrieval için embedding sınıfı.
-
-    quantize=False → float32  (~594 MB RAM, ~145 ms/sorgu)
-    quantize=True  → int8     (~173 MB RAM,  ~94 ms/sorgu,  %3 MRR kaybı)
+    GPU ivmelendirme (CUDA/MPS) ve CPU kuantizasyon yönetimi içerir.
     """
 
-    def __init__(self, quantize: bool = False):
+    def __init__(self, quantize: bool = False, device: str = None):
         self.quantize = quantize
-        self.device   = "cpu"
+        
+        # Cihaz Otomatik Algılama
+        if quantize:
+            self.device = "cpu"
+            if device and device != "cpu":
+                log.warning("Kuantizasyon sadece CPU üzerinde desteklenir. Cihaz 'cpu' olarak zorlandı.")
+        else:
+            if device:
+                self.device = device
+            else:
+                if torch.cuda.is_available():
+                    self.device = "cuda"
+                elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                    self.device = "mps"
+                else:
+                    self.device = "cpu"
 
-        fmt = "int8" if quantize else "float32"
-        print(f"[Mursit] Model yükleniyor ({fmt})...")
+        log.info(f"[Mursit] Model yükleniyor ({self.device} - {'int8' if quantize else 'float32'})...")
         t0 = time.time()
 
-        self.st = SentenceTransformer(MODEL_NAME, device=self.device)
+        try:
+            self.st = SentenceTransformer(MODEL_NAME, device=self.device, local_files_only=True)
+        except Exception as e:
+            log.warning(f"Çevrimdışı model yükleme başarısız ({e}), çevrimiçi deneniyor...")
+            self.st = SentenceTransformer(MODEL_NAME, device=self.device)
+        
         self.vector_size = self.st.get_embedding_dimension()
 
         if quantize:
             self._load_or_quantize()
 
-        print(f"[Mursit] Hazır — {time.time()-t0:.1f}s | dim={self.vector_size}")
-
-
+        log.info(f"[Mursit] Hazır — {time.time()-t0:.1f}s | dim={self.vector_size}")
 
     def _load_or_quantize(self) -> None:
         transformer_module = self.st._first_module().auto_model
@@ -80,35 +128,33 @@ class MursitEmbedder:
         )
 
         if os.path.exists(QUANTIZE_PATH):
-            print("[Mursit] Kaydedilmiş int8 ağırlıklar yükleniyor...")
+            log.info("Kaydedilmiş int8 ağırlıklar yükleniyor...")
             try:
                 state = torch.load(QUANTIZE_PATH, map_location="cpu")
                 quantized.load_state_dict(state)
             except Exception as e:
-                print(f"[UYARI] Kaydedilmiş int8 yüklenemedi, sıfırdan quantize edildi: {e}")
+                log.warning(f"Kaydedilmiş int8 yüklenemedi, sıfırdan kuantize ediliyor: {e}")
         else:
-            print("[Mursit] Quantize ediliyor (ilk kez)...")
+            log.info("Model dinamik olarak kuantize ediliyor (ilk kez)...")
             os.makedirs(os.path.dirname(QUANTIZE_PATH) or ".", exist_ok=True)
             torch.save(quantized.state_dict(), QUANTIZE_PATH)
-            print(f"[Mursit] int8 kaydedildi → {QUANTIZE_PATH}")
+            log.info(f"int8 ağırlıklar kaydedildi -> {QUANTIZE_PATH}")
 
         self.st._first_module().auto_model = quantized
 
-
-
-    def encode(self, texts: list[str], normalize: bool = True) -> list:
-        """Liste halinde metinleri vektöre çevirir → Python list of list[float]."""
+    def encode(self, texts: list[str], batch_size: int = 32, normalize: bool = True) -> list:
+        """Liste halindeki metinleri vektöre çevirir (Python list of list[float])."""
         return self.st.encode(
             texts,
             normalize_embeddings=normalize,
             show_progress_bar=False,
-            batch_size=BATCH_SIZE,
+            batch_size=batch_size,
         ).tolist()
 
     def encode_single(self, text: str, normalize: bool = True) -> list[float]:
-        """Sorguyu Mursit formatına uygun prefix ile vektöre çevirir."""
+        """Arama sorgusunu Mürşit modeline uygun prefix ile vektöre çevirir."""
         prefix = "query: "
-        full_text = prefix + text.strip() # Boşlukları temizle
+        full_text = prefix + text.strip()
         
         return self.st.encode(
             full_text, 
@@ -119,15 +165,17 @@ class MursitEmbedder:
 
     def kaydet(self, yol: str = QUANTIZE_PATH) -> None:
         if not self.quantize:
-            print("[UYARI] float32 model kaydedilmiyor. --quantize ile çalıştır.")
+            log.warning("float32 model kaydedilmiyor. Lütfen --quantize ile çalıştırın.")
             return
         os.makedirs(os.path.dirname(yol) or ".", exist_ok=True)
         torch.save(self.st._first_module().auto_model.state_dict(), yol)
         mb = os.path.getsize(yol) / 1024 / 1024
-        print(f"[Mursit] int8 kaydedildi → {yol} ({mb:.1f} MB)")
+        log.info(f"int8 kaydedildi -> {yol} ({mb:.1f} MB)")
 
 
-# Qdrant Helpers
+# ═══════════════════════════════════════════════════════════════════════════════
+# QDRANT YARDIMCI FONKSİYONLARI
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def _chunk_id_to_uint64(cid: str) -> int:
     return uuid.uuid5(uuid.NAMESPACE_DNS, str(cid)).int >> 64
@@ -138,48 +186,55 @@ def _get_existing_ids(client: QdrantClient, corpus: list) -> set:
     existing = set()
     for i in range(0, len(ids), 1000):
         try:
-            points = client.retrieve(
+            points = qdrant_retry(
+                client.retrieve,
                 collection_name=COLLECTION_NAME,
                 ids=ids[i : i + 1000],
                 with_payload=False,
                 with_vectors=False,
             )
             existing.update(p.id for p in points)
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning(f"Qdrant'tan mevcut ID'ler çekilirken hata oluştu: {e}")
     return existing
 
 
-def _ensure_collection(
-    client: QdrantClient, vector_size: int, reset: bool
-) -> None:
-    existing = [c.name for c in client.get_collections().collections]
+def _ensure_collection(client: QdrantClient, vector_size: int, reset: bool) -> None:
+    collections_res = qdrant_retry(client.get_collections)
+    existing = [c.name for c in collections_res.collections]
+    
     if reset and COLLECTION_NAME in existing:
-        client.delete_collection(COLLECTION_NAME)
-        print(f"[Qdrant] Collection silindi: {COLLECTION_NAME}")
+        qdrant_retry(client.delete_collection, COLLECTION_NAME)
+        log.info(f"Collection silindi: {COLLECTION_NAME}")
         existing.remove(COLLECTION_NAME)
+        
     if COLLECTION_NAME not in existing:
-        client.create_collection(
+        qdrant_retry(
+            client.create_collection,
             COLLECTION_NAME,
             vectors_config=qmodels.VectorParams(
                 size=vector_size, distance=DISTANCE_METRIC
             ),
         )
-        print(f"[Qdrant] Collection oluşturuldu: {COLLECTION_NAME}")
+        log.info(f"Collection oluşturuldu: {COLLECTION_NAME}")
     else:
-        count = client.count(COLLECTION_NAME).count
-        print(f"[Qdrant] Mevcut: {COLLECTION_NAME} ({count} kayıt)")
+        count = qdrant_retry(client.count, COLLECTION_NAME).count
+        log.info(f"Collection mevcut: {COLLECTION_NAME} ({count} kayıt)")
 
 
-# Embed Corpus
+# ═══════════════════════════════════════════════════════════════════════════════
+# VERİ TABANI OLUŞTURMA (EMBED CORPUS)
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def embed_corpus(
     reset: bool = False,
     test_mode: bool = False,
     quantize: bool = False,
+    batch_size: int = 32,
+    device: str = None,
 ) -> None:
     if not os.path.exists(CHUNK_CORPUS):
-        print(f"[HATA] {CHUNK_CORPUS} bulunamadı. Önce legal_chunker.py çalıştır.")
+        log.error(f"{CHUNK_CORPUS} bulunamadı. Önce legal_chunker.py çalıştırılmalı.")
         return
 
     with open(CHUNK_CORPUS, "r", encoding="utf-8") as f:
@@ -187,82 +242,91 @@ def embed_corpus(
 
     if test_mode:
         corpus = corpus[:20]
-        print("[Test] Sadece ilk 20 chunk işlenecek.")
+        log.info("Test modu aktif: Sadece ilk 20 chunk işlenecek.")
 
-    embedder = MursitEmbedder(quantize=quantize)
-    client   = get_qdrant_client()
+    embedder = MursitEmbedder(quantize=quantize, device=device)
+    client = get_qdrant_client()
 
     _ensure_collection(client, embedder.vector_size, reset)
 
     existing = set() if reset else _get_existing_ids(client, corpus)
-    yeni     = [c for c in corpus if _chunk_id_to_uint64(c["chunk_id"]) not in existing]
+    yeni = [c for c in corpus if _chunk_id_to_uint64(c["chunk_id"]) not in existing]
     
-    print(
-        f"[Embed] Toplam={len(corpus)} | Mevcut={len(existing)} | Eklenecek={len(yeni)}"
-    )
+    log.info(f"Veri Durumu: Toplam={len(corpus)} | Mevcut={len(existing)} | Eklenecek={len(yeni)}")
     if not yeni:
-        print("[Embed] Her şey güncel, işlem yok.")
+        log.info("Tüm veriler güncel. Eklenecek yeni chunk yok.")
         return
 
-    t0, eklenen, toplam = time.time(), 0, len(yeni)
+    t0 = time.time()
+    eklenen = 0
+    toplam = len(yeni)
 
-    for i in range(0, toplam, BATCH_SIZE):
-        batch = yeni[i : i + BATCH_SIZE]
+    for i in tqdm(range(0, toplam, batch_size), desc="Vektörleştirme ve Yükleme", total=(toplam + batch_size - 1) // batch_size):
+        batch = yeni[i : i + batch_size]
         enriched_texts = []
         for c in batch:
             source = c.get("source", "")
-            text = c.get("text","")
+            text = c.get("text", "")
 
             if source == "yargitay":
                 enriched_texts.append(f"Yargıtay Kararı {c.get('decision_id', '')}: {text}")
             else:
-                #Mevzuat için Kanun + Madde + Text
-                enriched_texts.append(f"{c.get('law','')} Madde {c.get('article_no', '')}: {text}")
+                enriched_texts.append(f"{c.get('law', '')} Madde {c.get('article_no', '')}: {text}")
 
-        vecs  = embedder.encode(enriched_texts)
+        # Vektörleri hesapla
+        vecs = embedder.encode(enriched_texts, batch_size=batch_size)
 
         points = [
             qmodels.PointStruct(
                 id=_chunk_id_to_uint64(c["chunk_id"]),
                 vector=vecs[idx],
                 payload={
-                    "chunk_id":   c.get("chunk_id", ""),
-                    "text":       c.get("text", ""),
-                    "law":        c.get("law", ""),
+                    "chunk_id": c.get("chunk_id", ""),
+                    "text": c.get("text", ""),
+                    "law": c.get("law", ""),
                     "article_no": c.get("article_no", ""),
-                    "source":     c.get("source", ""),
-                    "decision_id":c.get("decision_id", ""),
-                    "token_len":  c.get("token_len", 0),
-                    "atiflar":    c.get("atiflar", []) #mevzuat-içtihat köprüsü
+                    "source": c.get("source", ""),
+                    "decision_id": c.get("decision_id", ""),
+                    "token_len": c.get("token_len", 0),
+                    "atiflar": c.get("atiflar", [])
                 },
             )
             for idx, c in enumerate(batch)
         ]
-        client.upsert(collection_name=COLLECTION_NAME, points=points)
-
+        
+        # Qdrant'a yükle (Retry korumalı)
+        qdrant_retry(client.upsert, collection_name=COLLECTION_NAME, points=points)
         eklenen += len(batch)
-        elapsed  = time.time() - t0
-        remaining = (elapsed / eklenen) * (toplam - eklenen) if eklenen else 0
-        print(
-            f"  {eklenen:4d}/{toplam} (%{eklenen/toplam*100:.0f})"
-            f" | ~{remaining/60:.1f} dk kaldı"
-        )
 
-    print(f"\n[Embed] Tamamlandı. {eklenen} chunk eklendi. ({time.time()-t0:.1f}s)")
+    # CUDA bellek temizliği
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    log.info(f"Tamamlandı. {eklenen} chunk başarıyla yüklendi. (Süre: {time.time()-t0:.1f}s)")
 
 
-# CLI
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLI GİRİŞİ
+# ═══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="LawAgent Mursit Embedder v10")
-    parser.add_argument("--reset",    action="store_true", help="Collection'ı sıfırla")
-    parser.add_argument("--test",     action="store_true", help="İlk 20 chunk")
-    parser.add_argument("--quantize", action="store_true", help="int8 quantization")
-    parser.add_argument("--kaydet",   action="store_true", help="Quantized modeli kaydet")
+    parser = argparse.ArgumentParser(description="LawAgent Mursit Embedder v11 (GPU & Retry & tqdm)")
+    parser.add_argument("--reset", action="store_true", help="Collection'ı sıfırla ve baştan başla")
+    parser.add_argument("--test", action="store_true", help="Sadece ilk 20 chunk ile test et")
+    parser.add_argument("--quantize", action="store_true", help="int8 dinamik kuantizasyon")
+    parser.add_argument("--kaydet", action="store_true", help="Kuantize modeli kaydet")
+    parser.add_argument("--batch-size", type=int, default=32, help="Encoding batch boyutu (varsayılan: 32)")
+    parser.add_argument("--device", type=str, default=None, help="Cihaz zorla (cpu, cuda, mps vb.)")
     args = parser.parse_args()
 
-    if args.quantize and args.kaydet:
-        embedder = MursitEmbedder(quantize=True)
+    if args.kaydet:
+        embedder = MursitEmbedder(quantize=args.quantize, device=args.device)
         embedder.kaydet()
     else:
-        embed_corpus(reset=args.reset, test_mode=args.test, quantize=args.quantize)
+        embed_corpus(
+            reset=args.reset,
+            test_mode=args.test,
+            quantize=args.quantize,
+            batch_size=args.batch_size,
+            device=args.device,
+        )

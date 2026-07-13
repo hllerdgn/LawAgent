@@ -13,3 +13,5 @@ tiktoken
 requests
 scrapy
 bs4
+PyMuPDF
+python-multipart

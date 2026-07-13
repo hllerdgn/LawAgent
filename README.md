@@ -118,5 +118,9 @@ LawAgent/
 
 ---
 
+## 📸 Uygulama Ekran Görüntüsü
+
+![LawAgent AI Chatbot Arayüzü](lawagent_chatbot_screenshot.png)
+
 ## 📄 Lisans
 Bu proje Bitirme Projesi kapsamında geliştirilmiştir.
