@@ -39,9 +39,14 @@ qdrant_storage/
 # Poster ve görsel dosyaları (oluşturulan / büyük dosyalar)
 *.pdf
 *.svg
+*.pptx
+*.docx
 lawagent_poster.png
 lawagent_qr.png
 lawagent_chatbot_screenshot.png
+poster_preview.png
+poster_preview_with_qr.png
+QR_Kodum_1-1024.png
 # Poster oluşturma araçları
 poster.html
 screenshot_chatbot.html
