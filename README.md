@@ -91,6 +91,8 @@ npm run dev
 
 ```
 LawAgent/
+├── docs/                   # Proje dökümantasyonu ve fizibilite raporları
+│   └── uyap-feasibility.md # UYAP Entegrasyonu Fizibilite Raporu
 ├── BACKEND/
 │   ├── src/
 │   │   ├── scraper_mevzuat/    # mevzuat.gov.tr veri kazıma (Scrapy)
@@ -121,6 +123,10 @@ LawAgent/
 ## 📸 Uygulama Ekran Görüntüsü
 
 ![LawAgent AI Chatbot Arayüzü](lawagent_chatbot_screenshot.png)
+
+## 📚 Dokümantasyon
+
+*   [UYAP Entegrasyonu Fizibilite Raporu](docs/uyap-feasibility.md): UYAP sistemi ile resmi entegrasyon imkanları, teknik/hukuki engeller ve alternatif veri kaynakları hakkında analiz.
 
 ## 📄 Lisans
 Bu proje Bitirme Projesi kapsamında geliştirilmiştir.
