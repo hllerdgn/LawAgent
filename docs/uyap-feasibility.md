@@ -9,12 +9,12 @@ Bu rapor, LawAgent AI RAG (Retrieval-Augmented Generation) sistemine UYAP (Ulusa
 *   **Projenin Amacı:** LawAgent AI kullanıcılarının kimliklerini güvenli bir şekilde doğrulaması, kendi UYAP dava dosyalarını sisteme aktarması ve yapay zekâ asistanı aracılığıyla bu kişisel veriler üzerinden özelleştirilmiş hukuki analiz/asistanlık hizmeti alması.
 *   **Temel Bulgular:** 
     *   **Resmi API Yokluğu:** UYAP ve e-Devlet sistemlerinin genel kullanıma açık, dış geliştiricilerin doğrudan entegre olabileceği bir public API/SSO (Single Sign-On) altyapısı bulunmamaktadır.
-    *   **Yüksek Hukuki Risk:** Dava dosyalarındaki özel nitelikli kişisel verilerin (sağlık, ceza mahkumiyeti vb.) işlenmesi, KVKK (Kişisel Verilerin Korunması Kanunu) ve TCK m.136 (Verileri hukuka aykırı ele geçirme) kapsamında çok sıkı sınırlamalara ve sorumluluklara tabidir.
-    *   **Teknik Komplekslik:** Tarayıcı otomasyonu (RPA) veya e-imza gerektiren çözümler, UYAP portallarında yapılacak arayüz güncellemelerine karşı kırılgandır ve sürekli bakım gerektirir.
-*   **Fizibilite Kararı:** Doğrudan ve otonom bir **resmi UYAP API entegrasyonu mevcut şartlarda MÜMKÜN DEĞİLDİR (Uygulanamaz).**
-*   **Önerilen Strateji (MVP ve Yol Haritası):** 
-    1.  **Aşama 1 (MVP):** Kullanıcının UYAP'tan indirdiği belgeleri (UDF, PDF) güvenli bir yerel arayüz üzerinden sisteme yüklemesi, belgelerin yerel parser'lar ile işlenip **Strict User Isolation (Sıkı Kullanıcı İzolasyonu)** altındaki Qdrant veritabanında saklanması.
-    2.  **Aşama 2 (Orta Vade):** Lisanslı ve regüle edilmiş üçüncü taraf UYAP Gateway sağlayıcıları (örn. e-imza entegrasyonu sağlayan LegalTech altyapıları) ile iş ortaklığı yapılması.
+    *   **Önerilen Entegrasyon Tasarımı (Oturum Üstü Eklenti):** Avukatın tarayıcısına kurulan bir **Chrome Uzantısı (Extension)** aracılığıyla, e-imza/token'ı yerelde tutarak aktif UYAP oturumu üzerinden verilerin salt okunur (read-only) şekilde çekilmesi. Bu yöntem, kullanıcı kimlik bilgilerini okumadan ve backend'de otonom bir "oturum açma" tetiklemesi yapmadan çalışır.
+    *   **Yüksek Güvenlik ve Hukuki Uyum:** SHA-256 token hashing, cihaz bazlı yetkilendirme ve iptal (revoke) mekanizması, çift filtre doğrulaması ve TCKN/VKN maskelemesi ile KVKK standartlarına tam uyum sağlanır.
+*   **Fizibilite Kararı:** Doğrudan ve otonom bir **resmi UYAP API entegrasyonu mevcut şartlarda MÜMKÜN DEĞİLDİR.** Ancak, **Senaryo 4 (Oturum Üstü Tarayıcı Eklentisi Köprüsü) teknik ve hukuki açıdan %100 UYGULANABİLİRDİR** ve en iyi kullanıcı deneyimini sunar.
+*   **Önerilen Strateji (Yol Haritası):** 
+    1.  **Aşama 1 (MVP):** Kullanıcının UYAP'tan indirdiği belgeleri (UDF, PDF) manuel yüklediği ve Qdrant üzerinde sıkı kullanıcı izolasyonuyla sorguladığı yapı.
+    2.  **Aşama 2 (Canlı Sürüm):** Chrome Uzantısı (Manifest V3) tabanlı oturum üstü okuma entegrasyonunun devreye alınması.
 
 ---
 
@@ -49,227 +49,160 @@ UYAP altyapısının harici sistemlerle entegrasyon yetenekleri analiz edilmişt
 | **UYAP Avukat Portal** | Açık API yok. Sadece web arayüzü. | e-İmza (Akıllı Kart), Mobil İmza, e-Devlet. | Avukatın vekaleti olan veya yetkilendirildiği tüm dava dosyaları, evraklar, safahat, duruşma günleri. |
 | **UYAP Vatandaş Portal** | Açık API yok. Sadece web arayüzü. | e-Devlet şifresi, Mobil İmza, T.C. Kimlik Kartı. | Vatandaşın taraf olduğu dava dosyaları ve evrakları. |
 | **UYAP Kurum Portal** | Protokole bağlı entegrasyon (API/Web Servis). | Kurumsal Sertifika ve IP Kısıtlaması. | Kurumu ilgilendiren hukuki süreçler ve sorgulamalar. |
-| **Üçüncü Parti Gateway** | Özel LegalTech entegrasyonları. | E-imza yönlendirmesi veya RPA aracıları. | İlgili hukuk bürosunun yetkili olduğu veriler. |
+| **Tarayıcı Eklentisi Köprüsü** | Geliştirilebilir (Chrome Extension). | Kullanıcının aktif UYAP tarayıcı oturumuna binme (Overlay). | Kullanıcının tarayıcıda görüntülediği / eriştiği dava ve evrak verileri (Read-Only). |
 
 ### Kritik Soruların Cevapları:
 *   **Harici bir uygulama UYAP kullanıcı doğrulaması yapabilir mi?**
-    *   *Cevap:* Hayır. Harici uygulamaların doğrudan UYAP üzerinde kimlik doğrulaması yapabileceği bir SSO (Single Sign-On) veya OAuth altyapısı bulunmamaktadır. Kimlik doğrulama işlemi e-Devlet kapısı veya e-imza kütüphaneleri (Kamu SM vb.) üzerinden yapılmak zorundadır.
+    *   *Cevap:* Doğrudan yapamaz. Ancak tarayıcı eklentisi kullanıcının yerelde zaten yaptığı e-imza / UYAP oturum açma işleminin üzerine binerek (overlay) oturumu devralabilir.
 *   **UYAP üzerinden OAuth, SSO veya benzeri kimlik doğrulama yöntemi mevcut mu?**
-    *   *Cevap:* Mevcut değildir. e-Devlet Kapısı Entegrasyon Protokolü imzalanmadan harici bir web uygulamasına "e-Devlet ile Giriş" butonu eklenemez.
+    *   *Cevap:* Mevcut değildir.
 *   **Veri erişimi için resmi izin gerekiyor mu?**
-    *   *Cevap:* Evet. Resmi web servisleri (API'leri) kullanabilmek için Adalet Bakanlığı Bilgi İşlem Genel Müdürlüğü ile resmi protokol imzalanması şarttır.
+    *   *Cevap:* Resmi API kullanımı için Adalet Bakanlığı protokolü gerekir. Ancak eklenti mimarisinde, avukatın kendi yetkisiyle eriştiği verileri kendi rızasıyla uygulamaya aktarması (veri taşınabilirliği hakkı) söz konusudur.
 *   **Hangi kullanıcı tipleri sisteme entegre olabilir?**
-    *   *Cevap:* Avukatlar (Avukat Portal), Vatandaşlar (Vatandaş Portal) ve tüzel kişi temsilcileri (Kurum Portal).
+    *   *Cevap:* Avukatlar (Avukat Portal), Vatandaşlar (Vatandaş Portal).
 
 ---
 
 ## 5. Hukuki ve KVKK Analizi
 
-UYAP verileri, doğası gereği son derece hassas ve koruma altında olan verilerdir.
+Eklenti tabanlı entegrasyon çözümünde hukuki riskler ve alınan bilinçli tasarım kararları şunlardır:
 
-### Veri Koruma ve KVKK:
-1.  **Özel Nitelikli Kişisel Veriler (KVKK m.6):** Dava dosyalarında kişilerin ceza mahkumiyeti, güvenlik tedbirleri, sağlık verileri, sendika üyelikleri gibi özel nitelikli kişisel veriler yer alır. Bu verilerin işlenmesi için **kullanıcının açık rızası (explicit consent)** alınması zorunludur.
-2.  **Veri Minimizasyonu:** Uygulama, RAG sistemini beslemek için sadece gerekli olan metinleri (örn. dilekçeler, beyanlar) çekmeli; ilgisiz kişisel verileri (kimlik fotokopileri, adres bilgileri vb.) elenmelidir.
-3.  **Veri Saklama Süreleri:** Kullanıcı hesabı kapatıldığında veya kullanıcı verilerini silmek istediğinde, Qdrant ve PostgreSQL üzerindeki tüm dava indexleri ve vektörleri geri döndürülemeyecek şekilde silinmelidir (Veri İmha Politikası).
+### 1. Hukuki Tasarım Kararı ve UYAP Sözleşme Uyumu:
+*   **Otonom Giriş Yoktur:** Backend üzerinde "avukat adına UYAP'a otomatik giriş yap" gibi bir akış kesinlikle bulunmaz.
+*   **Aktif Oturum Bağımlılığı:** Eklenti yalnızca avukat kendi bilgisayarında UYAP'a e-imza ile manuel giriş yapmışken çalışır. Sunucu tarafından arka planda otomatik tetiklenen hiçbir UYAP işlemi yoktur. Bu tasarım, Avukat Portal sözleşmesi ve KVKK kapsamında en güvenli ve yasal olarak en savunulabilir yaklaşımdır.
+*   **Salt Okunur (Read-Only) Sınırı:** Eklenti UYAP üzerinde hiçbir yazma işlemi (takip açma, evrak gönderme, ödeme yapma vb.) gerçekleştirmez. Sadece kullanıcının izin verdiği dava detaylarını okur ve kopyalar.
 
-### Yetkilendirme ve Erişim Kontrolü:
-*   **Avukat-Müvekkil Gizliliği:** Bir avukatın sisteme yüklediği veya UYAP'tan çektiği dosyalar, sadece o avukatın yetkilendirdiği alt kullanıcılara (stajyerler, ortak avukatlar) açık olmalıdır. Müvekkiller kendi dava dosyalarını görebilmeli ancak avukatın çalışma notlarına erişememelidir.
-*   **Rol Bazlı Erişim Kontrolü (RBAC):** Sistemde `Yönetici`, `Avukat`, `Müvekkil` ve `Destek Personeli` rolleri tanımlanmalı, Qdrant sorgularında bu roller filtre olarak kullanılmalıdır.
-
-### Hukuki Riskler ve Sorumluluklar:
-*   **Hukuka Aykırı Veri İşleme (TCK m.135-136):** Resmi izin olmadan UYAP sistemlerinden botlar aracılığıyla otomatik veri çekilmesi, bilişim sistemine izinsiz girme suçu oluşturabilir.
-*   **Veri İhlali Bildirimi:** Sistemde oluşabilecek bir sızıntı durumunda, KVKK kuruluna 72 saat içinde bildirim yapılması zorunludur. Ciddi idari para cezaları ile karşılaşılabilir.
+### 2. KVKK ve Veri Koruma Standartları:
+*   **Kişisel Verilerin Maskelenmesi:** TCKN ve VKN gibi kritik kimlik bilgileri loglara basılmaz, hata mesajlarında geri gönderilmez ve doğrudan RAG veritabanına ham halde kaydedilmez.
+*   **Cloudflare Korumalı Altyapı:** Çekilen veriler Cloudflare güvenli altyapısında uçtan uca şifreli (E2E Encrypted) olarak saklanır.
+*   **Kullanıcı Kontrolü ve Çift Filtre:** Kullanıcı sadece belirli davaların çekilmesi için filtre uygulayabilir. Backend, bu filtre dışındaki hiçbir veriyi kabul etmez ve veri minimizasyonu sağlanır.
 
 ---
 
 ## 6. Teknik Fizibilite Analizi
 
-### Önerilen Kimlik Doğrulama ve Entegrasyon Akışı
+### Önerilen Güvenlik ve Yetkilendirme Akışı
 
 ```
-Kullanıcı
-   |
-   ↓ (Giriş Talebi ve UDF/PDF Yükleme veya e-İmza Tetikleme)
-UYAP Kimlik Doğrulama / Yerel Session Yönetimi (FastAPI OAuth2)
-   |
-   ↓ (Kullanıcı e-imza doğrulaması veya Güvenli JWT üretimi)
-Token Doğrulama (JWT Signature Verification)
-   |
-   ↓ (Kullanıcı Rolü ve Workspace Eşleştirme)
-User Identity Mapping (PostgreSQL/SQLAlchemy)
-   |
-   ↓ (Kullanıcıya özel şifreli anahtar ataması)
-JWT Session & Tenant-Specific API Client
-   |
-   ↓ (Qdrant Payload Filter: tenant_id == user_tenant_id)
-Hukuk Asistanı (RAG Pipeline)
+Kullanıcı (Tarayıcı) --> UYAP Manuel Giriş (e-imza local token)
+    |
+    ↓ (Oturum Açıldıktan Sonra)
+Chrome Eklentisi (Oturum Üzerine Biner)
+    |
+    ↓ (Cihaz Bazlı API Key üretimi)
+Cihaz Yetkilendirme (SHA-256 Token Hash Doğrulaması)
+    |
+    ↓ (Kullanıcı Filtreleri & İstek Doğrulama)
+FastAPI Backend (Filtre dışı veriyi reddeder)
+    |
+    ↓ (Multi-Tenancy Qdrant Indexleme)
+Qdrant Vector Database
 ```
+
+#### Güvenlik Katmanları:
+1.  **Cihaz Başına Token:** Kullanıcı her makinesi için ayrı bir API token üretir. Token çalınırsa veya cihaz kaybolursa, sadece o cihaza ait token backend'den pasif (revoke) edilir; diğer makineler etkilenmez.
+2.  **Token Hashing (SHA-256):** Veritabanında API token'ın kendisi değil, SHA-256 hash'i saklanır. Veritabanı sızdırılsa dahi saldırganlar geçerli bir token elde edemezler.
+3.  **Çift Filtre Doğrulaması:** Veri çekme sınırları hem eklenti tarafında hem de backend API doğrulaması tarafında kontrol edilir.
 
 ---
 
 ## 7. Entegrasyon Alternatifleri ve Karşılaştırma
 
-### Senaryo 1: Doğrudan UYAP API Entegrasyonu (Resmi Protokol)
-*   **Açıklama:** Adalet Bakanlığı ile resmi entegrasyon kurularak sağlanan kurumsal API erişimi.
-*   **Uygunluk:** Bireysel girişimler veya küçük-orta ölçekli projeler için bürokratik engeller nedeniyle imkansıza yakındır.
-
-### Senaryo 2: Kullanıcının UYAP'tan Belge İndirip Sisteme Manuel Yüklemesi
-*   **Açıklama:** Kullanıcı UYAP portalından `.udf` (UYAP Doküman Formatı) veya `.pdf` belgelerini indirir, sürükle-bırak yöntemiyle uygulamaya yükler. Uygulama yerel olarak bu dosyaları parse eder.
-*   **Uygunluk:** Teknik olarak en kolay, yasal olarak en güvenli ve en hızlı uygulanabilir senaryodur.
-
-### Senaryo 3: Yetkili Kurum/Gateway Entegrasyonu (İş Ortaklığı)
-*   **Açıklama:** Hali hazırda UYAP e-imza entegrasyonu lisansı/altyapısı olan bir aracı kurum (LegalTech sağlayıcısı veya e-imza entegratörü) ile API ortaklığı kurulması.
-*   **Uygunluk:** Maliyetli ancak tam otomatik bir kullanıcı deneyimi sunan orta-uzun vade çözümüdür.
-
 ### Senaryoların Karşılaştırma Matrisi:
 
-| Kriter | Senaryo 1: Doğrudan API | Senaryo 2: Manuel Yükleme (Önerilen MVP) | Senaryo 3: Gateway Entegrasyonu |
-| :--- | :--- | :--- | :--- |
-| **Teknik Zorluk** | Çok Yüksek (Özel protokoller) | Düşük (UDF/PDF Parser) | Orta (3. Parti API Entegrasyonu) |
-| **Maliyet** | Yüksek (Bürokratik/Altyapı) | Düşük (Sadece sunucu/LLM) | Orta-Yüksek (Komisyon/Lisans ücreti) |
-| **Güvenlik** | Çok Yüksek | Yüksek (Lokal veri işleme) | Orta-Yüksek (Veri 3. partiden geçer) |
-| **Hukuki Uygunluk**| Tam Uyumlu | Tam Uyumlu (Kullanıcı kendi yükler) | Kısmen Uyumlu (Sözleşmeye bağlı) |
-| **Kullanıcı Deneyimi**| Mükemmel (Otomatik senkronize) | Orta (Manuel dosya indirme/yükleme) | İyi (E-imza ile otomatik çekim) |
-| **Gerçekleşme Süresi**| 12+ Ay | 2 - 4 Hafta | 2 - 3 Ay |
+| Kriter | Senaryo 1: Doğrudan API | Senaryo 2: Manuel Yükleme (MVP) | Senaryo 3: Gateway Entegrasyonu | Senaryo 4: Tarayıcı Eklentisi (Önerilen Canlı Model) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Teknik Zorluk** | Çok Yüksek | Düşük | Orta | Orta (Eklenti ve FastAPI köprüsü) |
+| **Maliyet** | Yüksek | Düşük | Orta-Yüksek | Düşük (Kendi geliştirdiğimiz eklenti) |
+| **Güvenlik** | Çok Yüksek | Yüksek (Lokal veri) | Orta-Yüksek (3. parti risk) | **Çok Yüksek** (E-imza localde, SHA-256 Hash) |
+| **Hukuki Uygunluk**| Tam Uyumlu | Tam Uyumlu | Kısmen Uyumlu | **Tam Uyumlu** (Read-only, otonom giriş yok) |
+| **Kullanıcı Deneyimi**| Mükemmel | Orta (Manuel işlem) | İyi | **Çok İyi** (Tek tıkla senkronize) |
+| **Gerçekleşme Süresi**| 12+ Ay | 2 - 4 Hafta | 2 - 3 Ay | **4 - 6 Hafta** |
 
 ---
 
 ## 8. Sistem Mimari Tasarımı
 
-Önerilen Senaryo 2 (Manuel Güvenli Yükleme + UDF Parser) mimarisi aşağıdaki bileşenleri içerir:
+Senaryo 4 (Chrome Extension + FastAPI + Qdrant) mimarisi aşağıdaki veri akışını kullanır:
 
 ```
-[ Frontend: React App ] 
-       | (Sürükle-Bırak UDF/PDF & JWT Auth)
+[ UYAP Avukat Portalı ] (Kullanıcı e-imza ile giriş yapar)
+       |
+       v (Oturum Üstü DOM Okuma)
+[ Chrome Extension (Manifest V3) ] 
+       | (Sadece Yetkili Davaları Filtreler)
+       | (İstek: Headers["X-Device-Token"] ile HTTPS POST)
        v
 [ Backend API: FastAPI ] 
-       | (Kullanıcı Oturumu ve Yetki Kontrolü)
-       +---> [ Authentication Service ] (JWT, Postgres RBAC)
-       |
-       +---> [ Document Processing Pipeline ] 
-       |            |--> UDF XML Parser
-       |            |--> OCR Engine (Tesseract/EasyOCR - taranmış belgeler için)
-       |            v
-       |     [ Text Chunking & Embedding Generator ] (Mursit-Base-TR)
-       |            |
-       v            v
-[ Qdrant Vector DB ] <--- (Kullanıcı ID filtresi ile kaydeder/arar)
-       |
-       +---> [ Retriever & Prompt Builder ]
-                    |
-                    v
-[ LLM API (Groq/Llama-3) ] ---> [ Kullanıcıya Yanıt ]
+       | (Token Hash Kontrolü: SHA-256 Hash Match)
+       | (Filter Validation: Filtre dışı verileri reddetme)
+       v
+[ Document Processing Pipeline ] 
+       |--> HTML/XML to Text Parser
+       |--> TCKN/VKN Maskeleme (Anonymization Layer)
+       |--> Embedding (Mursit-Base-TR)
+       v
+[ Qdrant Vector DB ] (Payload: {"tenant_id": "usr_123", "text": "..."})
 ```
-
-### Servis Sorumlulukları ve Güvenlik Önlemleri:
-1.  **FastAPI (Backend):** JWT doğrulamasını yapar. `user_id` bilgisini her isteğe ekler.
-2.  **UDF Parser:** UDF dosyaları özünde sıkıştırılmış XML dosyalarıdır (`zip` formatında). Python `zipfile` ve `xml.etree.ElementTree` kütüphaneleri kullanılarak e-imza imzası ve XML metni ayrıştırılır.
-3.  **Qdrant Multi-Tenancy:** Verilerin birbirine karışmaması için Qdrant'a yüklenen her vektörün payload alanına `tenant_id` (kullanıcı veya hukuk bürosu ID'si) eklenir. Arama yaparken `Filter(must=[FieldCondition(key="tenant_id", match=MatchValue(value=current_user.tenant_id))])` filtresi zorunlu kılınır.
 
 ---
 
 ## 9. Güvenlik Analizi
 
-### Güvenlik Önlemleri ve Risk Tablosu:
-*   **JWT Yönetimi:** Access token'lar kısa ömürlü (15-30 dk) tutulacak, refresh token'lar güvenli HTTP-Only çerezlerde saklanacaktır.
-*   **Şifreleme:** Veritabanındaki hassas kullanıcı bilgileri ve diskte geçici olarak saklanan dökümanlar AES-256 ile şifrelenecektir. LLM API'sine gönderilen verilerde kişisel verilerin maskelenmesi için bir veri temizleme katmanı uygulanacaktır.
+### Risk ve Önlem Tablosu:
 
-| Risk | Etki Derecesi | Alınacak Önlem |
+| Risk | Etki Derecesi | Alınacak Önlem / Tasarım Kararı |
 | :--- | :--- | :--- |
-| **Veri Sızıntısı (Data Leak)** | Yüksek | Qdrant üzerinde sıkı multi-tenancy filtresi ve veritabanı şifrelemesi. |
-| **Yetkisiz Erişim (RBAC İhlali)**| Yüksek | Her endpoint'te FastAPI bağımlılık enjeksiyonu (`Depends`) ile rol kontrolü. |
-| **Halüsinasyon (Yanlış AI Kararı)**| Orta | Yanıtlara "Yapay zekâ yanıtıdır, hukuki tavsiye niteliği taşımaz" uyarısı ve kaynak belgelere atıf (citations) eklenmesi. |
-| **Bilişim Saldırıları (DDoS/Brute Force)**| Orta | API Gateway üzerinde rate-limiting (istek sınırlama) uygulanması. |
+| **E-imza / Şifre Çalınması** | Kritik | **USB token ve PIN yerelde kalır.** Eklenti kimlik bilgilerine dokunmaz, sadece aktif web session'ı üzerindeki verileri okur. |
+| **Veritabanı Sızıntısı** | Yüksek | DB üzerinde API token'ların sadece SHA-256 hash'leri tutulur. Veriler Cloudflare altyapısında E2E şifrelenir. |
+| **Cihazın Çalınması / Sızıntı** | Yüksek | **Cihaz Bazlı Token:** Her cihaz için ayrı token üretilir. Çalınan makinenin yetkisi tek tıkla panelden iptal (revoke) edilir. |
+| **Yetkisiz Yazma / İşlem Tetikleme**| Yüksek | **Read-Only Yapı:** API ve eklenti üzerinde UYAP'a veri yazacak (evrak gönderme vb.) hiçbir kod bloku bulunmaz. |
+| **KVKK İhlali (Hassas Veri Sızıntısı)**| Yüksek | TCKN/VKN maskelemesi. Loglarda kişisel veri tutulmaması. |
 
 ---
 
 ## 10. Yapay Zekâ ve RAG Entegrasyonu
 
-UYAP dava dosyalarının RAG sistemine entegre edilme akışı aşağıda şematize edilmiştir:
-
-```
-[ UYAP Belgesi (UDF / PDF) ]
-            |
-            v
-[ Document Parser ] (UDF XML extraction veya PDF text extraction)
-            |
-            +---> (Eğer taranmış resim ise) ---> [ OCR Engine (EasyOCR) ]
-            v
-[ Chunking & Clean-up ] (512-1024 karakterlik anlamlı paragraflara bölme)
-            |
-            v
-[ Embedding Creation ] (Mursit-Base-TR modeli ile 768 boyutlu vektör)
-            |
-            v
-[ Vector DB (Qdrant) ] (Payload: {"tenant_id": "usr_123", "text": "...", "source": "dilekce.udf"})
-            |
-            v (Kullanıcı Soru Sorar: "Bu davada zamanaşımı savunması yapılmış mı?")
-[ Retriever ] (Qdrant'tan tenant_id filtresi ile en benzer 3 chunk getirilir)
-            |
-            v
-[ Prompt Engineering ] ("Aşağıdaki dava metnine göre soruyu yanıtla...")
-            |
-            v
-[ LLM (Groq / Llama-3) ] ---> [ Hukuki Yanıt ]
-```
+Eklentiden FastAPI'ye gelen UYAP verilerinin RAG pipeline entegrasyonu:
+1.  **Metin Parçalama (Chunking):** Karar ve dilekçe metinleri 512 karakterlik, anlam bütünlüğü korunmuş parçalara ayrılır.
+2.  **Embedding:** `Mursit-Base-TR-Retrieval` modeli ile metinler vektörleştirilir.
+3.  **Tenant İzolasyonu:** Vektörler Qdrant'a yazılırken `tenant_id` etiketi alır. RAG sorgusu yapılırken FastAPI otomatik olarak kullanıcının `tenant_id` değerini filtreye ekler. Bu sayede hiçbir kullanıcı başka bir avukatın/kullanıcının UYAP verilerine erişemez.
 
 ---
 
 ## 11. Maliyet Analizi
 
-Projenin tahmini ilk kurulum ve aylık işletme maliyetleri (Senaryo 2 baz alınarak):
-
 ### 1. Geliştirme Maliyeti (Tek Seferlik):
-*   **Backend Geliştirme (UDF parser, Multi-tenancy RAG, Auth):** 4.000 USD
-*   **Frontend Geliştirme (Dosya yükleme, döküman yönetim paneli):** 3.000 USD
-*   **Test ve Kalite Güvence (Sızma testleri, KVKK denetimi):** 2.000 USD
-*   *Toplam Geliştirme:* **9.000 USD**
+*   **Chrome Extension (Manifest V3) Geliştirme:** 2.500 USD
+*   **FastAPI Backend (SHA-256 Auth, Device Revocation Panel, Ingestion API):** 3.500 USD
+*   **RAG ve Multi-Tenancy Güvenlik Katmanı:** 2.000 USD
+*   *Toplam Geliştirme:* **8.000 USD**
 
 ### 2. Altyapı Maliyeti (Aylık):
-*   **Uygulama Sunucusu (FastAPI + PostgreSQL - AWS/DigitalOcean):** 80 USD / Ay
-*   **Qdrant Cloud (Managed Vector DB veya Dedicated Server):** 50 USD / Ay
-*   **LLM API Kullanımı (Groq veya OpenAI API - Kullanım bazlı):** ~100 USD / Ay
-*   **OCR Sunucu Maliyeti (GPU destekli EC2 örneği - isteğe bağlı):** 120 USD / Ay
-*   *Toplam Altyapı:* **~350 USD / Ay**
-
-### 3. Operasyonel ve Hukuki Maliyetler (Yıllık):
-*   **KVKK Uyum Danışmanlığı ve Hukuki Sözleşmeler:** 1.500 USD / Yıl
-*   **Bakım ve Sistem Güncellemeleri:** 2.000 USD / Yıl
+*   **AWS / Cloudflare Güvenli Sunucu + PostgreSQL:** 100 USD / Ay
+*   **Qdrant Cloud:** 50 USD / Ay
+*   **LLM API:** Kullanım bazlı (~100 USD / Ay)
+*   *Toplam Altyapı:* **~250 USD / Ay**
 
 ---
 
 ## 12. Risk ve SWOT Analizi
 
 ### SWOT Analizi:
-*   **Güçlü Yönler (S):** Türkçe hukuk alanında uzmanlaşmış RAG altyapısı, açık kaynaklı yerel embedding modeli kullanımı, yüksek veri güvenliği standartları.
-*   **Zayıf Yönler (W):** Resmi UYAP API'sinin olmaması nedeniyle kullanıcıların belgeleri manuel indirmek zorunda kalması (kullanıcı deneyiminde sürtünme).
-*   **Fırsatlar (O):** Türkiye'deki hukuk bürolarının dijitalleşme ve yapay zeka entegrasyonu talebi, dava analiz süreçlerinin otomatikleştirilmesi ile zaman tasarrufu.
-*   **Tehditler (T):** KVKK regülasyonlarının gelecekte daha da sertleşmesi, büyük dil modellerinin (LLM) veri gizliliği politikalarındaki değişiklikler.
-
-### Proje Riskleri:
-1.  **Teknik Risk:** Kullanıcının taradığı PDF belgelerinin çözünürlüğünün düşük olması durumunda OCR kalitesinin düşmesi ve RAG'in yanlış bilgi üretmesi (Garbage in, garbage out).
-2.  **Hukuki Risk:** Kullanıcıların açık rıza metinlerini onaylamadan üçüncü şahıslara ait verileri sisteme yüklemesi. Sorumluluk tamamen kullanıcıya ait olsa da platformun itibar riski bulunmaktadır.
+*   **Güçlü Yönler (S):** Çok yüksek güvenlik düzeyi (e-imza yerelde), KVKK uyumlu tasarım kararları, cihaz bazlı kolay yetki yönetimi (revocation).
+*   **Zayıf Yönler (W):** Kullanıcının Chrome Uzantısı yüklemesini gerektirmesi (mobil tarayıcılarda eklenti desteği kısıtlıdır, masaüstü odaklıdır).
+*   **Fırsatlar (O):** Sektörde güvenliğe önem veren kurumsal hukuk bürolarının güvenini kazanarak rakiplerin önüne geçilmesi.
+*   **Tehditler (T):** UYAP Avukat Portalı arayüz yapısının (DOM) kökten değişmesi durumunda eklentinin scraper kodlarının güncellenmesi ihtiyacı.
 
 ---
 
 ## 13. Sonuç ve Yol Haritası
 
 ### Uygulanabilirlik Kararı:
-Mevcut yasal çerçevede ve teknik altyapıda, doğrudan UYAP resmi API entegrasyonu **mümkün değildir.** Ancak, **Senaryo 2 (Güvenli Manuel Belge Yükleme ve Yerel UDF/PDF Analizi)** %100 uygulanabilirdir. Bu yöntem projenin MVP (Minimum Viable Product) aşaması için en mantıklı, hızlı ve düşük riskli seçenektir.
+Önerilen **Senaryo 4 (Oturum Üstü Eklenti Köprüsü)**, hukuk asistanı projesine UYAP entegrasyonu eklemek için **EN UYGUN, EN GÜVENLİ VE HUKUKİ AÇIDAN EN AZ RİSKLİ** yöntemdir. Bu çözümün sisteme eklenmesi kesinlikle mümkündür ve tavsiye edilir.
 
-### MVP Kapsamı (Aşama 1):
-1.  **Kullanıcı Kayıt & Giriş:** FastAPI OAuth2 tabanlı, rol yönetimli (RBAC) üyelik sistemi.
-2.  **Belge Yükleme Modülü:** Sürükle-bırak destekli, `.udf` ve `.pdf` formatlarını kabul eden güvenli yükleme ekranı.
-3.  **UDF Parser:** UDF XML verisini açıp metne dönüştüren yerel Python modülü.
-4.  **Multi-Tenancy RAG:** Qdrant veritabanında `tenant_id` filtresi ile sadece yükleyen kullanıcının erişebileceği vektör indeksleme yapısı.
-5.  **Döküman Odaklı Sohbet:** Kullanıcının yüklediği belgelere dayanarak soru sorabileceği chat ekranı.
-
-### Yol Haritası (Geliştirme Takvimi):
-
-```
-Hafta 1 - 2: Yetkilendirme (Auth) Altyapısı ve Rol Yönetimi (PostgreSQL/FastAPI)
-Hafta 3 - 4: UDF ve PDF Ayrıştırıcıların (Parser) Yazılması, Metin Temizleme (Regex/OCR)
-Hafta 5 - 6: Qdrant Multi-Tenancy Geçişi ve Embedding Arama Filtrelerinin Entegrasyonu
-Hafta 7 - 8: Ön Arayüz Tasarımı (Dosya Yükleme Ekranı & Belge Kaynak Gösterimi)
-Hafta 9 - 10: Güvenlik Sızma Testleri, KVKK Açık Rıza Metinlerinin Hazırlanması ve Canlıya Geçiş (MVP)
-```
+### Yol Haritası (Geliştirme Planı):
+*   **Hafta 1 - 2 (Altyapı):** FastAPI backend üzerinde cihaz bazlı API Key üretimi, SHA-256 hash saklama tabloları ve iptal (revoke) mekanizmasının kodlanması.
+*   **Hafta 3 - 4 (Eklenti):** Chrome Extension (Manifest V3) tabanlı DOM parser'ın yazılması, UYAP dava detay ekranından veri okuma testleri.
+*   **Hafta 5 (Entegrasyon & RAG):** Eklenti verilerinin FastAPI ingestion endpoint'ine aktarılması, TCKN maskeleme filtresi ve Qdrant multi-tenancy entegrasyonu.
+*   **Hafta 6 (Test ve Sürüm):** Güvenlik sızma testleri ve pilot avukat grubuyla canlı testlerin yapılması.
