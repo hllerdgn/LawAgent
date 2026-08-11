@@ -2,8 +2,10 @@ import sys
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
-# mevcut spider dosyanızın adı yargitay_spider.py ise:
-from yargitay_spider import YargitaySpider
+try:
+    from .yargitay_spider import YargitaySpider
+except ImportError:
+    from yargitay_spider import YargitaySpider
 
 
 def run_scraper():

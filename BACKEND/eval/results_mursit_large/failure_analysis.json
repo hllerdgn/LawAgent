@@ -1,0 +1,638 @@
+{
+  "generated_at": "2026-08-02T12:36:25.225010",
+  "methodology": {
+    "recall_failure": "Hit@10=False — dogru madde top-10 adayina hic girmemis (retrieval problemi)",
+    "reranking_failure": "Hit@10=True ama Hit@1=False — madde aday havuzunda var ama uste cikamamis (reranking problemi)"
+  },
+  "gold_analysis": {
+    "set": "gold",
+    "total_queries": 38,
+    "total_failures": 3,
+    "recall_failures": 0,
+    "reranking_failures": 3,
+    "success_rate_hit1": 0.9211,
+    "failure_list": [
+      {
+        "id": "tbk_07",
+        "set": "gold",
+        "category": "semantic_tbk",
+        "query": "Eser sözleşmesinde müteahhidin ayıba karşı sorumluluğu nedir?",
+        "expected": "TBK m.[\"474\", \"475\", \"482\"]",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "472",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.5473
+          },
+          {
+            "law": "TBK",
+            "article_no": "474",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.4171
+          },
+          {
+            "law": "TBK",
+            "article_no": "475",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.2385
+          },
+          {
+            "law": "TBK",
+            "article_no": "482",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.1335
+          },
+          {
+            "law": "TBK",
+            "article_no": null,
+            "source": "yargitay",
+            "decision_id": "1085041300",
+            "skor": 1.0831
+          }
+        ],
+        "latency_ms": 1326.1
+      },
+      {
+        "id": "yargitay_01",
+        "set": "gold",
+        "category": "yargitay_intent",
+        "query": "Kira bedeli ödenmezse tahliye ile ilgili Yargıtay kararları var mı?",
+        "expected": "yargitay",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "352",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.37
+          },
+          {
+            "law": "TBK",
+            "article_no": null,
+            "source": "yargitay",
+            "decision_id": "136776400",
+            "skor": 1.3691
+          },
+          {
+            "law": "TBK",
+            "article_no": null,
+            "source": "yargitay",
+            "decision_id": "136776400",
+            "skor": 1.1998
+          },
+          {
+            "law": "TBK",
+            "article_no": "350",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.1456
+          },
+          {
+            "law": "TBK",
+            "article_no": "347",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0752
+          }
+        ],
+        "latency_ms": 1483.2
+      },
+      {
+        "id": "yargitay_02",
+        "set": "gold",
+        "category": "yargitay_intent",
+        "query": "Ayıplı mal davalarında Yargıtay nasıl karar veriyor?",
+        "expected": "yargitay",
+        "actual_rank": 8,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TKHK",
+            "article_no": "11",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0
+          },
+          {
+            "law": "TBK",
+            "article_no": "226",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9782
+          },
+          {
+            "law": "TBK",
+            "article_no": "475",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9156
+          },
+          {
+            "law": "TBK",
+            "article_no": "227",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8611
+          },
+          {
+            "law": "TBK",
+            "article_no": "222",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.7959
+          }
+        ],
+        "latency_ms": 1412.3
+      }
+    ]
+  },
+  "heldout_analysis": {
+    "set": "held-out",
+    "total_queries": 45,
+    "total_failures": 10,
+    "recall_failures": 3,
+    "reranking_failures": 7,
+    "success_rate_hit1": 0.7778,
+    "failure_list": [
+      {
+        "id": "ho_tkhk_02",
+        "set": "held-out",
+        "category": "semantic_tkhk",
+        "query": "İnternet üzerinden alınan bir ürünü hiçbir gerekçe göstermeden iade etme süresi nedir?",
+        "expected": "TKHK m.48",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TKHK",
+            "article_no": "50",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8493
+          },
+          {
+            "law": "TKHK",
+            "article_no": "48",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.7378
+          },
+          {
+            "law": "TKHK",
+            "article_no": "47",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.6496
+          },
+          {
+            "law": "TKHK",
+            "article_no": "18",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.5574
+          },
+          {
+            "law": "TKHK",
+            "article_no": "45",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.5144
+          }
+        ],
+        "latency_ms": 1682.5
+      },
+      {
+        "id": "ho_tkhk_04",
+        "set": "held-out",
+        "category": "semantic_tkhk",
+        "query": "Bankadan çekilen bireysel kredinin resmi yazılı şekilde yapılmamasının sonucu nedir?",
+        "expected": "TKHK m.23",
+        "actual_rank": 7,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TKHK",
+            "article_no": "24",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0
+          },
+          {
+            "law": "TTK",
+            "article_no": "808",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9766
+          },
+          {
+            "law": "TTK",
+            "article_no": "814",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8478
+          },
+          {
+            "law": "TKHK",
+            "article_no": "22",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8238
+          },
+          {
+            "law": "TTK",
+            "article_no": "722",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.788
+          }
+        ],
+        "latency_ms": 1902.6
+      },
+      {
+        "id": "ho_ttk_02",
+        "set": "held-out",
+        "category": "semantic_ttk",
+        "query": "Rakiplerimin müşterilerimi yanıltıcı beyanlarla çekmesine karşı hangi davaları açabilirim?",
+        "expected": "TTK m.[\"56\", \"60\"]",
+        "actual_rank": "not_in_top_10",
+        "failure_type": "recall_failure",
+        "top5_results": [
+          {
+            "law": "TTK",
+            "article_no": "814",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.3999
+          },
+          {
+            "law": "TTK",
+            "article_no": "808",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.3056
+          },
+          {
+            "law": "TTK",
+            "article_no": "807",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.2095
+          },
+          {
+            "law": "TTK",
+            "article_no": "849",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.1316
+          },
+          {
+            "law": "TTK",
+            "article_no": "792",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9724
+          }
+        ],
+        "latency_ms": 1997.5
+      },
+      {
+        "id": "ho_ttk_03",
+        "set": "held-out",
+        "category": "semantic_ttk",
+        "query": "Anonim şirketlerde müdür tayin etme yetkisi başka bir birime devredilebilir mi?",
+        "expected": "TTK m.375",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TTK",
+            "article_no": "625",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.534
+          },
+          {
+            "law": "TTK",
+            "article_no": "375",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.3514
+          },
+          {
+            "law": "TTK",
+            "article_no": "623",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8849
+          },
+          {
+            "law": "TTK",
+            "article_no": "624",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.794
+          },
+          {
+            "law": "TTK",
+            "article_no": "370",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.7063
+          }
+        ],
+        "latency_ms": 1809.9
+      },
+      {
+        "id": "ho_ttk_06",
+        "set": "held-out",
+        "category": "semantic_ttk",
+        "query": "Ortaklar kurulunda önceden belirlenmemiş bir konunun görüşülüp karara bağlanması mümkün müdür?",
+        "expected": "TTK m.413",
+        "actual_rank": "not_in_top_10",
+        "failure_type": "recall_failure",
+        "top5_results": [
+          {
+            "law": "TTK",
+            "article_no": "623",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9145
+          },
+          {
+            "law": "TTK",
+            "article_no": "625",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.822
+          },
+          {
+            "law": "TTK",
+            "article_no": "395",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.6401
+          },
+          {
+            "law": "TBK",
+            "article_no": "625",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.6203
+          },
+          {
+            "law": "TTK",
+            "article_no": "624",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.5609
+          }
+        ],
+        "latency_ms": 1414.7
+      },
+      {
+        "id": "ho_ttk_10",
+        "set": "held-out",
+        "category": "semantic_ttk",
+        "query": "Limited ortaklık müdürünün devredemeyeceği asli görevler nelerdir?",
+        "expected": "TTK m.625",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TTK",
+            "article_no": "632",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 35.4804
+          },
+          {
+            "law": "TTK",
+            "article_no": "625",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.95
+          },
+          {
+            "law": "TTK",
+            "article_no": "624",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.4537
+          },
+          {
+            "law": "TTK",
+            "article_no": "623",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.4165
+          },
+          {
+            "law": "TTK",
+            "article_no": "375",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.3736
+          }
+        ],
+        "latency_ms": 1523.7
+      },
+      {
+        "id": "ho_tbk_02",
+        "set": "held-out",
+        "category": "semantic_tbk",
+        "query": "Sözleşmedeki gizli amacın veya yanlış adlandırılmanın hukuki geçerliliğe etkisi nedir?",
+        "expected": "TBK m.19",
+        "actual_rank": 2,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "36",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.32
+          },
+          {
+            "law": "TBK",
+            "article_no": "19",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.1171
+          },
+          {
+            "law": "TBK",
+            "article_no": "33",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0537
+          },
+          {
+            "law": "TBK",
+            "article_no": "31",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9695
+          },
+          {
+            "law": "TBK",
+            "article_no": "30",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.8835
+          }
+        ],
+        "latency_ms": 1349.2
+      },
+      {
+        "id": "ho_tbk_03",
+        "set": "held-out",
+        "category": "semantic_tbk",
+        "query": "Kanunun emredici kurallarına aykırı olmayan her türlü sözleşme yapılabilir mi?",
+        "expected": "TBK m.26",
+        "actual_rank": 3,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "27",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.401
+          },
+          {
+            "law": "TBK",
+            "article_no": "12",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.254
+          },
+          {
+            "law": "TBK",
+            "article_no": "26",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.118
+          },
+          {
+            "law": "TBK",
+            "article_no": "21",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0467
+          },
+          {
+            "law": "TBK",
+            "article_no": "14",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.9073
+          }
+        ],
+        "latency_ms": 1388.6
+      },
+      {
+        "id": "ho_tbk_13",
+        "set": "held-out",
+        "category": "semantic_tbk",
+        "query": "Ev kirası alacakları veya otel konaklama bedelleri için dava açma süresi kaç yıldır?",
+        "expected": "TBK m.147",
+        "actual_rank": 4,
+        "failure_type": "reranking_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "347",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.3859
+          },
+          {
+            "law": "TBK",
+            "article_no": null,
+            "source": "yargitay",
+            "decision_id": "136776400",
+            "skor": 1.3221
+          },
+          {
+            "law": "TBK",
+            "article_no": "352",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.2371
+          },
+          {
+            "law": "TBK",
+            "article_no": "147",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0698
+          },
+          {
+            "law": "TBK",
+            "article_no": null,
+            "source": "yargitay",
+            "decision_id": "136776400",
+            "skor": 1.0272
+          }
+        ],
+        "latency_ms": 1488.6
+      },
+      {
+        "id": "ho_tbk_14",
+        "set": "held-out",
+        "category": "semantic_tbk",
+        "query": "Ortaklaşa borca girenlerden herhangi birinden borcun tamamı talep edilebilir mi?",
+        "expected": "TBK m.161",
+        "actual_rank": "not_in_top_10",
+        "failure_type": "recall_failure",
+        "top5_results": [
+          {
+            "law": "TBK",
+            "article_no": "163",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 1.0
+          },
+          {
+            "law": "TBK",
+            "article_no": "593",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.6396
+          },
+          {
+            "law": "TBK",
+            "article_no": "85",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.4871
+          },
+          {
+            "law": "TBK",
+            "article_no": "100",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.4571
+          },
+          {
+            "law": "TBK",
+            "article_no": "169",
+            "source": "mevzuat",
+            "decision_id": null,
+            "skor": 0.3951
+          }
+        ],
+        "latency_ms": 1324.5
+      }
+    ]
+  }
+}

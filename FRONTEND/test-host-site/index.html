@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yıldız & Ortakları Hukuk Bürosu — White-Label Integration Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.6;
+    }
+    header {
+      background: #0f172a;
+      color: #white;
+      padding: 1.5rem 2rem;
+      border-bottom: 3px solid #3b82f6;
+    }
+    header h1 {
+      color: #ffffff;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    header p {
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    main {
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+    .hero-card h2 {
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .client-switcher {
+      background: #f1f5f9;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+    }
+    .client-switcher h3 {
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      color: #334155;
+    }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .btn-outline {
+      background: transparent;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Yıldız & Ortakları Hukuk Bürosu</h1>
+    <p>Harici Müşteri Web Sitesi — LawAgent White-Label Entegrasyon Testi</p>
+  </header>
+
+  <main>
+    <div class="hero-card">
+      <span class="badge">WHITE-LABEL EMBED TEST</span>
+      <h2>Ticari ve Borçlar Hukuku Hizmetleri</h2>
+      <p>
+        Bu sayfa, LawAgent yapay zekâ sohbet robotunun harici bir avukatlık bürosu web sitesine 
+        birkaç satırlık JS Kodu ile nasıl entegre edildiğini (White-Label Widget) simüle etmektedir.
+      </p>
+      <p style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+        Sağ alt köşedeki sohbet butonuna tıklayarak atanmış <strong>Cobalt Hallmark temasını</strong> ve kişiselleştirilmiş başlığı test edebilirsiniz.
+      </p>
+    </div>
+
+    <div class="client-switcher">
+      <h3>Farklı Tenant / Tema Test Linkleri:</h3>
+      <a href="?client=yildiz-hukuk" class="btn">Cobalt Teması (Yıldız Hukuk)</a>
+      <a href="?client=kocak-hukuk" class="btn btn-outline">Carnival Teması (Koçak Hukuk)</a>
+      <a href="?client=ozkan-avukatlik" class="btn btn-outline">Grid Teması (Özkan Hukuk)</a>
+      <a href="?client=lawagent-demo" class="btn btn-outline">Lumen Teması (LawAgent Default)</a>
+    </div>
+  </main>
+
+  <!-- LAWAGENT WHITE-LABEL WIDGET SCRIPT -->
+  <!-- Gerçek ortamda: <script src="https://your-domain.com/widget.js" data-client="yildiz-hukuk"></script> -->
+  <script type="module" src="/src/widget.tsx" data-client="yildiz-hukuk"></script>
+
+</body>
+</html>

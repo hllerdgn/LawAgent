@@ -1,132 +1,74 @@
 import React from "react";
-import { Link } from "react-router";
-import {
-  Scale,
-  Mail,
-  Phone,
-  MapPin,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
-} from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="bg-[var(--color-primary)] text-white">
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[var(--color-accent)] rounded-lg flex items-center justify-center">
-                <Scale className="w-6 h-6 text-[var(--color-primary)]" />
-              </div>
-              <span className="">LawAgent</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed">
-              Bitirme projesi kapsamında, Türk hukuku alanında uzmanlaşmış yenilikçi yapay zeka asistanı.
+    <footer className="lumen-footer" role="contentinfo">
+      <div className="lumen-shell">
+        <div className="lumen-footer__inner">
+          {/* Brand */}
+          <div>
+            <div className="lumen-footer__brand">lawagent</div>
+            <p className="lumen-footer__tagline">
+              türk hukuku için tasarlanmış yapay zeka hukuk asistanı.
+              rag v2 mimarisi ile mevzuat kaynaklı yanıtlar.
+            </p>
+            <p
+              style={{
+                marginTop: "var(--space-5)",
+                fontFamily: "var(--font-label)",
+                fontSize: "9px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "var(--color-muted)",
+                lineHeight: 1.6,
+              }}
+            >
+              kvkk uyumlu · veri paylaşımı yok
             </p>
           </div>
-          <div className="flex flex-col gap-4">
-            <h3 className="text-white">Hızlı Bağlantılar</h3>
-            <div className="flex flex-col gap-3">
-              <Link
-                to="/"
-                className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-              >
-                Ana Sayfa
-              </Link>
-              <Link
-                to="/about"
-                className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-              >
-                Proje Hakkında
-              </Link>
-              <Link
-                to="/practice-areas"
-                className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-              >
-                Sistem Kapsamı
-              </Link>
-              <Link
-                to="/blog"
-                className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-              >
-                Blog
-              </Link>
-              <Link
-                to="/contact"
-                className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-              >
-                İletişim
-              </Link>
-            </div>
+
+          {/* Mevzuat */}
+          <div>
+            <p className="lumen-footer__col-head">mevzuat</p>
+            <ul className="lumen-footer__links">
+              <li><Link to="/practice-areas/is-hukuku">iş hukuku (tbk)</Link></li>
+              <li><Link to="/practice-areas/ticaret-hukuku">ticaret hukuku (ttk)</Link></li>
+              <li><Link to="/practice-areas/tuketici-hukuku">tüketici hukuku (tkhk)</Link></li>
+              <li><Link to="/practice-areas">tüm uygulama alanları</Link></li>
+            </ul>
           </div>
-          <div className="flex flex-col gap-4">
-            <h3 className="text-white">İletişim</h3>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-gray-300">
-                <Mail className="w-5 h-5 flex-shrink-0" />
-                <span>iletisim@lawagent.ai</span>
-              </div>
-              <div className="flex items-center gap-4 mt-2">
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-                >
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-                >
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-                >
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-[var(--color-accent)] transition-colors"
-                >
-                  <Instagram className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
+
+          {/* Platform */}
+          <div>
+            <p className="lumen-footer__col-head">platform</p>
+            <ul className="lumen-footer__links">
+              <li><Link to="/about">hakkında</Link></li>
+              <li><Link to="/work-principles">çalışma ilkeleri</Link></li>
+              <li><Link to="/blog">hukuki makaleler</Link></li>
+              <li><Link to="/contact">iletişim</Link></li>
+            </ul>
+          </div>
+
+          {/* Hukuki */}
+          <div>
+            <p className="lumen-footer__col-head">hukuki</p>
+            <ul className="lumen-footer__links">
+              <li><a href="#">kvkk aydınlatma metni</a></li>
+              <li><a href="#">gizlilik politikası</a></li>
+              <li><a href="#">çerez politikası</a></li>
+              <li><a href="#">kullanım koşulları</a></li>
+            </ul>
           </div>
         </div>
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 caption text-center md:text-left">
-              © 2025 LawAgent. Tüm hakları saklıdır.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[var(--color-accent)] transition-colors caption"
-              >
-                KVKK Aydınlatma Metni
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[var(--color-accent)] transition-colors caption"
-              >
-                Çerez Politikası
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[var(--color-accent)] transition-colors caption"
-              >
-                Yasal Uyarı
-              </a>
-            </div>
-          </div>
+
+        <div className="lumen-footer__bottom">
+          <span>© {year} lawagent · ai karar destek platformu</span>
+          <span>fastapi · llama-3 · rag v2 · qdrant</span>
         </div>
       </div>
     </footer>
   );
 }
-

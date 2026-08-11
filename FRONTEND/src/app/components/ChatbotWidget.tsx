@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 // ---------- UTILS ----------
 const cn = (...classes: (string | boolean | undefined)[]) =>
@@ -84,29 +84,8 @@ Nasıl yardımcı olabilirim?`,
   };
 }
 
-// Legal linkleri zenginleştir (inline kaynak için)
 function enrichLegalLinks(text: string): string {
-  return text
-    .replace(
-      /\bTBK\s*m\.?\s*(\d+)\b/gi,
-      "[TBK m.$1](https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6098&Klm=$1)",
-    )
-    .replace(
-      /\bTTK\s*m\.?\s*(\d+)\b/gi,
-      "[TTK m.$1](https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6102&Klm=$1)",
-    )
-    .replace(
-      /\bBK\s*m\.?\s*(\d+)\b/gi,
-      "[BK m.$1](https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6098&Klm=$1)",
-    )
-    .replace(
-      /\bTBK\b/g,
-      "[TBK](https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6098)",
-    )
-    .replace(
-      /\bTTK\b/g,
-      "[TTK](https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6102)",
-    );
+  return text;
 }
 
 // Cevap içindeki gereksiz kalın başlıkları yumuşat
@@ -121,6 +100,121 @@ function softenMarkdownHeadings(content: string): string {
 interface ParsedMessage {
   content: string;
   actions: string[];
+}
+
+interface ParsedBotResponse {
+  explanation: string;
+  closingQuestion: string;
+}
+
+function parseBotResponse(text: string): ParsedBotResponse {
+  let cleaned = text.trim();
+  
+  // If the response is not a structured legal response (does not contain standard headers),
+  // we do not attempt to split it. We return it as is.
+  const isStructured = 
+    cleaned.includes("**Hukuki Değerlendirme**") || 
+    cleaned.includes("**Kısa Bilgi**") || 
+    cleaned.includes("**Dayanak Mevzuat**") || 
+    cleaned.includes("**Dayanak Belge**");
+    
+  if (!isStructured) {
+    return {
+      explanation: cleaned,
+      closingQuestion: "",
+    };
+  }
+
+  // 1. Remove starting title like "**Hukuki Değerlendirme**" or "**Kısa Bilgi**"
+  cleaned = cleaned.replace(/^(\*\*Hukuki Değerlendirme\*\*|\*\*Kısa Bilgi\*\*)\s*/i, "");
+  
+  // 2. Extract closing question
+  let closingQuestion = "";
+  
+  // Try splitting by "---" first
+  const separatorIndex = cleaned.lastIndexOf("---");
+  if (separatorIndex !== -1) {
+    closingQuestion = cleaned.substring(separatorIndex + 3).trim();
+    cleaned = cleaned.substring(0, separatorIndex).trim();
+  } else {
+    // If no separator, look for typical closing questions
+    const paragraphs = cleaned.split("\n\n");
+    if (paragraphs.length > 1) {
+      const lastParagraph = paragraphs[paragraphs.length - 1].trim();
+      if (
+        lastParagraph.endsWith("?") || 
+        lastParagraph.toLowerCase().includes("ister misiniz") || 
+        lastParagraph.toLowerCase().includes("başka bir sorunuz var mı")
+      ) {
+        closingQuestion = lastParagraph;
+        paragraphs.pop();
+        cleaned = paragraphs.join("\n\n").trim();
+      }
+    }
+  }
+  
+  // 3. Remove "**Dayanak Mevzuat**" or "**Dayanak Belge**" and everything after it
+  const dayanakRegex = /\*\*Dayanak (Mevzuat|Belge)\*\*/i;
+  const match = cleaned.match(dayanakRegex);
+  if (match && match.index !== undefined) {
+    cleaned = cleaned.substring(0, match.index).trim();
+  }
+
+  return {
+    explanation: cleaned.trim(),
+    closingQuestion: closingQuestion.trim(),
+  };
+}
+
+function formatSourceLabel(source: LawSource): string {
+  let kanun = source.kanun.trim();
+  const madde = source.madde ? source.madde.trim() : "";
+  
+  if (kanun === "TKHK" || kanun === "6502 sayılı Tüketicinin Korunması Hakkında Kanun") {
+    kanun = "6502 sayılı TKHK";
+  } else if (kanun === "TBK" || kanun === "6098 sayılı Türk Borçlar Kanunu") {
+    kanun = "6098 sayılı TBK";
+  } else if (kanun === "TTK" || kanun === "6102 sayılı Türk Ticaret Kanunu") {
+    kanun = "6102 sayılı TTK";
+  }
+  
+  if (!madde) return kanun;
+  
+  if (kanun.toLowerCase().includes("yargıtay")) {
+    return `${kanun} ${madde}`;
+  }
+  
+  if (kanun.toLowerCase().includes("belge") || kanun.toLowerCase().includes("site_document")) {
+    return `${kanun}: ${madde}`;
+  }
+  
+  return `${kanun} m. ${madde}`;
+}
+
+function formatChipLabel(source: LawSource): string {
+  let kanun = source.kanun.trim();
+  const madde = source.madde ? source.madde.trim() : "";
+  
+  if (kanun === "6502 sayılı Tüketicinin Korunması Hakkında Kanun" || kanun === "6502 sayılı TKHK") {
+    kanun = "TKHK";
+  } else if (kanun === "6098 sayılı Türk Borçlar Kanunu" || kanun === "6098 sayılı TBK") {
+    kanun = "TBK";
+  } else if (kanun === "6102 sayılı Türk Ticaret Kanunu" || kanun === "6102 sayılı TTK") {
+    kanun = "TTK";
+  }
+  
+  if (!madde) return kanun;
+  
+  if (kanun.toLowerCase().includes("yargıtay")) {
+    const shortMadde = madde.length > 20 ? madde.substring(0, 20) + "…" : madde;
+    return `${kanun} ${shortMadde}`;
+  }
+  
+  if (kanun.toLowerCase().includes("belge") || kanun.toLowerCase().includes("site_document")) {
+    return `${kanun}: ${madde}`;
+  }
+  
+  return `${kanun} m. ${madde}`;
 }
 function parseMessage(rawText: string): ParsedMessage {
   let actions: string[] = [];
@@ -321,18 +415,24 @@ const SourceChip = ({
   source: LawSource;
   onClick: (source: LawSource) => void;
 }) => {
-  const label = source.madde
-    ? `${source.kanun} m. ${source.madde}`
-    : source.kanun;
+  const label = formatChipLabel(source);
 
   return (
     <button
       onClick={() => onClick(source)}
-      className="source-chip-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+      style={{
+        fontFamily: "var(--font-label)",
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        background: "var(--color-paper-2)",
+        color: "var(--color-accent)",
+        border: "1px solid var(--color-rule)",
+      }}
       title={source.ozet}
     >
       <FileText className="w-3 h-3 flex-shrink-0" />
-      <span className="truncate max-w-[120px]">{label}</span>
+      <span className="truncate max-w-[140px]">{label}</span>
     </button>
   );
 };
@@ -368,8 +468,11 @@ const MessageBubble = ({
       )}
     >
       {message.sender === "bot" && !isSystem && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[#C89C5D] to-[#B38A4D] flex items-center justify-center shadow-md mt-1">
-          <Scale className="w-4 h-4 text-white" />
+        <div
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-xs mt-1"
+          style={{ background: "var(--color-paper-2)", border: "1px solid var(--color-rule)" }}
+        >
+          <Scale className="w-4 h-4" style={{ color: "var(--color-accent)" }} />
         </div>
       )}
 
@@ -385,38 +488,108 @@ const MessageBubble = ({
       >
         <div
           className={cn(
-            "rounded-2xl text-[13px] leading-relaxed shadow-sm",
+            "rounded-2xl text-[13px] leading-relaxed shadow-xs",
             message.sender === "user"
-              ? "bg-gradient-to-br from-[#0B1F3B] to-[#071628] text-white rounded-br-md px-3.5 py-2.5"
+              ? "bg-[var(--color-accent)] text-[var(--color-paper)] rounded-br-md px-3.5 py-2.5"
               : isSystem
-                ? "bg-gray-100 text-gray-600 text-center rounded-xl border border-gray-200 px-4 py-2"
-                : "bg-white/95 backdrop-blur-sm text-gray-800 rounded-bl-md border border-gray-100/80 px-3.5 py-3",
+                ? "bg-[var(--color-paper-2)] text-[var(--color-muted)] text-center rounded-xl border border-[var(--color-rule)] px-4 py-2"
+                : "bg-[var(--color-paper)] text-[var(--color-ink)] rounded-2xl rounded-tl-none border border-[var(--color-rule)] px-4 py-3.5",
           )}
+          style={{ fontFamily: "var(--font-body)", textTransform: "lowercase" }}
         >
           {message.isLoading ? (
-            <div className="flex items-center gap-2.5 text-gray-600">
-              <Loader2 className="w-4 h-4 animate-spin text-[#C89C5D]" />
+            <div className="flex items-center gap-2.5" style={{ color: "var(--color-ink-2)" }}>
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--color-accent)" }} />
               <span className="italic font-medium text-[13px]">
-                {message.text || "Hukuki analiz yapılıyor..."}
+                {message.text || "hukuki analiz yapılıyor..."}
               </span>
             </div>
           ) : (
             <>
               {message.sender === "bot" && !isSystem && (
-                <div className="font-bold text-[#0B1F3B] text-[13px] mb-1.5">
-                  LawAgent AI
+                <div
+                  className="font-bold text-[11px] mb-1.5"
+                  style={{
+                    fontFamily: "var(--font-label)",
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    color: "var(--color-accent)",
+                  }}
+                >
+                  LAWAGENT AI
                 </div>
               )}
-              {message.sender === "bot" && !isSystem ? (
-                <BotMessageContent
-                  content={message.content || message.text || ""}
-                  enableTypewriter={true}
-                  shouldStopTyping={
-                    shouldStopTyping && activeTypingMessageId === message.id
-                  }
-                  onTypingStatusChange={onTypingStatusChange}
-                />
-              ) : (
+              {message.sender === "bot" && !isSystem ? (() => {
+                const botResponse = parseBotResponse(message.content || message.text || "");
+                const isCurrentTyping = activeTypingMessageId === message.id;
+                return (
+                  <>
+                    <BotMessageContent
+                      content={botResponse.explanation}
+                      enableTypewriter={true}
+                      shouldStopTyping={
+                        shouldStopTyping && isCurrentTyping
+                      }
+                      onTypingStatusChange={onTypingStatusChange}
+                    />
+                    
+                    {/* Unique Sources list inside card */}
+                    {message.sources && message.sources.length > 0 && !isCurrentTyping && (
+                      <div
+                        className="mt-3 pt-3 border-t animate-fadeSlideIn"
+                        style={{ borderColor: "var(--color-rule)" }}
+                      >
+                        <div
+                          className="font-bold text-[10px] mb-1.5"
+                          style={{
+                            fontFamily: "var(--font-label)",
+                            letterSpacing: "0.10em",
+                            textTransform: "uppercase",
+                            color: "var(--color-accent)",
+                          }}
+                        >
+                          KAYNAKLAR:
+                        </div>
+                        <ul className="space-y-1.5">
+                          {message.sources
+                            .filter(
+                              (s, i, arr) =>
+                                arr.findIndex(
+                                  (x) => x.kanun === s.kanun && x.madde === s.madde,
+                                ) === i,
+                            )
+                            .slice(0, 4)
+                            .map((source, idx) => (
+                              <li
+                                key={idx}
+                                onClick={() => onSourceClick?.(source)}
+                                className="flex items-start gap-1.5 text-[12px] font-semibold hover:opacity-80 active:scale-[0.99] cursor-pointer transition-all"
+                                style={{
+                                  fontFamily: "var(--font-label)",
+                                  textTransform: "uppercase",
+                                  color: "var(--color-accent)",
+                                }}
+                              >
+                                <span style={{ color: "var(--color-accent-2)" }}>•</span>
+                                <span>{formatSourceLabel(source)}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {/* Closing question */}
+                    {botResponse.closingQuestion && !isCurrentTyping && (
+                      <div
+                        className="mt-3 text-[12px] leading-relaxed animate-fadeSlideIn"
+                        style={{ color: "var(--color-muted)" }}
+                      >
+                        {botResponse.closingQuestion}
+                      </div>
+                    )}
+                  </>
+                );
+              })() : (
                 <div className="whitespace-pre-wrap">
                   {message.content || message.text}
                 </div>
@@ -702,10 +875,10 @@ export function ChatbotWidget() {
 
     const sendRequest = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:7860"}/ask`;
+        const apiUrl = `${import.meta.env.VITE_API_URL || "https://hllerdgn-lawagent-backend.hf.space"}/ask`;
         const controller = new AbortController();
         abortControllerRef.current = controller;
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s: HF Space cold start
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
@@ -762,17 +935,21 @@ export function ChatbotWidget() {
 
         if (connectionStatus === "offline") setConnectionStatus("online");
         return true;
-      } catch (error) {
+      } catch (error: any) {
         console.error("API hatası:", error);
-        if (connectionStatus !== "offline") {
-          setConnectionStatus("offline");
-          showOfflineSystemMessage();
-        }
-        const friendlyMessages = [
-          "Şu anda hizmet veremiyoruz. Lütfen biraz sonra tekrar deneyin.",
-          "Geçici bir teknik aksaklık oluştu.",
-          "Bağlantıda kısa süreli bir sorun oluştu. Sorunuz kaybolmadı, tekrar deneyebilirsiniz.",
-        ];
+        // Cold start tespiti: AbortError = timeout (HF Space uykudan uyanıyor)
+        const isColdStart =
+          error?.name === "AbortError" || error?.message?.includes("aborted");
+        const friendlyMessages = isColdStart
+          ? [
+              "⏳ Sunucu başlatılıyor, lütfen birkaç saniye bekleyin ve tekrar deneyin.",
+              "⏳ Sistem şu an uyanıyor. 10-15 saniye sonra tekrar deneyebilirsiniz.",
+            ]
+          : [
+              "Şu anda hizmet veremiyoruz. Lütfen biraz sonra tekrar deneyin.",
+              "Geçici bir teknik aksaklık oluştu.",
+              "Bağlantıda kısa süreli bir sorun oluştu. Sorunuz kaybolmadı, tekrar deneyebilirsiniz.",
+            ];
         const fallbackText =
           friendlyMessages[Math.floor(Math.random() * friendlyMessages.length)];
         setMessages((prev) =>
@@ -894,16 +1071,21 @@ export function ChatbotWidget() {
         )}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center bg-gradient-to-tr from-[#0B1F3B] to-[#071628] text-white transition-all duration-300 hover:scale-110 active:scale-95 group"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer"
+          style={{
+            background: "var(--color-paper)",
+            border: "1px solid var(--color-rule)",
+            color: "var(--color-ink)",
+          }}
           aria-label="AI Chatbot"
         >
           {isOpen ? (
-            <X className="w-7 h-7" />
+            <X className="w-6 h-6" style={{ color: "var(--color-ink)" }} />
           ) : (
             <>
-              <Scale className="w-7 h-7 group-hover:scale-110 transition-transform" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#C89C5D] rounded-full animate-ping" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#C89C5D] rounded-full" />
+              <Scale className="w-6 h-6 group-hover:scale-110 transition-transform" style={{ color: "var(--color-accent)" }} />
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping" style={{ background: "var(--color-accent)" }} />
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full" style={{ background: "var(--color-accent)" }} />
             </>
           )}
         </button>
@@ -912,46 +1094,78 @@ export function ChatbotWidget() {
       {isOpen && (
         <div
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden bg-white shadow-2xl animate-fadeIn border border-gray-100 transition-all duration-300",
+            "fixed z-50 flex flex-col overflow-hidden shadow-2xl animate-fadeIn transition-all duration-300",
             isFullscreen
               ? "inset-0 rounded-none"
               : "inset-0 sm:inset-auto sm:bottom-24 sm:right-6 sm:rounded-2xl",
           )}
-          style={
-            !isFullscreen && isDesktop
+          style={{
+            background: "var(--color-paper)",
+            border: "1px solid var(--color-rule)",
+            fontFamily: "var(--font-body)",
+            ...(!isFullscreen && isDesktop
               ? {
                   width: `${dimensions.width}px`,
                   height: `${dimensions.height}px`,
                   maxWidth: "90vw",
                   maxHeight: "90vh",
                 }
-              : undefined
-          }
+              : {}),
+          }}
         >
-          {/* Header - poster style */}
-          <div className="bg-gradient-to-r from-[#1e3a5f] to-[#152b47] p-4 flex items-center justify-between shadow-lg">
+          {/* Header — Lumen style */}
+          <div
+            className="p-4 flex items-center justify-between shadow-xs"
+            style={{
+              background: "var(--color-paper)",
+              borderBottom: "1px solid var(--color-rule)",
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-xl flex items-center justify-center shadow-md">
-                <Scale className="w-5 h-5 text-white" />
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{
+                  background: "var(--color-paper-2)",
+                  border: "1px solid var(--color-rule)",
+                }}
+              >
+                <Scale className="w-4 h-4" style={{ color: "var(--color-accent)" }} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-white font-bold text-sm tracking-wide">
-                    {!isDesktop ? "LawAgent" : "LawAgent AI"}
+                  <h2
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 400,
+                      fontSize: "var(--text-lg)",
+                      color: "var(--color-ink)",
+                      textTransform: "lowercase",
+                    }}
+                  >
+                    lawagent ai
                   </h2>
                   <span
                     className={`w-2 h-2 rounded-full ${
                       connectionStatus === "online"
-                        ? "bg-green-400 animate-pulse"
+                        ? "bg-emerald-500 animate-pulse"
                         : "bg-red-500"
                     }`}
                   />
                 </div>
-                <p className="text-[#93c5fd] text-xs font-medium">
-                  AI Hukuk Asistanı
+                <p
+                  style={{
+                    fontFamily: "var(--font-label)",
+                    fontSize: "9px",
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    color: "var(--color-muted)",
+                  }}
+                >
+                  00 · HUKUKİ YANIT MOTORU
                 </p>
               </div>
             </div>
+
             <div className="flex items-center gap-1.5">
               {!isDesktop && (
                 <div className="flex items-center gap-1.5 mr-1">
@@ -960,45 +1174,37 @@ export function ChatbotWidget() {
                       handleClose();
                       navigate("/");
                     }}
-                    className="text-white hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/20 bg-white/10"
+                    className="p-2 rounded-lg transition-all"
+                    style={{ color: "var(--color-ink)" }}
                     title="Ana Sayfa"
                   >
-                    <Home className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-medium hidden sm:inline">
-                      Ana Sayfa
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleClose();
-                      navigate("/about");
-                    }}
-                    className="text-white hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/20 bg-white/10"
-                    title="Hakkımızda"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-medium hidden sm:inline">
-                      Hakkımızda
-                    </span>
+                    <Home className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {activeTypingMessageId !== null && (
                 <button
                   onClick={handleStopGeneration}
-                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-all group flex items-center gap-1.5 bg-red-500/20 border border-red-400/30"
+                  className="px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                  style={{
+                    background: "oklch(90% 0.08 25 / 0.3)",
+                    border: "1px solid oklch(65% 0.15 25 / 0.4)",
+                    color: "oklch(40% 0.15 25)",
+                    fontFamily: "var(--font-label)",
+                    fontSize: "10px",
+                    textTransform: "uppercase",
+                  }}
                   title="Yanıtı Durdur"
                 >
-                  <StopCircle className="w-4 h-4 text-red-400 group-hover:text-red-300" />
-                  <span className="text-xs font-medium text-red-300">
-                    Durdur
-                  </span>
+                  <StopCircle className="w-3.5 h-3.5" />
+                  <span>Durdur</span>
                 </button>
               )}
               {isDesktop && (
                 <button
                   onClick={toggleFullscreen}
-                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-all"
+                  className="p-2 rounded-lg transition-all"
+                  style={{ color: "var(--color-muted)" }}
                   title={isFullscreen ? "Normal Boyut" : "Tam Ekran"}
                 >
                   {isFullscreen ? (
@@ -1010,7 +1216,8 @@ export function ChatbotWidget() {
               )}
               <button
                 onClick={handleClose}
-                className="text-white hover:bg-white/20 p-2 rounded-lg transition-all"
+                className="p-2 rounded-lg transition-all"
+                style={{ color: "var(--color-muted)" }}
                 title="Kapat"
               >
                 <X className="w-4 h-4" />
@@ -1018,9 +1225,24 @@ export function ChatbotWidget() {
             </div>
           </div>
 
-          {/* Law Category Chips - poster style */}
-          <div className="category-chips-bar bg-[#f8fafc] border-b border-[#e2e8f0] px-4 py-2.5 flex-shrink-0">
-            <div className="text-[9px] font-bold text-[#94a3b8] tracking-wider uppercase mb-1.5">
+          {/* Law Category Chips */}
+          <div
+            className="px-4 py-2.5 flex-shrink-0"
+            style={{
+              background: "var(--color-paper-2)",
+              borderBottom: "1px solid var(--color-rule)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-label)",
+                fontSize: "9px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "var(--color-muted)",
+                marginBottom: "6px",
+              }}
+            >
               HUKUK KATEGORİLERİ
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -1028,7 +1250,14 @@ export function ChatbotWidget() {
                 <button
                   key={idx}
                   onClick={() => handleCategoryClick(cat.query)}
-                  className="category-chip px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#e2e8f0] bg-white text-[#475569] hover:bg-[#f1f5f9] hover:border-[#C89C5D] hover:text-[#0B1F3B] transition-all duration-200 hover:shadow-sm active:scale-95 cursor-pointer"
+                  className="px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    textTransform: "lowercase",
+                    background: "var(--color-paper)",
+                    color: "var(--color-ink-2)",
+                    border: "1px solid var(--color-rule)",
+                  }}
                 >
                   {cat.label}
                 </button>
@@ -1037,21 +1266,33 @@ export function ChatbotWidget() {
           </div>
 
           {/* Info banner */}
-          <div className="bg-blue-50/50 border-b border-blue-100 px-4 py-2 text-[10px] text-blue-800 leading-tight flex items-start gap-2">
-            <Info className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div
+            className="px-4 py-2 text-[10px] leading-tight flex items-start gap-2"
+            style={{
+              background: "var(--color-paper-2)",
+              borderBottom: "1px solid var(--color-rule)",
+              color: "var(--color-muted)",
+              fontFamily: "var(--font-body)",
+              textTransform: "lowercase",
+            }}
+          >
+            <Info className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: "var(--color-accent)" }} />
             <span>
-              <strong>Önemli Bilgilendirme:</strong> Bu AI asistan genel bilgi
-              amaçlıdır. Detaylı hukuki danışmanlık için lütfen ekibimizle
-              iletişime geçin.
+              <strong>bilgilendirme:</strong> bu ai asistan genel bilgi
+              amaçlıdır, kişisel verileriniz saklanmaz.
             </span>
           </div>
 
-          {/* Messages area - poster gradient style */}
+          {/* Messages area — blueprint grid background */}
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto p-4 space-y-4"
             style={{
-              background: "linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)",
+              background: `
+                linear-gradient(var(--rule-blueprint) 1px, transparent 1px) 0 0 / 32px 32px,
+                linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px) 0 0 / 32px 32px,
+                var(--color-paper)
+              `,
             }}
           >
             {messages.map((message) => {
@@ -1073,51 +1314,59 @@ export function ChatbotWidget() {
             })}
           </div>
 
-          {/* Resize handle */}
-          {!isFullscreen && isDesktop && (
-            <div
-              ref={resizeRef}
-              onMouseDown={handleResizeStart}
-              className="absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize group z-10"
-              title="Sürükleyerek boyutlandır"
-            >
-              <div className="absolute bottom-1 right-1 w-4 h-4 flex flex-col gap-0.5 items-end justify-end opacity-40 group-hover:opacity-70 transition-opacity">
-                <div className="flex gap-0.5">
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                </div>
-                <div className="flex gap-0.5">
-                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Input area - poster style */}
-          <div className="p-3.5 border-t border-[#e5e7eb] bg-white">
+          {/* Input area — Lumen style */}
+          <div
+            className="p-3.5"
+            style={{
+              background: "var(--color-paper)",
+              borderTop: "1px solid var(--color-rule)",
+            }}
+          >
             <div className="flex items-center gap-2.5">
-              <div className="flex-1 flex items-center bg-[#f9fafb] rounded-xl px-3.5 py-2.5 border-[1.5px] border-[#e5e7eb] focus-within:border-[#1e3a5f] transition-colors">
+              <div
+                className="flex-1 flex items-center rounded-xl px-3.5 py-2.5 transition-colors"
+                style={{
+                  background: "var(--color-paper-2)",
+                  border: "1px solid var(--color-rule)",
+                }}
+              >
                 <input
                   type="text"
-                  placeholder="Mesajınızı yazın..."
+                  placeholder="hukuki sorunuzu yazın..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-[#9ca3af]"
+                  className="flex-1 bg-transparent outline-none text-sm placeholder:text-[var(--color-muted)]"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "var(--color-ink)",
+                    textTransform: "lowercase",
+                  }}
                   disabled={connectionStatus === "offline"}
                 />
               </div>
               <button
                 onClick={() => handleSend()}
                 disabled={!inputValue.trim() || connectionStatus === "offline"}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#152b47] text-white hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
+                className="w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer disabled:opacity-40"
+                style={{
+                  background: "var(--color-accent)",
+                  color: "var(--color-paper)",
+                }}
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[9px] text-[#94a3b8] mt-2 text-center font-medium">
-              LawAgent AI, verdiği yanıtları güvenilir hukuki kaynaklara
-              dayandırır.
+            <p
+              className="text-[9px] mt-2 text-center"
+              style={{
+                fontFamily: "var(--font-label)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--color-muted)",
+              }}
+            >
+              LAWAGENT AI · MEVZUAT KAYNAKLI YANIT MOTORU
             </p>
           </div>
         </div>
@@ -1126,47 +1375,85 @@ export function ChatbotWidget() {
       {/* Source Modal */}
       {showSourceModal && selectedSource && (
         <div
-          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-[60] backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+          style={{ background: "oklch(0% 0 0 / 0.4)" }}
           onClick={() => setShowSourceModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-scaleIn"
+            className="rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-scaleIn"
+            style={{
+              background: "var(--color-paper)",
+              border: "1px solid var(--color-rule)",
+              fontFamily: "var(--font-body)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#C89C5D] to-[#B38A4D] rounded-xl flex items-center justify-center shadow-md">
-                  <Scale className="w-6 h-6 text-white" />
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "var(--color-paper-2)",
+                    border: "1px solid var(--color-rule)",
+                  }}
+                >
+                  <Scale className="w-5 h-5" style={{ color: "var(--color-accent)" }} />
                 </div>
                 <div>
-                  <h3 className="text-[#0B1F3B] font-bold text-base">
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 400,
+                      fontSize: "var(--text-xl)",
+                      color: "var(--color-ink)",
+                      textTransform: "lowercase",
+                    }}
+                  >
                     {selectedSource.kanun}
-                    {selectedSource.madde &&
-                      ` - Madde ${selectedSource.madde}`}
+                    {selectedSource.madde && ` · madde ${selectedSource.madde}`}
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium">
-                    Hukuki Kaynak Detayı
+                  <p
+                    style={{
+                      fontFamily: "var(--font-label)",
+                      fontSize: "9px",
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted)",
+                    }}
+                  >
+                    HUKUKİ KAYNAK METNİ
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowSourceModal(false)}
-                className="text-gray-400 hover:text-gray-700 transition-colors"
+                style={{ color: "var(--color-muted)" }}
+                className="hover:opacity-75 transition-opacity cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border-l-4 border-[#C89C5D]">
-              <p className="text-sm text-slate-700 leading-relaxed">
+            <div
+              className="p-5 rounded-xl border-l-3"
+              style={{
+                background: "var(--color-paper-2)",
+                borderColor: "var(--color-accent)",
+              }}
+            >
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: "var(--color-ink)", textTransform: "lowercase" }}
+              >
                 "{selectedSource.ozet}"
               </p>
             </div>
             <div className="mt-5 flex justify-end">
               <button
                 onClick={() => setShowSourceModal(false)}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#152b47] text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all"
+                className="lumen-btn lumen-btn--primary"
+                style={{ padding: "8px 20px" }}
               >
-                Anladım
+                kapat
               </button>
             </div>
           </div>

@@ -1,69 +1,163 @@
 import React from "react";
-import { Link } from "react-router";
-import { PracticeAreaCard } from "../components/PracticeAreaCard";
-import {
-  Briefcase,
-  Users,
-  Home as HomeIcon,
-  FileText,
-  Building2,
-  ShoppingCart,
-} from "lucide-react";
+import { Link } from "react-router-dom";
+
+const AREAS = [
+  {
+    slug: "ticaret-hukuku",
+    label: "01 · TİCARET HUKUKU",
+    title: "türk ticaret kanunu (ttk)",
+    sub: "6102 sayılı kanun · 1535 madde",
+    body: "şirket kuruluşu, haksız rekabet, ticari sözleşmeler, ticari uyuşmazlıkların çözümü ve şirketler hukukuna dair sorularınız için.",
+  },
+  {
+    slug: "is-hukuku",
+    label: "02 · İŞ HUKUKU",
+    title: "türk borçlar kanunu (tbk)",
+    sub: "6098 sayılı kanun · 818 madde",
+    body: "iş akitlerinin feshi, kıdem ve ihbar tazminatları, işçi-işveren uyuşmazlıkları ve arabuluculuk süreçleri.",
+  },
+  {
+    slug: "tuketici-hukuku",
+    label: "03 · TÜKETİCİ HUKUKU",
+    title: "tüketicinin korunması hakkında kanun (tkhk)",
+    sub: "6502 sayılı kanun · 84 madde",
+    body: "ayıplı mal ve hizmetler, mesafeli satış cayma hakkı, hakem heyeti ve tüketici mahkemesi süreçleri.",
+  },
+];
 
 export function PracticeAreasPage() {
-  const practiceAreas = [
-    {
-      icon: Briefcase,
-      title: "Türk Ticaret Kanunu (TTK)",
-      description:
-        "Türk Ticaret Kanunu kapsamında şirket kuruluşu, ticari işletme hukuku ve ticari uyuşmazlıklar.",
-      slug: "Türk Ticaret Kanunu ",
-    },
-    {
-      icon: Users,
-      title: "İş Hukuku (TBK)",
-      description:
-        "Türk Borçlar Kanunu kapsamında iş sözleşmeleri, işçi-işveren uyuşmazlıkları ve iş güvenliği.",
-      slug: "is-hukuku",
-    },
-    {
-      icon: ShoppingCart,
-      title: "Tüketicinin Korunması Hakkında Kanun (TKHK)",
-      description:
-        "Tüketicinin Korunması Hakkında Kanun kapsamında tüketici hakları ve ayıplı mal süreçleri.",
-      slug: "tuketici-hukuku",
-    },
-  ];
-
   return (
-    <div className="w-full">
-      <section className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-white mb-6">Sistem Kapsamı</h1>
-            <p className="text-gray-200 text-lg">
-              LawAgent AI asistanı, aşağıda belirtilen temel kanunlar ve mevzuatlar çerçevesinde 
-              sorularınızı yanıtlayacak şekilde eğitilmiştir.
-            </p>
-          </div>
+    <>
+      {/* Page hero */}
+      <section
+        style={{
+          background: `
+            linear-gradient(var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            radial-gradient(60% 40% at 80% 50%, var(--color-paper-emit) 0%, transparent 65%),
+            var(--color-paper)
+          `,
+          paddingTop: "var(--space-12)",
+          paddingBottom: "var(--space-10)",
+          borderBottom: "1px solid var(--color-rule)",
+        }}
+        aria-labelledby="areas-title"
+      >
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-4)" }}>
+            00 · mevzuat kapsamı ve uzmanlık
+          </span>
+          <h1
+            id="areas-title"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "var(--text-display)",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "var(--tracking-display)",
+              color: "var(--color-ink)",
+              maxWidth: "16ch",
+              overflowWrap: "anywhere",
+            }}
+          >
+            desteklenen hukuk{" "}
+            <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>disiplinleri</em>.
+          </h1>
+          <p style={{
+            marginTop: "var(--space-6)",
+            fontSize: "var(--text-lg)",
+            color: "var(--color-ink-2)",
+            lineHeight: "var(--leading-normal)",
+            maxWidth: "52ch",
+          }}>
+            lawagent ai, aşağıdaki temel kanun maddeleri ve güncel mevzuat normları
+            üzerinde eğitilmiştir.
+          </p>
         </div>
       </section>
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {practiceAreas.map((area, index) => (
-              <Link key={index} to={`/practice-areas/${area.slug}`}>
-                <PracticeAreaCard
-                  icon={area.icon}
-                  title={area.title}
-                  description={area.description}
-                />
+
+      {/* Stat row */}
+      <div className="lumen-stats lumen-shell">
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">3</span>
+          <span className="lumen-stat__label">temel kanun</span>
+        </div>
+        <div className="lumen-stat__divider" aria-hidden="true"/>
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">2837</span>
+          <span className="lumen-stat__label">indekslenen madde</span>
+        </div>
+        <div className="lumen-stat__divider" aria-hidden="true"/>
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">28 ms</span>
+          <span className="lumen-stat__label">p50 yanıt süresi</span>
+        </div>
+      </div>
+
+      {/* Practice area cards */}
+      <section className="lumen-section" aria-labelledby="areas-cards-title">
+        <div className="lumen-shell">
+          <header className="lumen-section__head">
+            <span className="eyebrow">01 · uygulama alanları</span>
+            <h2 id="areas-cards-title" className="lumen-section__title">
+              türk hukukunun üç temel <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>mevzuatı</em>.
+            </h2>
+            <p className="lumen-section__lede">
+              her alan için özel olarak indekslenmiş vektör veri tabanı. ilgili
+              kanun maddesine kaynak referansıyla yanıt.
+            </p>
+          </header>
+          <div className="lumen-cards" role="list">
+            {AREAS.map((area) => (
+              <Link
+                key={area.slug}
+                to={`/practice-areas/${area.slug}`}
+                className="lumen-card"
+                role="listitem"
+              >
+                <span className="lumen-card__eyebrow">{area.label}</span>
+                <div>
+                  <h2 className="lumen-card__title">{area.title}</h2>
+                  <p style={{
+                    fontFamily: "var(--font-label)",
+                    fontSize: "10px",
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    color: "var(--color-accent)",
+                    marginTop: "var(--space-2)",
+                  }}>
+                    {area.sub}
+                  </p>
+                </div>
+                <p className="lumen-card__body">{area.body}</p>
+                <span className="lumen-card__arrow" aria-hidden="true">→</span>
               </Link>
             ))}
           </div>
         </div>
       </section>
-    </div>
+
+      {/* CTA */}
+      <section className="lumen-cta" style={{ borderTop: "1px solid var(--color-rule)" }}>
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-5)" }}>
+            02 · mevzuat sorgulama
+          </span>
+          <h2 className="lumen-cta__title">
+            özel bir kanun maddesini <em>sorgulayın</em>.
+          </h2>
+          <p className="lumen-cta__sub">
+            merak ettiğiniz kanun fıkrasını doğrudan lawagent ai asistanına sorabilirsiniz.
+          </p>
+          <button
+            className="lumen-btn lumen-btn--primary"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+            style={{ marginInline: "auto", display: "inline-flex" }}
+          >
+            asistan ile sorgulama yap →
+          </button>
+        </div>
+      </section>
+    </>
   );
 }
-

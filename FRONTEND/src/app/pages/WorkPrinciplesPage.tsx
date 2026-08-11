@@ -1,129 +1,181 @@
-import React from 'react';
-import { Link } from 'react-router';
-import { Button } from '../components/Button';
-import { Shield, Eye, Heart, Lock } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+
+const PRINCIPLES = [
+  {
+    code: "01",
+    label: "01 · ETİK VE DOĞRULUK",
+    title: "etik & doğruluk",
+    body: "avukatlık meslek kurallarına ve mevzuat ruhuna %100 sadakat gösteriyor, uydurma (halüsinatif) bilgilere kesinlikle geçit vermiyoruz.",
+  },
+  {
+    code: "02",
+    label: "02 · ŞEFFAFLIK",
+    title: "şeffaf veri kaynağı",
+    body: "sistem tarafından üretilen her yanıtın arkasındaki kanun fıkrası ve vektörel kaynak kullanıcıya şeffafça gösterilir.",
+  },
+  {
+    code: "03",
+    label: "03 · PERFORMANS",
+    title: "yüksek performans",
+    body: "qdrant vektör indeksleme ile milisaniyeler düzeyinde en ilgili hukuki metin parçaları getirilir.",
+  },
+  {
+    code: "04",
+    label: "04 · GİZLİLİK",
+    title: "kvkk & veri güvenliği",
+    body: "kullanıcılardan gelen sorular ve oturum verileri anonimleştirilir, kvkk standartlarında güvenle işlenir.",
+  },
+];
+
+const COMMITMENTS = [
+  { label: "MEVZUAT DOĞRULUĞU GÜVENCESİ", text: "üretilen tüm yanıtlar ilgili kanun fıkrasına atıfta bulunur, rastgele çıkarımlardan kaçınır." },
+  { label: "KESİNTİSİZ ERİŞİLEBİLİRLİK", text: "7/24 aktif bulut altyapısı sayesinde hukuki araştırma süreçlerinizi her an destekler." },
+  { label: "TAM GİZLİLİK KORUMASI", text: "sisteme iletilen hukuki soru metinleri hiçbir dış modele veya üçüncü şahsa iletilmez." },
+];
 
 export function WorkPrinciplesPage() {
-  const principles = [
-    {
-      icon: Shield,
-      title: 'Etik',
-      description: 'Avukatlık mesleğinin etik kurallarına tam bağlılık gösteriyor, her zaman dürüstlük ve adalet ilkesi doğrultusunda hareket ediyorum.'
-    },
-    {
-      icon: Eye,
-      title: 'Şeffaflık',
-      description: 'Müvekkillerimle açık ve net iletişim kuruyorum. Süreç boyunca tüm gelişmeler hakkında düzenli olarak bilgilendirme yapıyorum.'
-    },
-    {
-      icon: Heart,
-      title: 'Profesyonellik',
-      description: 'Her dosyaya özen gösteriyor, titiz araştırma ve hazırlıkla en iyi sonucu elde etmek için çalışıyorum.'
-    },
-    {
-      icon: Lock,
-      title: 'Gizlilik',
-      description: 'Müvekkil-avukat gizliliği ilkesine tam saygı gösteriyor, paylaşılan tüm bilgileri en üst düzey gizlilikle koruyorum.'
-    }
-  ];
-
   return (
-    <div className="w-full">
-      <section className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-white mb-6">Çalışma Prensiblerim</h1>
-            <p className="text-gray-200 text-lg">
-              Mesleğimi icra ederken bağlı olduğum değerler ve ilkeler.
-            </p>
+    <>
+      {/* Page hero */}
+      <section
+        style={{
+          background: `
+            linear-gradient(var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            var(--color-paper)
+          `,
+          paddingTop: "var(--space-12)",
+          paddingBottom: "var(--space-10)",
+          borderBottom: "1px solid var(--color-rule)",
+        }}
+        aria-labelledby="principles-title"
+      >
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-4)" }}>
+            00 · ilkelerimiz ve standartlarımız
+          </span>
+          <h1
+            id="principles-title"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "var(--text-display)",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "var(--tracking-display)",
+              color: "var(--color-ink)",
+              maxWidth: "18ch",
+              overflowWrap: "anywhere",
+            }}
+          >
+            çalışma <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>prensiplerimiz</em>.
+          </h1>
+          <p style={{
+            marginTop: "var(--space-6)",
+            fontSize: "var(--text-lg)",
+            color: "var(--color-ink-2)",
+            lineHeight: "var(--leading-normal)",
+            maxWidth: "52ch",
+          }}>
+            lawagent ai, hukuki bilginin güvenilirliğini ve etik ilkelerini en üst
+            seviyede tutacak standartlarla inşa edilmiştir.
+          </p>
+        </div>
+      </section>
+
+      {/* Principles Grid */}
+      <section className="lumen-section" aria-labelledby="cards-title">
+        <div className="lumen-shell">
+          <header className="lumen-section__head">
+            <span className="eyebrow">01 · temel standartlar</span>
+            <h2 id="cards-title" className="lumen-section__title">
+              dört temel <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>prensip</em>.
+            </h2>
+          </header>
+
+          <div className="lumen-cards" role="list">
+            {PRINCIPLES.map((p) => (
+              <div key={p.code} className="lumen-card" role="listitem">
+                <span className="lumen-card__eyebrow">{p.label}</span>
+                <h3 className="lumen-card__title">{p.title}</h3>
+                <p className="lumen-card__body">{p.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {principles.map((principle, index) => {
-              const Icon = principle.icon;
-              return (
-                <div 
-                  key={index}
-                  className="bg-[var(--color-background)] p-8 lg:p-10 rounded-2xl border border-[var(--color-border)] hover:shadow-xl transition-shadow"
-                >
-                  <div className="flex flex-col gap-6">
-                    <div className="w-20 h-20 bg-[var(--color-primary)] rounded-full flex items-center justify-center">
-                      <Icon className="w-10 h-10 text-[var(--color-accent)]" />
-                    </div>
-                    <div>
-                      <h2 className="text-[var(--color-primary)] mb-4">{principle.title}</h2>
-                      <p className="text-[var(--color-text-secondary)] leading-relaxed">
-                        {principle.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+
+      {/* Commitments List */}
+      <section
+        className="lumen-section"
+        style={{ borderTop: "1px solid var(--color-rule)" }}
+        aria-labelledby="commitments-title"
+      >
+        <div className="lumen-shell">
+          <header className="lumen-section__head">
+            <span className="eyebrow">02 · taahhütlerimiz</span>
+            <h2 id="commitments-title" className="lumen-section__title">
+              kullanıcılarımıza <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>taahhütlerimiz</em>.
+            </h2>
+          </header>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+            {COMMITMENTS.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--color-paper-2)",
+                  border: "1px solid var(--color-rule)",
+                  borderLeft: "3px solid var(--color-accent)",
+                  padding: "var(--space-6)",
+                  borderRadius: "var(--radius-md)",
+                }}
+              >
+                <span style={{
+                  fontFamily: "var(--font-label)",
+                  fontSize: "10px",
+                  letterSpacing: "0.10em",
+                  textTransform: "uppercase",
+                  color: "var(--color-accent)",
+                  display: "block",
+                  marginBottom: "var(--space-2)",
+                }}>
+                  {c.label}
+                </span>
+                <p style={{
+                  fontSize: "var(--text-sm)",
+                  color: "var(--color-ink)",
+                  lineHeight: "var(--leading-normal)",
+                }}>
+                  {c.text}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-      <section className="bg-[var(--color-background)]">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-[var(--color-primary)] mb-4">Size Verdiğim Taahhütler</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white p-6 rounded-xl border-l-4 border-[var(--color-accent)]">
-                <h3 className="text-[var(--color-primary)] mb-2">Adalet Arayışı</h3>
-                <p className="text-[var(--color-text-secondary)]">
-                  Her müvekkilimin hakkını sonuna kadar savunuyor, adaleti sağlamak için elimden gelen her şeyi yapıyorum.
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border-l-4 border-[var(--color-accent)]">
-                <h3 className="text-[var(--color-primary)] mb-2">Sürekli İletişim</h3>
-                <p className="text-[var(--color-text-secondary)]">
-                  Dosyanızın her aşamasında sizinle iletişim halinde kalıyor, sorularınızı yanıtlıyor ve sizi bilgilendiriyorum.
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border-l-4 border-[var(--color-accent)]">
-                <h3 className="text-[var(--color-primary)] mb-2">Kişiye Özel Yaklaşım</h3>
-                <p className="text-[var(--color-text-secondary)]">
-                  Her dosyanın kendine özgü olduğunu biliyor, ihtiyaçlarınıza uygun özelleştirilmiş çözümler üretiyorum.
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border-l-4 border-[var(--color-accent)]">
-                <h3 className="text-[var(--color-primary)] mb-2">Hızlı Yanıt</h3>
-                <p className="text-[var(--color-text-secondary)]">
-                  Sorularınıza ve taleplerinize mümkün olan en kısa sürede dönüş yapıyor, acil durumlarda hızlı hareket ediyorum.
-                </p>
-              </div>
-            </div>
-          </div>
+
+      {/* CTA */}
+      <section className="lumen-cta" style={{ borderTop: "1px solid var(--color-rule)" }}>
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-5)" }}>
+            03 · soru sorun
+          </span>
+          <h2 className="lumen-cta__title">
+            asistanı <em>deneyin</em>.
+          </h2>
+          <p className="lumen-cta__sub">
+            etik ve şeffaf rag mimarisi ile sorularınızı hemen sorun.
+          </p>
+          <button
+            className="lumen-btn lumen-btn--primary"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+            style={{ marginInline: "auto", display: "inline-flex" }}
+          >
+            asistanı başlat →
+          </button>
         </div>
       </section>
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-16">
-          <div className="text-center flex flex-col items-center gap-6">
-            <h2 className="text-[var(--color-primary)] max-w-3xl">Bu prensiplerle size hizmet etmek isterim</h2>
-            <p className="text-[var(--color-text-secondary)] max-w-2xl text-lg">
-              Hukuki konularınızda profesyonel destek için benimle iletişime geçin.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <Link to="/contact">
-                <Button variant="primary">
-                  İletişime Geçin
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button variant="secondary">
-                  Hakkımda Daha Fazla
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    </>
   );
 }
-

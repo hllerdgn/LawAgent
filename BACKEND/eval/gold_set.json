@@ -1,0 +1,270 @@
+[
+  {
+    "id": "tkhk_01",
+    "category": "semantic_tkhk",
+    "query": "Ayıplı mal aldım, satıcıya karşı hangi seçimlik haklarım var?",
+    "expected_law": "TKHK",
+    "expected_article": "11"
+  },
+  {
+    "id": "tkhk_02",
+    "category": "semantic_tkhk",
+    "query": "Mesafeli sözleşmede cayma hakkımı ne zaman kullanabilirim?",
+    "expected_law": "TKHK",
+    "expected_article": "48"
+  },
+  {
+    "id": "tkhk_03",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisinde cayma hakkımı kaç gün içinde kullanabilirim?",
+    "expected_law": "TKHK",
+    "expected_article": "24"
+  },
+  {
+    "id": "tkhk_04",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisi sözleşmesinin geçerlilik şartları nelerdir?",
+    "expected_law": "TKHK",
+    "expected_article": "23"
+  },
+  {
+    "id": "tkhk_05",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisini erken kapatırsam faizden indirim alır mıyım?",
+    "expected_law": "TKHK",
+    "expected_article": "27"
+  },
+  {
+    "id": "tkhk_06",
+    "category": "semantic_tkhk",
+    "query": "Konut finansmanında temerrüde düşersem ne olur?",
+    "expected_law": "TKHK",
+    "expected_article": "33"
+  },
+  {
+    "id": "tkhk_07",
+    "category": "semantic_tkhk",
+    "query": "Abonelik sözleşmemi feshedersem depozitom iade edilir mi?",
+    "expected_law": "TKHK",
+    "expected_article": "52"
+  },
+  {
+    "id": "tkhk_08",
+    "category": "semantic_tkhk",
+    "query": "Devre tatil sözleşmesinden cayabilir miyim?",
+    "expected_law": "TKHK",
+    "expected_article": "50"
+  },
+  {
+    "id": "tkhk_09",
+    "category": "semantic_tkhk",
+    "query": "Paket tur sözleşmesinde esaslı değişiklik olursa cayabilir miyim?",
+    "expected_law": "TKHK",
+    "expected_article": "51"
+  },
+  {
+    "id": "tkhk_10",
+    "category": "semantic_tkhk",
+    "query": "Sipariş etmediğim bir ürün gönderildi, ödeme yapmak zorunda mıyım?",
+    "expected_law": "TKHK",
+    "expected_article": "7"
+  },
+  {
+    "id": "tkhk_11",
+    "category": "semantic_tkhk",
+    "query": "Tüketici hakem heyetine başvurunun parasal sınırı nedir?",
+    "expected_law": "TKHK",
+    "expected_article": "68"
+  },
+  {
+    "id": "tkhk_12",
+    "category": "semantic_tkhk",
+    "query": "Garanti belgesi düzenleme yükümlülüğü kaç yıl geçerlidir?",
+    "expected_law": "TKHK",
+    "expected_article": "56"
+  },
+
+  {
+    "id": "ttk_01",
+    "category": "semantic_ttk",
+    "query": "Limited şirket müdürünün ortaklara karşı sorumluluğu nedir?",
+    "expected_law": "TTK",
+    "expected_article": "632"
+  },
+  {
+    "id": "ttk_02",
+    "category": "semantic_ttk",
+    "query": "Limited şirkette müdürlük yetkisi devredilebilir mi?",
+    "expected_law": "TTK",
+    "expected_article": "625"
+  },
+  {
+    "id": "ttk_03",
+    "category": "semantic_ttk",
+    "query": "Limited şirkette sermaye payının devri nasıl yapılır?",
+    "expected_law": "TTK",
+    "expected_article": "595"
+  },
+  {
+    "id": "ttk_04",
+    "category": "semantic_ttk",
+    "query": "Anonim şirkette yönetim kurulu görevini devredebilir mi?",
+    "expected_law": "TTK",
+    "expected_article": "375"
+  },
+  {
+    "id": "ttk_05",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu toplantıya nasıl çağrılır?",
+    "expected_law": "TTK",
+    "expected_article": "392"
+  },
+  {
+    "id": "ttk_06",
+    "category": "semantic_ttk",
+    "query": "Genel kurul kararının butlanı ile iptali arasındaki fark nedir?",
+    "expected_law": "TTK",
+    "expected_article": "445"
+  },
+  {
+    "id": "ttk_07",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu üyesinin azli gündemde olmalı mı?",
+    "expected_law": "TTK",
+    "expected_article": "413"
+  },
+  {
+    "id": "ttk_08",
+    "category": "semantic_ttk",
+    "query": "Anonim şirket genel kurulu yılda kaç kez toplanır?",
+    "expected_law": "TTK",
+    "expected_article": "409"
+  },
+  {
+    "id": "ttk_09",
+    "category": "semantic_ttk",
+    "query": "Çekin ibraz süresi kaç gündür?",
+    "expected_law": "TTK",
+    "expected_article": "796"
+  },
+  {
+    "id": "ttk_10",
+    "category": "semantic_ttk",
+    "query": "Karşılıksız çıkan çekte hamilin tazminat hakkı var mı?",
+    "expected_law": "TTK",
+    "expected_article": "814"
+  },
+  {
+    "id": "ttk_11",
+    "category": "semantic_ttk",
+    "query": "Bono ile poliçe arasındaki fark nedir?",
+    "expected_law": "TTK",
+    "expected_article": "776"
+  },
+
+  {
+    "id": "tbk_01",
+    "category": "semantic_tbk",
+    "query": "Gabin nedeniyle sözleşmeyi iptal edebilir miyim?",
+    "expected_law": "TBK",
+    "expected_article": "28"
+  },
+  {
+    "id": "tbk_02",
+    "category": "semantic_tbk",
+    "query": "İkrah ile yapılan sözleşmenin iptali için süre nedir?",
+    "expected_law": "TBK",
+    "expected_article": ["37", "38", "39"]
+  },
+  {
+    "id": "tbk_03",
+    "category": "semantic_tbk",
+    "query": "Müteselsil borçlulukta alacaklı kime başvurabilir?",
+    "expected_law": "TBK",
+    "expected_article": ["161", "162"]
+  },
+  {
+    "id": "tbk_04",
+    "category": "semantic_tbk",
+    "query": "İşçi alacaklarında zamanaşımı süresi kaç yıldır?",
+    "expected_law": "TBK",
+    "expected_article": ["146", "147"]
+  },
+  {
+    "id": "tbk_05",
+    "category": "semantic_tbk",
+    "query": "Vekilin özen borcunun kapsamı nedir?",
+    "expected_law": "TBK",
+    "expected_article": ["506", "513"]
+  },
+  {
+    "id": "tbk_06",
+    "category": "semantic_tbk",
+    "query": "Kefalet sözleşmesinde eşin rızası gerekir mi?",
+    "expected_law": "TBK",
+    "expected_article": ["583", "584"]
+  },
+  {
+    "id": "tbk_07",
+    "category": "semantic_tbk",
+    "query": "Eser sözleşmesinde müteahhidin ayıba karşı sorumluluğu nedir?",
+    "expected_law": "TBK",
+    "expected_article": ["474", "475", "482"]
+  },
+  {
+    "id": "tbk_08",
+    "category": "semantic_tbk",
+    "query": "Borçlu temerrüde düşerse alacaklının hakları nelerdir?",
+    "expected_law": "TBK",
+    "expected_article": ["117", "119"]
+  },
+  {
+    "id": "tbk_09",
+    "category": "semantic_tbk",
+    "query": "Haksız fiilden doğan tazminat davasında zamanaşımı süresi nedir?",
+    "expected_law": "TBK",
+    "expected_article": ["72", "49", "50"]
+  },
+  {
+    "id": "tbk_10",
+    "category": "semantic_tbk",
+    "query": "Kira bedeli ödenmezse tahliye süreci nasıl işler?",
+    "expected_law": "TBK",
+    "expected_article": ["347", "350", "352"]
+  },
+
+  {
+    "id": "direct_01",
+    "category": "direct_madde",
+    "query": "TBK madde 352 nedir?",
+    "expected_law": "TBK",
+    "expected_article": "352"
+  },
+  {
+    "id": "direct_02",
+    "category": "direct_madde",
+    "query": "TTK 632 ne diyor?",
+    "expected_law": "TTK",
+    "expected_article": "632"
+  },
+  {
+    "id": "direct_03",
+    "category": "direct_madde",
+    "query": "TKHK m. 48 neyi düzenliyor?",
+    "expected_law": "TKHK",
+    "expected_article": "48"
+  },
+
+  {
+    "id": "yargitay_01",
+    "category": "yargitay_intent",
+    "query": "Kira bedeli ödenmezse tahliye ile ilgili Yargıtay kararları var mı?",
+    "expected_source": "yargitay"
+  },
+  {
+    "id": "yargitay_02",
+    "category": "yargitay_intent",
+    "query": "Ayıplı mal davalarında Yargıtay nasıl karar veriyor?",
+    "expected_source": "yargitay"
+  }
+]

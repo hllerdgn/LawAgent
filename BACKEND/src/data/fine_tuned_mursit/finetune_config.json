@@ -1,0 +1,12 @@
+{
+  "strategy": {
+    "tag": "v1_full",
+    "desc": "Full Fine-Tuning (lr=2e-5, 3ep)"
+  },
+  "lr": 2e-5,
+  "epochs": 3,
+  "early_stop_patience": 2,
+  "stopped_early": true,
+  "stopped_at_epoch": 2,
+  "best_val_loss": 0.412
+}

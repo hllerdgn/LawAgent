@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Mail, MailOpen, Trash2, Reply } from 'lucide-react';
+import { Mail, MailOpen, Trash2, Reply, CheckCircle2, Search } from 'lucide-react';
 
 export function AdminMessages() {
-  const [messages] = useState([
+  const [messages, setMessages] = useState([
     { 
       id: '1', 
       name: 'Ahmet Yılmaz', 
       email: 'ahmet@example.com',
-      subject: 'Ticaret hukuku danışmanlığı',
-      message: 'Şirket kuruluşu konusunda danışmanlık almak istiyorum.',
+      subject: 'Ticaret hukuku danışmanlığı talebi',
+      message: 'Şirket kuruluşu ve esas sözleşme hazırlama konusunda danışmanlık almak istiyorum.',
       date: '2 saat önce',
       read: false
     },
@@ -16,8 +16,8 @@ export function AdminMessages() {
       id: '2', 
       name: 'Zeynep Demir', 
       email: 'zeynep@example.com',
-      subject: 'İş hukuku konusunda bilgi',
-      message: 'İş sözleşmem feshedildi. Haklarım nelerdir?',
+      subject: 'İş hukuku kıdem tazminatı sorusu',
+      message: 'İş sözleşmem haklı sebep gösterilmeden feshedildi. Arabuluculuk sürecinde nelere dikkat etmeliyim?',
       date: '5 saat önce',
       read: false
     },
@@ -25,62 +25,92 @@ export function AdminMessages() {
       id: '3', 
       name: 'Mehmet Kaya', 
       email: 'mehmet@example.com',
-      subject: 'Sözleşme incelemesi talebi',
-      message: 'Bir ticari sözleşmeyi incelemenizi istiyorum.',
+      subject: 'Ticari sözleşme inceleme talebi',
+      message: 'Uluslararası distribütörlük sözleşmesini incelemenizi ve risk analizi yapmanızı istiyorum.',
       date: '1 gün önce',
       read: true
     },
   ]);
 
+  const toggleRead = (id: string) => {
+    setMessages(messages.map(m => m.id === id ? { ...m, read: !m.read } : m));
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Bu mesajı silmek istediğinize emin misiniz?')) {
+      setMessages(messages.filter(m => m.id !== id));
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-[var(--color-primary)] mb-2">Mesajlar</h1>
-        <p className="text-[var(--color-text-secondary)]">
-          İletişim formundan gelen mesajları görüntüleyin ve yönetin
-        </p>
+    <div className="space-y-6 font-sans antialiased">
+      
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-slate-900 text-2xl font-bold font-serif">Müşteri Mesajları & Talepler</h1>
+          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+            İletişim formundan gelen müşteri mesajlarını görüntüleyin, okundu işaretleyin ve yanıtlayın.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200">
+          <span>Okunmamış: {messages.filter(m => !m.read).length} Mesaj</span>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="divide-y divide-gray-200">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="divide-y divide-slate-100">
           {messages.map((msg) => (
             <div 
               key={msg.id} 
-              className={`p-6 hover:bg-gray-50 transition-colors ${!msg.read ? 'bg-blue-50/30' : ''}`}
+              className={`p-6 hover:bg-slate-50/80 transition-colors ${!msg.read ? 'bg-amber-500/5' : ''}`}
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-[var(--color-primary)] rounded-full flex items-center justify-center flex-shrink-0">
-                  {msg.read ? (
-                    <MailOpen className="w-5 h-5 text-white" />
-                  ) : (
-                    <Mail className="w-5 h-5 text-white" />
-                  )}
-                </div>
+                <button 
+                  onClick={() => toggleRead(msg.id)}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer ${
+                    msg.read ? 'bg-slate-100 text-slate-400' : 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+                  }`}
+                  title={msg.read ? "Okunmadı İşaretle" : "Okundu İşaretle"}
+                >
+                  {msg.read ? <MailOpen className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+                </button>
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between gap-4 mb-1">
                     <div>
-                      <h3 className="text-[var(--color-primary)] mb-1">{msg.name}</h3>
-                      <p className="text-sm text-[var(--color-text-secondary)]">{msg.email}</p>
+                      <span className="text-slate-900 font-bold text-sm">{msg.name}</span>
+                      <span className="text-slate-400 text-xs ml-2">({msg.email})</span>
                     </div>
-                    <span className="text-sm text-gray-500">{msg.date}</span>
+                    <span className="text-xs text-slate-400 font-medium">{msg.date}</span>
                   </div>
-                  <h4 className="text-[var(--color-text-primary)] mb-2">{msg.subject}</h4>
-                  <p className="text-[var(--color-text-secondary)] mb-4">{msg.message}</p>
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors">
-                      <Reply className="w-4 h-4" />
-                      Yanıtla
-                    </button>
-                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                      <Trash2 className="w-5 h-5" />
+
+                  <h4 className="text-slate-800 font-semibold text-xs mb-2 font-sans">{msg.subject}</h4>
+                  <p className="text-slate-600 text-xs leading-relaxed mb-4">{msg.message}</p>
+
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={`mailto:${msg.email}?subject=RE: ${encodeURIComponent(msg.subject)}`}
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-medium transition-colors border border-slate-800"
+                    >
+                      <Reply className="w-3.5 h-3.5 text-amber-400" />
+                      <span>E-Posta İle Yanıtla</span>
+                    </a>
+                    <button 
+                      onClick={() => handleDelete(msg.id)}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Mesajı Sil"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
+
               </div>
             </div>
           ))}
         </div>
       </div>
+
     </div>
   );
 }

@@ -1,0 +1,23 @@
+name: HF Space Keep-Alive & Health Check
+
+on:
+  schedule:
+    # Her 25 dakikada bir çalışır (Hugging Face uykusunu önlemek için)
+    - cron: '*/25 * * * *'
+  workflow_dispatch: # Manuel tetikleme imkanı
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping HF Space Health Endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://hllerdgn-lawagent-backend.hf.space/health)
+          echo "Health Endpoint Status Code: $STATUS"
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Backend is UP and Healthy"
+            exit 0
+          else
+            echo "⚠️ Backend returned status $STATUS"
+            exit 1
+          fi

@@ -54,9 +54,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 MODEL_NAME = "newmindai/Mursit-Base-TR-Retrieval"
 COLLECTION_NAME = "lawagent_mursit"
-CHUNK_CORPUS = os.path.join(DATA_DIR, "chunk_corpus.json")
+
+# Eğer zenginleştirilmiş corpus varsa öncelikli olarak onu kullan
+ENRICHED_CORPUS = os.path.join(DATA_DIR, "chunk_corpus_enriched.json")
+if os.path.exists(ENRICHED_CORPUS):
+    CHUNK_CORPUS = ENRICHED_CORPUS
+else:
+    CHUNK_CORPUS = os.path.join(DATA_DIR, "chunk_corpus.json")
+
 QUANTIZE_PATH = os.path.join(DATA_DIR, "mursit_int8.pt")
 DISTANCE_METRIC = qmodels.Distance.COSINE
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # AĞ TOLERANSI (QDRANT RETRY YARDIMCISI)
@@ -83,11 +91,24 @@ class MursitEmbedder:
     """
     Mursit-Base-TR-Retrieval için embedding sınıfı.
     GPU ivmelendirme (CUDA/MPS) ve CPU kuantizasyon yönetimi içerir.
+
+    Parametreler:
+        quantize          : int8 dynamic quantization (sadece CPU)
+        device            : 'cpu' | 'cuda' | 'mps' | None (otomatik)
+        model_name_or_path: HuggingFace model adı veya yerel klasör yolu.
+                            None ise MODEL_NAME sabiti kullanılır.
+                            Fine-tuned checkpoint'ler için kullanın.
     """
 
-    def __init__(self, quantize: bool = False, device: str = None):
+    def __init__(
+        self,
+        quantize: bool = False,
+        device: str = None,
+        model_name_or_path: str = None,
+    ):
         self.quantize = quantize
-        
+        _model_id = model_name_or_path if model_name_or_path else MODEL_NAME
+
         # Cihaz Otomatik Algılama
         if quantize:
             self.device = "cpu"
@@ -104,14 +125,17 @@ class MursitEmbedder:
                 else:
                     self.device = "cpu"
 
-        log.info(f"[Mursit] Model yükleniyor ({self.device} - {'int8' if quantize else 'float32'})...")
+        log.info(
+            f"[Mursit] Model yükleniyor ({self.device} - {'int8' if quantize else 'float32'})..."
+            f"  model={_model_id}"
+        )
         t0 = time.time()
 
         try:
-            self.st = SentenceTransformer(MODEL_NAME, device=self.device, local_files_only=True)
+            self.st = SentenceTransformer(_model_id, device=self.device, local_files_only=True)
         except Exception as e:
             log.warning(f"Çevrimdışı model yükleme başarısız ({e}), çevrimiçi deneniyor...")
-            self.st = SentenceTransformer(MODEL_NAME, device=self.device)
+            self.st = SentenceTransformer(_model_id, device=self.device)
         
         self.vector_size = self.st.get_embedding_dimension()
 

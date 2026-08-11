@@ -488,7 +488,7 @@ class LegalGenerator:
                         if c.get("article_no") is not None
                         else ""
                     ),
-                    "ozet": (c.get("text") or "")[:200] + "...",
+                    "ozet": c.get("text") or "",
                     "tip": "mevzuat",
                 }
             )
@@ -497,7 +497,7 @@ class LegalGenerator:
                 {
                     "kanun": "Yargıtay",
                     "madde": c.get("decision_id", ""),
-                    "ozet": (c.get("text") or "")[:200] + "...",
+                    "ozet": c.get("text") or "",
                     "tip": "ictihat",
                 }
             )
@@ -678,7 +678,7 @@ class LegalGenerator:
                                 if c.get("article_no") is not None
                                 else ""
                             ),
-                            "ozet": (c.get("text") or "")[:200] + "...",
+                            "ozet": c.get("text") or "",
                         }
                     )
 
@@ -737,9 +737,13 @@ def create_app() -> FastAPI:
         description="Türk Hukuku Asistanı (Düzeltilmiş İçtihat Sırası + Esnek Tetikleyici)",
         lifespan=lifespan,
     )
+    # CORS — ALLOWED_ORIGINS env var varsa kullan, yoksa ["*"] fallback
+    # Örnek: ALLOWED_ORIGINS=https://lawagent.vercel.app,http://localhost:5173
+    _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+    _origins = [o.strip() for o in _raw_origins.split(",") if o.strip()] or ["*"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=_origins,
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -762,6 +766,7 @@ def create_app() -> FastAPI:
         query: str
         k: int = 7
         session_id: str = "default"
+        client_id: Optional[str] = "lawagent-demo"
 
     class AskResponse(BaseModel):
         answer: str
@@ -774,12 +779,41 @@ def create_app() -> FastAPI:
 
     gen = LegalGenerator()
 
+    # ── CLIENT / MULTI-TENANT ENDPOINTS ───────────────────────────────────────
+    def _load_clients_json() -> Dict[str, Any]:
+        clients_file = Path(__file__).resolve().parent / "clients.json"
+        if clients_file.exists():
+            try:
+                with open(clients_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                log.error(f"clients.json okunurken hata: {e}")
+        return {}
+
+    @app.get("/clients")
+    async def get_clients():
+        """Sistemdeki tüm kayıtlı client/tenant yapılandırmalarını döndürür."""
+        clients = _load_clients_json()
+        return {"clients": list(clients.values())}
+
+    @app.get("/clients/{client_id}")
+    async def get_client_config(client_id: str):
+        """Belirtilen client_id için public yapılandırmayı döndürür."""
+        clients = _load_clients_json()
+        if client_id in clients:
+            return clients[client_id]
+        # Fallback default
+        if "lawagent-demo" in clients:
+            return clients["lawagent-demo"]
+        return JSONResponse(status_code=404, content={"detail": f"Client '{client_id}' bulunamadı."})
+
     @app.post("/ask", response_model=AskResponse)
     async def ask(req: AskRequest):
         if not req.query.strip():
             return JSONResponse(status_code=400, content={"detail": "Sorgu boş."})
         result = gen.generate(req.query, session_id=req.session_id, k=req.k)
         return result
+
 
     from fastapi import UploadFile, File
     @app.post("/upload-document")
@@ -817,17 +851,12 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health():
-        return {
-            "status": "ok",
-            "version": "5.8",
-            "features": [
-                "Düzeltilmiş içtihat talebi sırası",
-                "Esnek tetikleyici (emsal karar)",
-                "Gelişmiş Madde Kontrolü",
-                "İki Aşamalı İçtihat",
-                "Alaka Kontrolü",
-            ],
-        }
+        # Uptime monitoring için minimal, güvenli endpoint.
+        # ❌ Groq API çağrısı yapılmaz
+        # ❌ Qdrant'a istek gönderilmez
+        # ❌ Embedding model yüklenmez
+        # ✅ Sadece FastAPI process'inin çalıştığını doğrular
+        return {"status": "ok"}
 
     @app.get("/memory/{session_id}")
     async def get_memory(session_id: str):

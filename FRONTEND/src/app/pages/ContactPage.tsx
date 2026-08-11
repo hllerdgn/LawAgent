@@ -1,229 +1,329 @@
 import React, { useState } from 'react';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Code2, Phone, Mail, Clock, Send, Terminal } from 'lucide-react';
+
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
+
+type FormErrors = Partial<Record<keyof FormData, string>>;
+
+const CONTACT_INFO = [
+  { label: "01 · E-POSTA", title: "e-posta adresi", value: "contact@lawagent.ai", href: "mailto:contact@lawagent.ai" },
+  { label: "02 · KONUM", title: "adres", value: "istanbul, türkiye", href: null },
+  { label: "03 · SÜRÜM", title: "proje sürümü", value: "v1.0.0 · fastapi + react 18 + vite", href: null },
+];
 
 export function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+  const [formData, setFormData] = useState<FormData>({
+    name: '', email: '', phone: '', subject: '', message: ''
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof FormData]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'İsim gereklidir';
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'isim alanı boş bırakılamaz';
     if (!formData.email.trim()) {
-      newErrors.email = 'E-posta gereklidir';
-    } else if (!/\\S+@\\S+\\.\\S+/.test(formData.email)) {
-      newErrors.email = 'Geçerli bir e-posta adresi girin';
+      newErrors.email = 'e-posta alanı gereklidir';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'geçerli bir e-posta adresi girin';
     }
-    if (!formData.subject.trim()) newErrors.subject = 'Konu gereklidir';
+    if (!formData.subject.trim()) newErrors.subject = 'konu başlığı gereklidir';
     if (!formData.message.trim()) {
-      newErrors.message = 'Mesaj gereklidir';
-    } else if (formData.message.trim().length < 20) {
-      newErrors.message = 'Mesaj en az 20 karakter olmalıdır';
+      newErrors.message = 'mesaj alanı gereklidir';
+    } else if (formData.message.trim().length < 15) {
+      newErrors.message = 'mesaj en az 15 karakter olmalıdır';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validate()) return;
-
     setIsSubmitting(true);
-    
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitSuccess(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      
       setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 1500);
+    }, 1200);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 16px',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--text-sm)',
+    color: 'var(--color-ink)',
+    background: 'var(--color-paper)',
+    border: '1px solid var(--color-rule)',
+    borderRadius: 'var(--radius-md)',
+    outline: 'none',
+    textTransform: 'lowercase',
+    transition: 'border-color 150ms ease',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontFamily: 'var(--font-label)',
+    fontSize: '10px',
+    letterSpacing: '0.10em',
+    textTransform: 'uppercase',
+    color: 'var(--color-muted)',
+    marginBottom: 'var(--space-2)',
+  };
+
+  const errorStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-label)',
+    fontSize: '10px',
+    color: 'oklch(55% 0.22 25)',
+    marginTop: 'var(--space-1)',
+    display: 'block',
   };
 
   return (
-    <div className="w-full">
-      <section className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-white mb-6">İletişim & Geri Bildirim</h1>
-            <p className="text-gray-200 text-lg">
-              LawAgent AI asistanı ile ilgili hata bildirimleri, sistem önerileri veya projeye katkı sağlamak için geliştirici ekibimizle iletişime geçin.
-            </p>
-          </div>
+    <>
+      {/* Page hero */}
+      <section
+        style={{
+          background: `
+            linear-gradient(var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            var(--color-paper)
+          `,
+          paddingTop: "var(--space-12)",
+          paddingBottom: "var(--space-10)",
+          borderBottom: "1px solid var(--color-rule)",
+        }}
+        aria-labelledby="contact-title"
+      >
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-4)" }}>
+            00 · iletişim ve geri bildirim
+          </span>
+          <h1
+            id="contact-title"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "var(--text-display)",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "var(--tracking-display)",
+              color: "var(--color-ink)",
+              maxWidth: "16ch",
+              overflowWrap: "anywhere",
+            }}
+          >
+            bizimle <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>iletişime</em>{" "}
+            geçin.
+          </h1>
+          <p style={{
+            marginTop: "var(--space-6)",
+            fontSize: "var(--text-lg)",
+            color: "var(--color-ink-2)",
+            lineHeight: "var(--leading-normal)",
+            maxWidth: "48ch",
+          }}>
+            lawagent sistemi hakkındaki soru, öneri veya geri bildirimlerinizi
+            ekibimize iletebilirsiniz.
+          </p>
         </div>
       </section>
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="flex flex-col gap-8">
-              <div>
-                <h2 className="text-[var(--color-primary)] mb-6">Geliştirici Ekibi</h2>
-                <p className="text-[var(--color-text-secondary)] leading-relaxed mb-8">
-                  LawAgent AI projesi geliştirme aşamasındadır. Sistemi denerken karşılaştığınız mantıksal hataları (halüsinasyonlar) veya yeni özellik fikirlerini bizimle paylaşabilirsiniz.
+
+      {/* Main grid */}
+      <section className="lumen-section" aria-labelledby="form-title">
+        <div className="lumen-shell">
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1.5fr",
+            gap: "var(--space-10)",
+            alignItems: "start",
+          }}>
+
+            {/* Left: contact info cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+              <header style={{ marginBottom: "var(--space-2)" }}>
+                <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-3)" }}>
+                  01 · iletişim bilgileri
+                </span>
+                <h2 style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 400,
+                  fontSize: "var(--text-3xl)",
+                  lineHeight: "var(--leading-tight)",
+                  letterSpacing: "var(--tracking-display)",
+                  color: "var(--color-ink)",
+                }}>
+                  lawagent geliştirici ekibi.
+                </h2>
+                <p style={{
+                  marginTop: "var(--space-3)",
+                  fontSize: "var(--text-sm)",
+                  color: "var(--color-ink-2)",
+                  lineHeight: "var(--leading-normal)",
+                }}>
+                  lawagent ai geliştirici ekibine aşağıdaki kanallardan ulaşabilirsiniz.
                 </p>
-              </div>
+              </header>
 
-              <div className="flex flex-col gap-6">
-                <div className="flex items-start gap-4 p-4 bg-[var(--color-background)] rounded-xl">
-                  <div className="w-12 h-12 bg-[var(--color-primary)] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Code2 className="w-6 h-6 text-[var(--color-accent)]" />
-                  </div>
-                  <div>
-                    <h3 className="text-[var(--color-primary)] mb-1">Github / Repo</h3>
-                    <p className="text-[var(--color-text-secondary)]">
-                      Yakında açık kaynaklı repolarımız burada duyurulacaktır.
-                    </p>
-                  </div>
+              {CONTACT_INFO.map((info) => (
+                <div key={info.label} className="lumen-card" style={{ padding: "var(--space-5)" }}>
+                  <span className="lumen-card__eyebrow">{info.label}</span>
+                  <h3 className="lumen-card__title" style={{ fontSize: "var(--text-xl)" }}>{info.title}</h3>
+                  {info.href ? (
+                    <a href={info.href} style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      letterSpacing: "0.06em",
+                      color: "var(--color-accent)",
+                      textDecoration: "none",
+                      textTransform: "lowercase",
+                    }}>{info.value}</a>
+                  ) : (
+                    <p style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      letterSpacing: "0.06em",
+                      color: "var(--color-muted)",
+                      textTransform: "lowercase",
+                    }}>{info.value}</p>
+                  )}
                 </div>
+              ))}
 
-                <div className="flex items-start gap-4 p-4 bg-[var(--color-background)] rounded-xl">
-                  <div className="w-12 h-12 bg-[var(--color-primary)] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-[var(--color-accent)]" />
-                  </div>
-                  <div>
-                    <h3 className="text-[var(--color-primary)] mb-1">E-posta (Destek)</h3>
-                    <p className="text-[var(--color-text-secondary)]">iletisim@lawagent.ai</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-[var(--color-background)] rounded-xl">
-                  <div className="w-12 h-12 bg-[var(--color-primary)] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Terminal className="w-6 h-6 text-[var(--color-accent)]" />
-                  </div>
-                  <div>
-                    <h3 className="text-[var(--color-primary)] mb-1">Proje Durumu</h3>
-                    <p className="text-[var(--color-text-secondary)]">
-                      Beta v1.0 <br />
-                      Sistem aktif olarak eğitilmeye devam etmektedir.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* AI shortcut */}
+              <button
+                className="lumen-btn lumen-btn--primary"
+                onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                ai asistana soru sor →
+              </button>
             </div>
-            <div className="bg-[var(--color-background)] p-6 lg:p-8 rounded-2xl border border-[var(--color-border)]">
-              <h2 className="text-[var(--color-primary)] mb-6">Geri Bildirim Formu</h2>
-              
+
+            {/* Right: contact form */}
+            <div
+              style={{
+                background: "var(--color-paper-2)",
+                border: "1px solid var(--color-rule)",
+                borderRadius: "var(--radius-lg)",
+                padding: "var(--space-8)",
+              }}
+            >
+              <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-4)" }}>
+                02 · mesaj gönderin
+              </span>
+              <h2 id="form-title" style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 400,
+                fontSize: "var(--text-3xl)",
+                lineHeight: "var(--leading-tight)",
+                letterSpacing: "var(--tracking-display)",
+                color: "var(--color-ink)",
+                marginBottom: "var(--space-7)",
+              }}>
+                mesajınızı yazın.
+              </h2>
+
               {submitSuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
-                  <p className="">Mesajınız başarıyla gönderildi. Katkınız için teşekkür ederiz.</p>
+                <div style={{
+                  background: "oklch(90% 0.08 145 / 0.3)",
+                  border: "1px solid oklch(65% 0.15 145 / 0.4)",
+                  color: "oklch(35% 0.12 145)",
+                  padding: "var(--space-4)",
+                  borderRadius: "var(--radius-md)",
+                  marginBottom: "var(--space-6)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "var(--text-sm)",
+                }}>
+                  ✓ mesajınız başarıyla iletildi. katkınız için teşekkür ederiz.
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-[var(--color-text-primary)] mb-2">
-                    İsim Soyisim *
-                  </label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Adınız ve soyadınız"
-                    className={errors.name ? 'border-red-500' : ''}
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                  )}
+              <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+                  <div>
+                    <label htmlFor="name" style={labelStyle}>Ad Soyad *</label>
+                    <input
+                      id="name" name="name" type="text"
+                      value={formData.name} onChange={handleChange}
+                      placeholder="adınız soyadınız"
+                      style={{ ...inputStyle, borderColor: errors.name ? "oklch(55% 0.22 25)" : undefined }}
+                      aria-describedby={errors.name ? "name-error" : undefined}
+                    />
+                    {errors.name && <span id="name-error" style={errorStyle}>{errors.name}</span>}
+                  </div>
+                  <div>
+                    <label htmlFor="email" style={labelStyle}>E-Posta *</label>
+                    <input
+                      id="email" name="email" type="email"
+                      value={formData.email} onChange={handleChange}
+                      placeholder="ornek@lawagent.ai"
+                      style={{ ...inputStyle, borderColor: errors.email ? "oklch(55% 0.22 25)" : undefined }}
+                      aria-describedby={errors.email ? "email-error" : undefined}
+                    />
+                    {errors.email && <span id="email-error" style={errorStyle}>{errors.email}</span>}
+                  </div>
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-[var(--color-text-primary)] mb-2">
-                    E-posta *
-                  </label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="ornek@email.com"
-                    className={errors.email ? 'border-red-500' : ''}
+                  <label htmlFor="subject" style={labelStyle}>Konu *</label>
+                  <input
+                    id="subject" name="subject" type="text"
+                    value={formData.subject} onChange={handleChange}
+                    placeholder="hangi konuda mesaj gönderiyorsunuz?"
+                    style={{ ...inputStyle, borderColor: errors.subject ? "oklch(55% 0.22 25)" : undefined }}
+                    aria-describedby={errors.subject ? "subject-error" : undefined}
                   />
-                  {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                  )}
+                  {errors.subject && <span id="subject-error" style={errorStyle}>{errors.subject}</span>}
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-[var(--color-text-primary)] mb-2">
-                    Konu *
-                  </label>
-                  <Input
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    placeholder="Hata bildirimi, öneri vb."
-                    className={errors.subject ? 'border-red-500' : ''}
-                  />
-                  {errors.subject && (
-                    <p className="text-red-500 text-sm mt-1">{errors.subject}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-[var(--color-text-primary)] mb-2">
-                    Mesaj / Hata Detayı *
-                  </label>
+                  <label htmlFor="message" style={labelStyle}>Mesaj Detayı *</label>
                   <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder="Lütfen asistanın verdiği yanlış yanıtı veya önerinizi detaylıca yazın..."
-                    rows={6}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
-                      errors.message ? 'border-red-500' : 'border-[var(--color-border)]'
-                    }`}
+                    id="message" name="message"
+                    value={formData.message} onChange={handleChange}
+                    placeholder="lütfen detaylı bilgi veya görüşlerinizi yazın..."
+                    rows={5}
+                    style={{
+                      ...inputStyle,
+                      resize: "vertical",
+                      minHeight: "120px",
+                      borderColor: errors.message ? "oklch(55% 0.22 25)" : undefined,
+                    }}
+                    aria-describedby={errors.message ? "message-error" : undefined}
                   />
-                  {errors.message && (
-                    <p className="text-red-500 text-sm mt-1">{errors.message}</p>
-                  )}
+                  {errors.message && <span id="message-error" style={errorStyle}>{errors.message}</span>}
                 </div>
 
-                <Button 
-                  type="submit" 
-                  variant="primary" 
+                <button
+                  type="submit"
                   disabled={isSubmitting}
-                  className="w-full"
+                  className="lumen-btn lumen-btn--primary"
+                  style={{ justifyContent: "center", opacity: isSubmitting ? 0.6 : 1 }}
                 >
-                  {isSubmitting ? (
-                    'Gönderiliyor...'
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Gönder
-                    </>
-                  )}
-                </Button>
+                  {isSubmitting ? "gönderiliyor..." : "mesajı gönder →"}
+                </button>
               </form>
             </div>
+
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }

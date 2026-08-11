@@ -1,451 +1,240 @@
+/* Hallmark · macrostructure: Marquee Hero · genre: editorial · theme: Lumen · drop: Day Foundry
+ * audience: vatandaşlar · use case: chatbot başlat + 3 hizmet alanı
+ * nav/footer: Layout.tsx üzerinden (çift nav önlendi)
+ */
+
 import React from "react";
-import { Link } from "react-router";
-import { Button } from "../components/Button";
-import { PracticeAreaCard } from "../components/PracticeAreaCard";
-import {
-  Briefcase,
-  Users,
-  Home as HomeIcon,
-  FileText,
-  Building2,
-  ShoppingCart,
-  MessageCircle,
-  Sparkles,
-  CheckCircle2,
-  Send,
-  ArrowRight,
-  Phone,
-  Info,
-  Scale,
-  TrendingUp,
-  Award,
-  Zap,
-  Star,
-} from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { Link } from "react-router-dom";
 
-export function HomePage() {
-  const practiceAreas = [
-    {
-      icon: Briefcase,
-      title: "Ticaret Hukuku (TTK)",
-      description:
-        "Türk Ticaret Kanunu kapsamında şirket kuruluşu, ticari işletme hukuku ve ticari uyuşmazlıklar.",
-      slug: "ticaret-hukuku",
-    },
-    {
-      icon: Users,
-      title: "İş Hukuku (TBK)",
-      description:
-        "Türk Borçlar Kanunu kapsamında iş sözleşmeleri, işçi-işveren uyuşmazlıkları ve iş güvenliği.",
-      slug: "is-hukuku",
-    },
-    {
-      icon: ShoppingCart,
-      title: "Tüketici Hukuku (TKHK)",
-      description:
-        "Tüketicinin Korunması Hakkında Kanun kapsamında tüketici hakları ve ayıplı mal süreçleri.",
-      slug: "tuketici-hukuku",
-    },
-  ];
+/* ── Meter bar heights — gaussian envelope ───────────────────────────────────── */
+const METER_BARS = Array.from({ length: 64 }, (_, i) => {
+  const t = i / 63;
+  const env   = Math.exp(-7 * (t - 0.5) ** 2);
+  const harm1 = Math.sin(t * Math.PI * 7) * 0.18;
+  const harm2 = Math.sin(t * Math.PI * 15 + 1.2) * 0.09;
+  return Math.max(0.06, Math.min(1, env * 0.73 + harm1 + harm2 + 0.08));
+});
 
+const PRACTICE_AREAS = [
+  {
+    slug: "is-hukuku",
+    code: "TBK",
+    label: "01 · İŞ HUKUKU",
+    title: "iş hukuku",
+    sub: "türk borçlar kanunu",
+    body: "iş sözleşmeleri, kıdem ve ihbar tazminatı, işçi-işveren uyuşmazlıkları ve iş güvenliği konularında mevzuat destekli yanıtlar.",
+    stat: "818 madde",
+  },
+  {
+    slug: "ticaret-hukuku",
+    code: "TTK",
+    label: "02 · TİCARET HUKUKU",
+    title: "ticaret hukuku",
+    sub: "türk ticaret kanunu",
+    body: "şirket kuruluşu, ticari işletme devri, anonim ve limited şirket işlemleri, ticari uyuşmazlıklar.",
+    stat: "1535 madde",
+  },
+  {
+    slug: "tuketici-hukuku",
+    code: "TKHK",
+    label: "03 · TÜKETİCİ HUKUKU",
+    title: "tüketici hukuku",
+    sub: "tüketicinin korunması hakkında kanun",
+    body: "tüketici hakları, ayıplı mal ve hizmet, cayma hakkı, garanti belgeleri ve tüketici mahkemeleri.",
+    stat: "84 madde",
+  },
+];
+
+function PrismApparatus() {
   return (
-    <div className="w-full">
-      <section className="bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-16 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="flex flex-col gap-8">
-              <h1 className="text-[#1e3a5f] text-4xl lg:text-5xl font-bold leading-tight">
-                Türk Hukuku İçin Geliştirilmiş{" "}
-                <span className="text-[#D4A574]">
-                  Yapay Zeka Asistanı
-                </span>
-              </h1>
-              <div className="flex items-start gap-3 bg-gradient-to-r from-[#D4A574]/10 to-transparent p-4 rounded-xl border-l-4 border-[#D4A574]">
-                <Zap className="w-6 h-6 text-[#D4A574] flex-shrink-0 mt-1" />
-                <p className="text-gray-700 font-medium leading-relaxed">
-                  Ticaret ve iş hukuku alanında{" "}
-                  <strong>hızlı, veri destekli</strong> hukuki çözümler
-                  sunuyoruz.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button
-                  onClick={() => {
-                    const el = document.getElementById("practice-areas-section");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="bg-white border-2 border-[#1e3a5f] text-[#1e3a5f] hover:bg-gray-50 transition-all duration-300 text-base px-8 py-6 rounded-lg font-semibold group flex items-center justify-center gap-2"
-                >
-                  Özellikleri Keşfet
-                  <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button
-                  onClick={() => {
-                    // ChatbotWidget'ı açmak için custom event kullan
-                    window.dispatchEvent(new CustomEvent("toggle-chatbot"));
-                  }}
-                  className="inline-flex items-center justify-center gap-2 border-2 border-[#D4A574] text-[#1e3a5f] hover:bg-[#D4A574] hover:text-white transition-all duration-300 text-base px-8 py-6 rounded-lg font-semibold group"
-                >
-                  <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  AI Asistanı Başlat
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-col gap-6">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#1e3a5f]/5 to-[#D4A574]/5 group">
-                <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwyfHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzc3MjM0NDU2fDA&ixlib=rb-4.1.0&q=80&w=1080"
-                  alt="Yapay Zeka Hukuk Asistanı"
-                  className="w-full h-[450px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-transparent p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-lg font-bold mb-1">
-                        Yapay Zeka Destekli
-                      </p>
-                      <p className="text-blue-200 text-sm">
-                        Henüz avukat girişi yapılmadı
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-[#D4A574] rounded-full flex items-center justify-center">
-                      <Scale className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-[#1e3a5f]">
-                      4.9/5.0
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#D4A574] to-[#1e3a5f] rounded-xl opacity-20 group-hover:opacity-30 blur transition-all duration-300" />
-
-                <div className="relative bg-white p-6 rounded-xl shadow-xl border-2 border-[#D4A574]/30 hover:border-[#D4A574] transition-all duration-300">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="relative">
-                      <div className="w-14 h-14 bg-gradient-to-br from-[#1e3a5f] to-[#152b47] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                        <MessageCircle className="w-7 h-7 text-[#D4A574]" />
-                      </div>
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white"></span>
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-[#1e3a5f] font-bold text-lg">
-                          AI Hukuk Asistanı
-                        </h3>
-                        <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                          Çevrimiçi
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-[#D4A574]" />
-                          <span>7/24 anında yanıt</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-[#D4A574]" />
-                          <span>Mevzuat destekli öneriler</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-[#D4A574]" />
-                          <span>Yapay zeka teknolojisi</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const chatButton = document.querySelector(
-                        '[aria-label="AI Chatbot"]',
-                      ) as HTMLButtonElement;
-                      if (chatButton) chatButton.click();
-                    }}
-                    className="w-full bg-gradient-to-r from-[#1e3a5f] to-[#152b47] hover:from-[#152b47] hover:to-[#1e3a5f] text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group/btn"
-                  >
-                    <Sparkles className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />
-                    Hemen Sor
-                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section id="practice-areas-section" className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-16 lg:py-24">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-[#D4A574]/10 text-[#D4A574] px-4 py-2 rounded-full text-sm font-semibold mb-6">
-              <Sparkles className="w-4 h-4" />
-              Desteklenen Mevzuatlar
-            </div>
-            <h2 className="text-[#1e3a5f] mb-6 text-4xl lg:text-5xl font-bold">
-              Kapsamlı Hukuki Yapay Zeka
-            </h2>
-            <p className="text-gray-600 max-w-3xl mx-auto text-lg leading-relaxed">
-              LawAgent AI asistanı, RAG (Retrieval-Augmented Generation) mimarisi sayesinde aşağıdaki temel kanunlarda 
-              doğru ve mevzuat destekli yanıtlar sunar.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {practiceAreas.map((area, index) => (
-              <Link key={index} to={`/practice-areas/${area.slug}`}>
-                <PracticeAreaCard
-                  icon={area.icon}
-                  title={area.title}
-                  description={area.description}
-                />
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-16">
-            <Link to="/practice-areas">
-              <Button
-                variant="secondary"
-                className="border-2 border-[#1e3a5f] text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-all duration-300 px-8 py-6 text-base font-semibold"
-              >
-                Tüm Kapsamı Görüntüle
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-      <section className="bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-16 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="flex flex-col gap-8">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="text-[#1e3a5f] text-xl font-bold">
-                    Yapay Zeka Destekli Hukuki Analiz
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Gelişmiş AI teknolojisi ile hızlı ve doğru çözümler
-                  </p>
-                </div>
-              </div>
-
-              <h2 className="text-[#1e3a5f] text-4xl lg:text-5xl font-bold leading-tight">
-                7/24{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4A574] to-[#1e3a5f]">
-                  AI Hukuk Asistanınız
-                </span>
-              </h2>
-
-              <p className="text-gray-700 text-lg leading-relaxed">
-                LawAgent AI Asistanı, Llama-3 dil modeli ve Qdrant vektör veritabanı 
-                altyapısıyla hukuki sorularınıza <strong>anında</strong> yanıt verir. 
-                TBK, TTK ve TKHK kapsamında sık sorulan sorularınız için 
-                hızlı ve isabetli asistanınızdır.
-              </p>
-              <div className="flex flex-col gap-5">
-                <div className="flex items-start gap-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-[#D4A574]/30 transition-all duration-300 group cursor-default">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#D4A574]/10 to-[#D4A574]/5 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Zap className="w-6 h-6 text-[#D4A574]" />
-                  </div>
-                  <div>
-                    <p className="text-[#1e3a5f] font-bold mb-1 group-hover:text-[#D4A574] transition-colors">
-                      Anında Hukuki Bilgi
-                    </p>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      Sık sorulan sorulara 7/24 profesyonel yanıtlar
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-[#D4A574]/30 transition-all duration-300 group cursor-default">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-[#1e3a5f] font-bold mb-1 group-hover:text-blue-600 transition-colors">
-                      Mevzuat Destekli Öneriler
-                    </p>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      TBK,TTK ve TKHK kapsamında güncel bilgiler
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-[#D4A574]/30 transition-all duration-300 group cursor-default">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <CheckCircle2 className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-[#1e3a5f] font-bold mb-1 group-hover:text-green-600 transition-colors">
-                      Her Zaman Erişilebilir
-                    </p>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      Gece gündüz hukuki sorularınızı yanıtlıyoruz
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent("toggle-chatbot"));
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#1e3a5f] to-[#152b47] hover:shadow-lg transition-all duration-300 px-8 py-6 text-base text-white rounded-lg font-semibold"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  Şimdi Deneyin
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-[#1e3a5f]/5 to-[#D4A574]/10 rounded-3xl blur-2xl" />
-
-              <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-100">
-                <div className="bg-gradient-to-r from-[#1e3a5f] to-[#152b47] p-5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-xl flex items-center justify-center shadow-lg">
-                      <Scale className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-bold text-sm">
-                        LawAgent AI Asistan
-                      </p>
-                      <p className="text-blue-200 text-xs">
-                        Hukuk & Danışmanlık
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-blue-50 border-b border-blue-100 px-4 py-2.5 flex items-start gap-2">
-                  <Info className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-900 leading-relaxed">
-                    Genel bilgilendirme amaçlıdır, profesyonel danışmanlık için
-                    ekibimizle iletişime geçin.
-                  </p>
-                </div>
-                <div className="p-6 space-y-4 bg-gradient-to-b from-slate-50 to-gray-100 min-h-[350px]">
-                  <div className="flex justify-start gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Scale className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm max-w-[75%] border border-gray-100">
-                      <p className="text-sm text-gray-700">
-                        Merhaba! LawAgent Hukuk & Danışmanlık AI Asistanına hoş
-                        geldiniz. Size nasıl yardımcı olabilirim?
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152b47] text-white px-4 py-3 rounded-2xl rounded-br-md max-w-[75%] shadow-md">
-                      <p className="text-sm">
-                        Ticari sözleşme hazırlama konusunda bilgi almak
-                        istiyorum
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-start gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Scale className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm max-w-[75%] border border-gray-100">
-                      <p className="text-sm text-gray-700">
-                        Tabii ki! Ticari sözleşmeler konusunda size yardımcı
-                        olabilirim. Hangi tür sözleşme hakkında detay almak
-                        istersiniz?
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-start gap-2 animate-pulse">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#D4A574] to-[#B8926A] rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Scale className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm border border-gray-100">
-                      <div className="flex gap-1.5">
-                        <span
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0ms" }}
-                        ></span>
-                        <span
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "150ms" }}
-                        ></span>
-                        <span
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "300ms" }}
-                        ></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 focus-within:border-[#D4A574] transition-colors">
-                      <span className="text-gray-400 text-sm">
-                        Hukuki sorunuzu yazın…
-                      </span>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#152b47] rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all cursor-pointer">
-                      <Send className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section className="bg-gradient-to-br from-[#1e3a5f] via-[#152b47] to-[#1e3a5f] text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-10 w-64 h-64 bg-[#D4A574] rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-[#D4A574] rounded-full blur-3xl" />
-        </div>
-
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-16 lg:py-20 relative z-10">
-          <div className="text-center flex flex-col items-center gap-8">
-            <div className="inline-flex items-center gap-2 bg-[#D4A574]/20 text-[#D4A574] px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm">
-              <CheckCircle2 className="w-4 h-4" />
-              Bitirme Projesi
-            </div>
-            <h2 className="text-white max-w-3xl text-4xl lg:text-5xl font-bold leading-tight">
-              Yapay Zeka Destekli Hukuk Asistanını Hemen Deneyin
-            </h2>
-            <p className="text-blue-100 max-w-2xl text-lg leading-relaxed">
-              LawAgent AI, hukuki metinlerdeki bilgi arama sürecinizi saniyelere indirir. 
-              Gelişmiş RAG mimarisiyle doğru mevzuatı bulur ve size sunar.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
-              <button
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent("toggle-chatbot"));
-                }}
-                className="bg-[#D4A574] hover:bg-[#B8926A] text-[#1e3a5f] rounded-lg hover:shadow-2xl transition-all duration-300 text-base px-8 py-6 font-semibold flex items-center gap-2"
-              >
-                Asistanı Başlat
-                <Sparkles className="w-5 h-5 ml-1" />
-              </button>
-              <Link to="/about">
-                <Button
-                  variant="secondary"
-                  className="border-2 border-white text-white hover:bg-white hover:text-[#1e3a5f] rounded-lg transition-all duration-300 text-base px-8 py-6 font-semibold"
-                >
-                  <Info className="w-5 h-5 mr-1" />
-                  Proje Detayları
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    <figure className="lumen-apparatus" aria-label="hukuki analiz enstrümanı" aria-hidden="true">
+      <svg
+        className="lumen-apparatus__svg"
+        viewBox="0 0 400 360"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <pattern id="grid-fine" width="24" height="24" patternUnits="userSpaceOnUse">
+            <path d="M 24 0 L 0 0 0 24" fill="none" stroke="oklch(18% 0.014 265 / 0.06)" strokeWidth="0.5"/>
+          </pattern>
+          <linearGradient id="prism-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="oklch(46% 0.24 268)" stopOpacity="0.14"/>
+            <stop offset="100%" stopColor="oklch(46% 0.24 268)" stopOpacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="beam-fade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="oklch(55% 0.010 265)" stopOpacity="0"/>
+            <stop offset="100%" stopColor="oklch(55% 0.010 265)" stopOpacity="0.6"/>
+          </linearGradient>
+        </defs>
+        <rect width="400" height="360" fill="url(#grid-fine)" opacity="0.6"/>
+        <polygon points="200,40 86,240 314,240" fill="url(#prism-fill)"
+          stroke="oklch(46% 0.24 268 / 0.38)" strokeWidth="1"/>
+        <line x1="143" y1="40" x2="200" y2="160"
+          stroke="oklch(46% 0.24 268 / 0.18)" strokeWidth="0.5" strokeDasharray="3,4"/>
+        <line x1="257" y1="40" x2="200" y2="160"
+          stroke="oklch(46% 0.24 268 / 0.18)" strokeWidth="0.5" strokeDasharray="3,4"/>
+        <circle cx="200" cy="160" r="2" fill="oklch(46% 0.24 268 / 0.5)"/>
+        <line x1="0" y1="140" x2="143" y2="140"
+          stroke="url(#beam-fade)" strokeWidth="1.5" strokeDasharray="5,4"/>
+        <polygon points="143,137 150,140 143,143" fill="oklch(55% 0.010 265 / 0.5)"/>
+        <line x1="143" y1="140" x2="269" y2="185"
+          stroke="oklch(55% 0.010 265 / 0.25)" strokeWidth="1" strokeDasharray="3,3"/>
+        {/* Spectrum rays */}
+        <line x1="269" y1="185" x2="390" y2="139" stroke="oklch(68% 0.16 18)" strokeWidth="1.5" opacity="0.85"/>
+        <line x1="269" y1="185" x2="394" y2="161" stroke="oklch(74% 0.18 45)" strokeWidth="1.5" opacity="0.80"/>
+        <line x1="269" y1="185" x2="395" y2="185" stroke="oklch(78% 0.17 85)" strokeWidth="1.5" opacity="0.80"/>
+        <line x1="269" y1="185" x2="394" y2="209" stroke="oklch(70% 0.16 145)" strokeWidth="1.5" opacity="0.80"/>
+        <line x1="269" y1="185" x2="390" y2="231" stroke="oklch(58% 0.22 268)" strokeWidth="1.5" opacity="0.85"/>
+        {/* Scale annotations */}
+        <line x1="86" y1="262" x2="314" y2="262" stroke="oklch(18% 0.014 265 / 0.15)" strokeWidth="0.5"/>
+        <line x1="86" y1="258" x2="86" y2="266" stroke="oklch(18% 0.014 265 / 0.15)" strokeWidth="0.5"/>
+        <line x1="314" y1="258" x2="314" y2="266" stroke="oklch(18% 0.014 265 / 0.15)" strokeWidth="0.5"/>
+        <text x="200" y="278" textAnchor="middle"
+          fontFamily="'JetBrains Mono', monospace" fontSize="9" letterSpacing="0.10em"
+          fill="oklch(55% 0.010 265)" opacity="0.6">θ_EXIT = 22°</text>
+        <path d="M 155,140 A 20,20 0 0,1 148,124"
+          stroke="oklch(18% 0.014 265 / 0.25)" strokeWidth="0.5" fill="none"/>
+        <text x="158" y="120" fontFamily="'JetBrains Mono', monospace"
+          fontSize="8.5" letterSpacing="0.08em" fill="oklch(55% 0.010 265)" opacity="0.55">
+          θ_IN = 38°
+        </text>
+      </svg>
+      <ul className="lumen-callouts">
+        <li className="lumen-callout lumen-callout--left" style={{ top: "14%" } as React.CSSProperties}>TBK · 818 MADDE</li>
+        <li className="lumen-callout lumen-callout--right" style={{ top: "34%" } as React.CSSProperties}>TTK · 1535 MADDE</li>
+        <li className="lumen-callout lumen-callout--left" style={{ top: "62%" } as React.CSSProperties}>TKHK · 84 MADDE</li>
+        <li className="lumen-callout lumen-callout--right" style={{ top: "80%" } as React.CSSProperties}>RAG V2 · 28 MS</li>
+      </ul>
+    </figure>
   );
 }
 
+export function HomePage() {
+  return (
+    <>
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <section className="lumen-hero" id="hero" aria-labelledby="hero-title">
+        <div className="lumen-shell">
+          <div className="lumen-hero__grid">
+            <div className="lumen-hero__lead">
+              <div className="lumen-hero__eyebrow">
+                <span className="eyebrow">00 · yapay zeka hukuk asistanı</span>
+              </div>
+              <h1 id="hero-title" className="lumen-hero__title">
+                hukuki sorularınıza{" "}<em>yanıt</em>{" "}veriyor.
+              </h1>
+              <p className="lumen-hero__lede">
+                türk borçlar kanunu, ticaret kanunu ve tüketici kanunu kapsamında
+                mevzuat kaynaklı, güvenilir yanıtlar — saniyeler içinde.
+              </p>
+              <div className="lumen-hero__actions">
+                <button
+                  className="lumen-btn lumen-btn--primary"
+                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+                  aria-label="yapay zeka asistanını aç"
+                >
+                  asistanı başlat →
+                </button>
+                <Link to="/practice-areas" className="lumen-btn lumen-btn--ghost">
+                  uygulama alanları
+                </Link>
+              </div>
+            </div>
+            <div>
+              <PrismApparatus />
+            </div>
+          </div>
+        </div>
+      </section>
 
+      {/* ── Meter Strip ───────────────────────────────────────────────────── */}
+      <aside className="lumen-meter" aria-label="sistem sinyal okuyucu" aria-hidden="true">
+        <span className="lumen-meter__label">KAYNAK · 2837 MADDE</span>
+        <div className="lumen-meter__bars">
+          {METER_BARS.map((h, i) => (
+            <span key={i} className="lumen-meter__bar"
+              style={{ height: `${Math.round(h * 26) + 2}px`, opacity: 0.28 + h * 0.72 }}/>
+          ))}
+        </div>
+        <span className="lumen-meter__label">YANIT · 28 MS</span>
+      </aside>
+
+      {/* ── Three-Stat Row ────────────────────────────────────────────────── */}
+      <section className="lumen-stats lumen-shell" aria-label="platform istatistikleri">
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">%99.4</span>
+          <span className="lumen-stat__label">mevzuat doğruluğu</span>
+        </div>
+        <div className="lumen-stat__divider" aria-hidden="true"/>
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">7/24</span>
+          <span className="lumen-stat__label">anlık yanıt</span>
+        </div>
+        <div className="lumen-stat__divider" aria-hidden="true"/>
+        <div className="lumen-stat">
+          <span className="lumen-stat__num">RAG v2</span>
+          <span className="lumen-stat__label">vektör indeks</span>
+        </div>
+      </section>
+
+      {/* ── Service Areas ─────────────────────────────────────────────────── */}
+      <section className="lumen-section" id="uygulama-alanlari" aria-labelledby="areas-title">
+        <div className="lumen-shell">
+          <header className="lumen-section__head">
+            <span className="eyebrow">01 · uygulama alanları</span>
+            <h2 id="areas-title" className="lumen-section__title">
+              türk hukukunun üç temel{" "}
+              <span style={{ color: "var(--color-accent-2)" }}>mevzuatı</span>.
+            </h2>
+            <p className="lumen-section__lede">
+              rag mimarisi, türk hukuk sisteminin en kritik üç kanun başlığında
+              eğitilmiş vektör veritabanından beslenir.
+            </p>
+          </header>
+          <div className="lumen-cards" role="list">
+            {PRACTICE_AREAS.map((area) => (
+              <Link key={area.slug} to={`/practice-areas/${area.slug}`}
+                className="lumen-card" role="listitem">
+                <span className="lumen-card__eyebrow">{area.label}</span>
+                <div>
+                  <h3 className="lumen-card__title">{area.title}</h3>
+                  <p style={{
+                    fontFamily: "var(--font-label)", fontSize: "10px",
+                    letterSpacing: "0.10em", textTransform: "uppercase",
+                    color: "var(--color-accent)", marginTop: "4px",
+                  }}>
+                    {area.sub} · {area.stat}
+                  </p>
+                </div>
+                <p className="lumen-card__body">{area.body}</p>
+                <span className="lumen-card__arrow" aria-hidden="true">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Strip ─────────────────────────────────────────────────────── */}
+      <section className="lumen-cta" aria-labelledby="cta-title">
+        <div className="lumen-shell">
+          <div className="lumen-cta__eyebrow">
+            <span className="eyebrow">02 · başla</span>
+          </div>
+          <h2 id="cta-title" className="lumen-cta__title">
+            sorunuzu <em>sorun</em>.
+          </h2>
+          <p className="lumen-cta__sub">
+            ücretsiz, anında, mevzuat destekli. kişisel verileriniz
+            saklanmaz veya üçüncü taraflarla paylaşılmaz.
+          </p>
+          <button className="lumen-btn lumen-btn--primary"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+            style={{ marginInline: "auto", display: "flex" }}>
+            asistanı başlat →
+          </button>
+        </div>
+      </section>
+    </>
+  );
+}

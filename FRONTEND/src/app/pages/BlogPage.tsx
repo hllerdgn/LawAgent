@@ -1,93 +1,176 @@
 import React from "react";
-import { Link } from "react-router";
-import { Calendar, User, ArrowRight } from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { Link } from "react-router-dom";
+
+const BLOG_POSTS = [
+  {
+    title: "ticaret hukukunda sık karşılaşılan uyuşmazlıklar ve çözüm yolları",
+    slug: "ticaret-hukukunda-sik-karsilasilan-sorunlar",
+    excerpt: "6102 sayılı türk ticaret kanunu çerçevesinde şirket ortakları uyuşmazlıkları, ticari alacak tahsili ve sözleşme ihlalleri hakkında rehber.",
+    date: "15 ocak 2025",
+    readTime: "5 dk",
+    category: "TTK · TİCARET",
+  },
+  {
+    title: "iş sözleşmesi feshi ve kıdem tazminatı hakları",
+    slug: "is-sozlesmesi-feshi-haklarinizi-bilin",
+    excerpt: "işçinin ve işverenin 4857 sayılı iş kanunu kapsamındaki hakları, fesih bildirimi süreleri ve arabuluculuk başvuru adımları.",
+    date: "10 ocak 2025",
+    readTime: "6 dk",
+    category: "TBK · İŞ",
+  },
+  {
+    title: "6502 sayılı tkhk kapsamında tüketici hakları rehberi",
+    slug: "tuketici-haklarinda-yeni-duzenlemeler",
+    excerpt: "ayıplı mal iadesi, mesafeli satış cayma hakkı ve tüketici hakem heyetlerine e-devlet üzerinden başvuru yöntemleri.",
+    date: "5 ocak 2025",
+    readTime: "4 dk",
+    category: "TKHK · TÜKETİCİ",
+  },
+];
 
 export function BlogPage() {
-  // Mock blog posts - would come from database in real app
-  const blogPosts = [
-    {
-      title: "Ticaret Hukukunda Sık Karşılaşılan Sorunlar",
-      slug: "ticaret-hukukunda-sik-karsilasilan-sorunlar",
-      excerpt:
-        "Ticari faaliyetlerde en çok karşılaşılan hukuki sorunlar ve çözüm yolları hakkında bilmeniz gerekenler.",
-      date: "15 Ocak 2025",
-      category: "Ticaret Hukuku",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
-    },
-    {
-      title: "İş Sözleşmesi Feshi: Haklarınızı Bilin",
-      slug: "is-sozlesmesi-feshi-haklarinizi-bilin",
-      excerpt:
-        "İş sözleşmesinin feshedilmesi durumunda işçi ve işverenin hakları nelerdir? Detaylı açıklamalar.",
-      date: "10 Ocak 2025",
-      category: "İş Hukuku",
-      image:
-        "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800",
-    },
-    {
-      title: "Tüketici Haklarında Yeni Düzenlemeler",
-      slug: "tuketici-haklarinda-yeni-duzenlemeler",
-      excerpt:
-        "2025 yılında yürürlüğe giren tüketici hakları düzenlemeleri ve etkileri.",
-      date: "5 Ocak 2025",
-      category: "Tüketici Hukuku",
-      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800",
-    },
-  ];
-
   return (
-    <div className="w-full">
-      <section className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-white mb-6">Blog</h1>
-            <p className="text-gray-200 text-lg">
-              Hukuki konularda bilgilendirici makaleler ve güncel gelişmeler.
-            </p>
-          </div>
+    <>
+      {/* Page hero */}
+      <section
+        style={{
+          background: `
+            linear-gradient(var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px) 0 0 / 48px 48px,
+            var(--color-paper)
+          `,
+          paddingTop: "var(--space-12)",
+          paddingBottom: "var(--space-10)",
+          borderBottom: "1px solid var(--color-rule)",
+        }}
+        aria-labelledby="blog-title"
+      >
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-4)" }}>
+            00 · hukuki içerik ve içtihat
+          </span>
+          <h1
+            id="blog-title"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "var(--text-display)",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "var(--tracking-display)",
+              color: "var(--color-ink)",
+              maxWidth: "18ch",
+              overflowWrap: "anywhere",
+            }}
+          >
+            hukuki makaleler ve{" "}
+            <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>incelemeler</em>.
+          </h1>
+          <p style={{
+            marginTop: "var(--space-6)",
+            fontSize: "var(--text-lg)",
+            color: "var(--color-ink-2)",
+            lineHeight: "var(--leading-normal)",
+            maxWidth: "52ch",
+          }}>
+            güncel mevzuat değişiklikleri, emsal mahkeme kararları ve pratik hukuki
+            bilgilendirme yazıları.
+          </p>
         </div>
       </section>
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-24 py-12 lg:py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post, index) => (
-              <Link key={index} to={`/blog/${post.slug}`} className="group">
-                <article className="bg-white border border-[var(--color-border)] rounded-xl overflow-hidden hover:shadow-xl transition-shadow">
-                  <div className="relative h-48 overflow-hidden">
-                    <ImageWithFallback
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-[var(--color-accent)] text-[var(--color-primary)] text-sm rounded-full">
-                        {post.category}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-4 text-sm text-[var(--color-text-secondary)] mb-3">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {post.date}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        Av. LAWAGENT
-                      </span>
-                    </div>
-                    <h3 className="text-[var(--color-primary)] mb-3 group-hover:text-[var(--color-accent)] transition-colors">
+
+      {/* Blog feed */}
+      <section className="lumen-section" aria-labelledby="posts-title">
+        <div className="lumen-shell">
+          <header className="lumen-section__head">
+            <span className="eyebrow">01 · son makaleler</span>
+            <h2 id="posts-title" className="lumen-section__title" style={{ display: "none" }}>
+              son makaleler
+            </h2>
+          </header>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1px", borderTop: "1px solid var(--color-rule)" }}>
+            {BLOG_POSTS.map((post) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <article
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "auto 1fr auto",
+                    gap: "var(--space-7)",
+                    alignItems: "center",
+                    padding: "var(--space-6) 0",
+                    borderBottom: "1px solid var(--color-rule-2)",
+                    transition: "background 150ms ease",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "oklch(94% 0.010 265)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  {/* Category tag */}
+                  <span style={{
+                    fontFamily: "var(--font-label)",
+                    fontSize: "10px",
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    color: "var(--color-accent)",
+                    whiteSpace: "nowrap",
+                    minWidth: "120px",
+                  }}>
+                    {post.category}
+                  </span>
+
+                  {/* Content */}
+                  <div>
+                    <h3 style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 400,
+                      fontSize: "var(--text-2xl)",
+                      lineHeight: "var(--leading-snug)",
+                      letterSpacing: "var(--tracking-display)",
+                      color: "var(--color-ink)",
+                      marginBottom: "var(--space-2)",
+                    }}>
                       {post.title}
                     </h3>
-                    <p className="text-[var(--color-text-secondary)] mb-4 line-clamp-2">
+                    <p style={{
+                      fontSize: "var(--text-sm)",
+                      color: "var(--color-ink-2)",
+                      lineHeight: "var(--leading-normal)",
+                      maxWidth: "60ch",
+                    }}>
                       {post.excerpt}
                     </p>
-                    <div className="flex items-center gap-2 text-[var(--color-accent)] group-hover:gap-3 transition-all">
-                      <span>Devamını Oku</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
+                  </div>
+
+                  {/* Meta */}
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: "var(--space-2)",
+                    whiteSpace: "nowrap",
+                  }}>
+                    <span style={{
+                      fontFamily: "var(--font-label)",
+                      fontSize: "10px",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted)",
+                    }}>
+                      {post.date}
+                    </span>
+                    <span style={{
+                      fontFamily: "var(--font-label)",
+                      fontSize: "10px",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted)",
+                    }}>
+                      {post.readTime} okuma
+                    </span>
+                    <span style={{ color: "var(--color-accent)", fontSize: "var(--text-sm)" }}>→</span>
                   </div>
                 </article>
               </Link>
@@ -95,7 +178,28 @@ export function BlogPage() {
           </div>
         </div>
       </section>
-    </div>
+
+      {/* CTA */}
+      <section className="lumen-cta" style={{ borderTop: "1px solid var(--color-rule)" }}>
+        <div className="lumen-shell">
+          <span className="eyebrow" style={{ display: "block", marginBottom: "var(--space-5)" }}>
+            02 · mevzuat soruları
+          </span>
+          <h2 className="lumen-cta__title">
+            makalede geçen kanunları <em>sorgulayın</em>.
+          </h2>
+          <p className="lumen-cta__sub">
+            rag v2 mimarisi, ilgili kanun maddesini bağlam içinde bulur ve yanıtlar.
+          </p>
+          <button
+            className="lumen-btn lumen-btn--primary"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-chatbot"))}
+            style={{ marginInline: "auto", display: "inline-flex" }}
+          >
+            asistana sor →
+          </button>
+        </div>
+      </section>
+    </>
   );
 }
-

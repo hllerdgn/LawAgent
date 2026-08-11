@@ -1,0 +1,39 @@
+id,category,query,expected_law,expected_article,expected_source,rank,elapsed_ms,top1_source,top1_law,top1_article,top1_score
+tkhk_01,semantic_tkhk,"Ayıplı mal aldım, satıcıya karşı hangi seçimlik haklarım var?",TKHK,11,,1,2502.9,mevzuat,TKHK,11,80.8059
+tkhk_02,semantic_tkhk,Mesafeli sözleşmede cayma hakkımı ne zaman kullanabilirim?,TKHK,48,,1,1000.4,mevzuat,TKHK,48,71.3131
+tkhk_03,semantic_tkhk,Tüketici kredisinde cayma hakkımı kaç gün içinde kullanabilirim?,TKHK,24,,1,899.3,mevzuat,TKHK,24,150.0
+tkhk_04,semantic_tkhk,Tüketici kredisi sözleşmesinin geçerlilik şartları nelerdir?,TKHK,23,,1,871.9,mevzuat,TKHK,23,37.4344
+tkhk_05,semantic_tkhk,Tüketici kredisini erken kapatırsam faizden indirim alır mıyım?,TKHK,27,,2,882.7,mevzuat,TKHK,37,5.1794
+tkhk_06,semantic_tkhk,Konut finansmanında temerrüde düşersem ne olur?,TKHK,33,,1,876.9,mevzuat,TKHK,33,83.5812
+tkhk_07,semantic_tkhk,Abonelik sözleşmemi feshedersem depozitom iade edilir mi?,TKHK,52,,1,875.2,mevzuat,TKHK,52,82.57
+tkhk_08,semantic_tkhk,Devre tatil sözleşmesinden cayabilir miyim?,TKHK,50,,1,836.8,mevzuat,TKHK,50,86.2165
+tkhk_09,semantic_tkhk,Paket tur sözleşmesinde esaslı değişiklik olursa cayabilir miyim?,TKHK,51,,1,878.7,mevzuat,TKHK,51,87.5
+tkhk_10,semantic_tkhk,"Sipariş etmediğim bir ürün gönderildi, ödeme yapmak zorunda mıyım?",TKHK,7,,1,902.2,mevzuat,TKHK,7,0.9454
+tkhk_11,semantic_tkhk,Tüketici hakem heyetine başvurunun parasal sınırı nedir?,TKHK,68,,1,868.6,mevzuat,TKHK,68,139.4643
+tkhk_12,semantic_tkhk,Garanti belgesi düzenleme yükümlülüğü kaç yıl geçerlidir?,TKHK,56,,1,703.6,mevzuat,TKHK,56,143.0035
+ttk_01,semantic_ttk,Limited şirket müdürünün ortaklara karşı sorumluluğu nedir?,TTK,632,,1,892.2,mevzuat,TTK,632,58.2809
+ttk_02,semantic_ttk,Limited şirkette müdürlük yetkisi devredilebilir mi?,TTK,625,,1,875.3,mevzuat,TTK,625,150.0
+ttk_03,semantic_ttk,Limited şirkette sermaye payının devri nasıl yapılır?,TTK,595,,1,890.6,mevzuat,TTK,595,150.0
+ttk_04,semantic_ttk,Anonim şirkette yönetim kurulu görevini devredebilir mi?,TTK,375,,1,904.2,mevzuat,TTK,375,108.0687
+ttk_05,semantic_ttk,Yönetim kurulu toplantıya nasıl çağrılır?,TTK,392,,1,670.7,mevzuat,TTK,392,5.6526
+ttk_06,semantic_ttk,Genel kurul kararının butlanı ile iptali arasındaki fark nedir?,TTK,445,,1,738.9,mevzuat,TTK,445,45.0375
+ttk_07,semantic_ttk,Yönetim kurulu üyesinin azli gündemde olmalı mı?,TTK,413,,1,897.8,mevzuat,TTK,413,145.8369
+ttk_08,semantic_ttk,Anonim şirket genel kurulu yılda kaç kez toplanır?,TTK,409,,1,905.7,mevzuat,TTK,409,150.0
+ttk_09,semantic_ttk,Çekin ibraz süresi kaç gündür?,TTK,796,,1,664.5,mevzuat,TTK,796,130.8356
+ttk_10,semantic_ttk,Karşılıksız çıkan çekte hamilin tazminat hakkı var mı?,TTK,814,,1,1098.4,mevzuat,TTK,814,36.5679
+ttk_11,semantic_ttk,Bono ile poliçe arasındaki fark nedir?,TTK,776,,1,692.9,mevzuat,TTK,776,150.0
+tbk_01,semantic_tbk,Gabin nedeniyle sözleşmeyi iptal edebilir miyim?,TBK,28,,1,1073.8,mevzuat,TBK,28,62.8324
+tbk_02,semantic_tbk,İkrah ile yapılan sözleşmenin iptali için süre nedir?,TBK,"[""37"", ""38"", ""39""]",,1,875.5,mevzuat,TBK,39,4.5397
+tbk_03,semantic_tbk,Müteselsil borçlulukta alacaklı kime başvurabilir?,TBK,"[""161"", ""162""]",,1,936.5,mevzuat,TBK,161,56.0691
+tbk_04,semantic_tbk,İşçi alacaklarında zamanaşımı süresi kaç yıldır?,TBK,"[""146"", ""147""]",,1,710.1,mevzuat,TBK,146,3.75
+tbk_05,semantic_tbk,Vekilin özen borcunun kapsamı nedir?,TBK,"[""506"", ""513""]",,1,2282.7,mevzuat,TBK,506,0.9563
+tbk_06,semantic_tbk,Kefalet sözleşmesinde eşin rızası gerekir mi?,TBK,"[""583"", ""584""]",,1,1071.2,mevzuat,TBK,584,5.7287
+tbk_07,semantic_tbk,Eser sözleşmesinde müteahhidin ayıba karşı sorumluluğu nedir?,TBK,"[""474"", ""475"", ""482""]",,2,864.0,mevzuat,TBK,472,5.716
+tbk_08,semantic_tbk,Borçlu temerrüde düşerse alacaklının hakları nelerdir?,TBK,"[""117"", ""119""]",,1,876.2,mevzuat,TBK,117,96.3127
+tbk_09,semantic_tbk,Haksız fiilden doğan tazminat davasında zamanaşımı süresi nedir?,TBK,"[""72"", ""49"", ""50""]",,1,853.8,mevzuat,TBK,72,4.7137
+tbk_10,semantic_tbk,Kira bedeli ödenmezse tahliye süreci nasıl işler?,TBK,"[""347"", ""350"", ""352""]",,1,916.7,mevzuat,TBK,352,4.1674
+direct_01,direct_madde,TBK madde 352 nedir?,TBK,352,,1,671.2,mevzuat,TBK,352,139.1004
+direct_02,direct_madde,TTK 632 ne diyor?,TTK,632,,1,661.9,mevzuat,TTK,632,113.8513
+direct_03,direct_madde,TKHK m. 48 neyi düzenliyor?,TKHK,48,,1,852.8,mevzuat,TKHK,48,114.3589
+yargitay_01,yargitay_intent,Kira bedeli ödenmezse tahliye ile ilgili Yargıtay kararları var mı?,,,yargitay,1,894.6,yargitay,TBK,,28.5
+yargitay_02,yargitay_intent,Ayıplı mal davalarında Yargıtay nasıl karar veriyor?,,,yargitay,1,877.9,yargitay,TKHK,,14.4533

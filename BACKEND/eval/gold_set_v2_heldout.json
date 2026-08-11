@@ -1,0 +1,318 @@
+[
+  {
+    "id": "ho_tkhk_01",
+    "category": "semantic_tkhk",
+    "query": "Kusurlu çıkan bir ürünü geri verip paramı geri alma hakkım var mıdır?",
+    "expected_law": "TKHK",
+    "expected_article": "11"
+  },
+  {
+    "id": "ho_tkhk_02",
+    "category": "semantic_tkhk",
+    "query": "İnternet üzerinden alınan bir ürünü hiçbir gerekçe göstermeden iade etme süresi nedir?",
+    "expected_law": "TKHK",
+    "expected_article": "48"
+  },
+  {
+    "id": "ho_tkhk_03",
+    "category": "semantic_tkhk",
+    "query": "Bankadan kredi kullandıktan sonra vazgeçmek için kaç günlük sürem vardır?",
+    "expected_law": "TKHK",
+    "expected_article": "24"
+  },
+  {
+    "id": "ho_tkhk_04",
+    "category": "semantic_tkhk",
+    "query": "Bankadan çekilen bireysel kredinin resmi yazılı şekilde yapılmamasının sonucu nedir?",
+    "expected_law": "TKHK",
+    "expected_article": "23"
+  },
+  {
+    "id": "ho_tkhk_05",
+    "category": "semantic_tkhk",
+    "query": "Borcunu vadesinden önce topluca kapatan kredi müşterisine faiz indirimi nasıl yapılır?",
+    "expected_law": "TKHK",
+    "expected_article": "27"
+  },
+  {
+    "id": "ho_tkhk_06",
+    "category": "semantic_tkhk",
+    "query": "Ev kredisi taksitleri ödenmediğinde bankanın borcun tamamını isteme şartları nelerdir?",
+    "expected_law": "TKHK",
+    "expected_article": "33"
+  },
+  {
+    "id": "ho_tkhk_07",
+    "category": "semantic_tkhk",
+    "query": "İnternet veya TV aboneliğini sonlandırırken cayma bedeli veya ceza ödenir mi?",
+    "expected_law": "TKHK",
+    "expected_article": "52"
+  },
+  {
+    "id": "ho_tkhk_08",
+    "category": "semantic_tkhk",
+    "query": "Satın alınan bir cihazın en az kaç yıl boyunca arızalara karşı ücretsiz tamir garantisi olmalıdır?",
+    "expected_law": "TKHK",
+    "expected_article": "56"
+  },
+  {
+    "id": "ho_tkhk_09",
+    "category": "semantic_tkhk",
+    "query": "Maddi değeri düşük uyuşmazlıklarda mahkemeye gitmeden önce nereye başvurmak zorunludur?",
+    "expected_law": "TKHK",
+    "expected_article": "68"
+  },
+  {
+    "id": "ho_tkhk_10",
+    "category": "semantic_tkhk",
+    "query": "Sözleşmeye tüketici aleyhine tek taraflı konulan adaletsiz maddelerin hükmü nedir?",
+    "expected_law": "TKHK",
+    "expected_article": "5"
+  },
+  {
+    "id": "ho_tkhk_11",
+    "category": "semantic_tkhk",
+    "query": "Bana sorulmadan adresime gönderilen bir eşyayı geri göndermek veya parasını ödemek zorunda mıyım?",
+    "expected_law": "TKHK",
+    "expected_article": "7"
+  },
+
+  {
+    "id": "ho_ttk_01",
+    "category": "semantic_ttk",
+    "query": "Ticari işlerle uğraşan bir kişinin basiretli davranma yükümlülüğü nedir?",
+    "expected_law": "TTK",
+    "expected_article": "18"
+  },
+  {
+    "id": "ho_ttk_02",
+    "category": "semantic_ttk",
+    "query": "Rakiplerimin müşterilerimi yanıltıcı beyanlarla çekmesine karşı hangi davaları açabilirim?",
+    "expected_law": "TTK",
+    "expected_article": ["56", "60"]
+  },
+  {
+    "id": "ho_ttk_03",
+    "category": "semantic_ttk",
+    "query": "Anonim şirketlerde müdür tayin etme yetkisi başka bir birime devredilebilir mi?",
+    "expected_law": "TTK",
+    "expected_article": "375"
+  },
+  {
+    "id": "ho_ttk_04",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu üyelerinden biri toplantı yapılmasını nasıl talep eder?",
+    "expected_law": "TTK",
+    "expected_article": "392"
+  },
+  {
+    "id": "ho_ttk_05",
+    "category": "semantic_ttk",
+    "query": "Şirket ortaklarının katıldığı yıllık genel toplantı ne zaman yapılmalıdır?",
+    "expected_law": "TTK",
+    "expected_article": "409"
+  },
+  {
+    "id": "ho_ttk_06",
+    "category": "semantic_ttk",
+    "query": "Ortaklar kurulunda önceden belirlenmemiş bir konunun görüşülüp karara bağlanması mümkün müdür?",
+    "expected_law": "TTK",
+    "expected_article": "413"
+  },
+  {
+    "id": "ho_ttk_07",
+    "category": "semantic_ttk",
+    "query": "Şirket ortaklar toplantısında kanuna aykırı alınan bir kararın iptali için dava açma süresi nedir?",
+    "expected_law": "TTK",
+    "expected_article": "445"
+  },
+  {
+    "id": "ho_ttk_08",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu üyeleri şirkete verdikleri zararlardan ötürü ne zaman sorumlu tutulur?",
+    "expected_law": "TTK",
+    "expected_article": "553"
+  },
+  {
+    "id": "ho_ttk_09",
+    "category": "semantic_ttk",
+    "query": "Limited ortaklıkta hissenin başka birine aktarılması için noter onayı gerekir mi?",
+    "expected_law": "TTK",
+    "expected_article": "595"
+  },
+  {
+    "id": "ho_ttk_10",
+    "category": "semantic_ttk",
+    "query": "Limited ortaklık müdürünün devredemeyeceği asli görevler nelerdir?",
+    "expected_law": "TTK",
+    "expected_article": "625"
+  },
+  {
+    "id": "ho_ttk_11",
+    "category": "semantic_ttk",
+    "query": "Limited şirketi yöneten kişilerin ortaklara karşı tazminat yükümlülüğü nedir?",
+    "expected_law": "TTK",
+    "expected_article": "632"
+  },
+  {
+    "id": "ho_ttk_12",
+    "category": "semantic_ttk",
+    "query": "Türkiye sınırları içinde düzenlenen bir ödeme emrinin bankadan tahsil edilme süresi kaç gündür?",
+    "expected_law": "TTK",
+    "expected_article": "796"
+  },
+  {
+    "id": "ho_ttk_13",
+    "category": "semantic_ttk",
+    "query": "Banka hesabında para bulunmayan bir ödeme belgesini alan kişinin tazminat hakkı var mıdır?",
+    "expected_law": "TTK",
+    "expected_article": "814"
+  },
+
+  {
+    "id": "ho_tbk_01",
+    "category": "semantic_tbk",
+    "query": "İki taraf anlaşmaya vardığında sözleşme ne zaman kurulmuş sayılır?",
+    "expected_law": "TBK",
+    "expected_article": "1"
+  },
+  {
+    "id": "ho_tbk_02",
+    "category": "semantic_tbk",
+    "query": "Sözleşmedeki gizli amacın veya yanlış adlandırılmanın hukuki geçerliliğe etkisi nedir?",
+    "expected_law": "TBK",
+    "expected_article": "19"
+  },
+  {
+    "id": "ho_tbk_03",
+    "category": "semantic_tbk",
+    "query": "Kanunun emredici kurallarına aykırı olmayan her türlü sözleşme yapılabilir mi?",
+    "expected_law": "TBK",
+    "expected_article": "26"
+  },
+  {
+    "id": "ho_tbk_04",
+    "category": "semantic_tbk",
+    "query": "Ahlaka veya kamu düzenine aykırı yapılan bir anlaşmanın akıbeti nedir?",
+    "expected_law": "TBK",
+    "expected_article": "27"
+  },
+  {
+    "id": "ho_tbk_05",
+    "category": "semantic_tbk",
+    "query": "Sözleşme yaparken önemli bir konuda hata yapan taraf anlaşmayı iptal edebilir mi?",
+    "expected_law": "TBK",
+    "expected_article": "30"
+  },
+  {
+    "id": "ho_tbk_06",
+    "category": "semantic_tbk",
+    "query": "Karşı tarafın yalan söyleyerek kandırması sonucu imzaladığım sözleşmeden nasıl dönebilirim?",
+    "expected_law": "TBK",
+    "expected_article": ["36", "39"]
+  },
+  {
+    "id": "ho_tbk_07",
+    "category": "semantic_tbk",
+    "query": "Kandırılan veya korkutulan kişinin sözleşmeyi geçersiz kılmak için ne kadar süresi vardır?",
+    "expected_law": "TBK",
+    "expected_article": "39"
+  },
+  {
+    "id": "ho_tbk_08",
+    "category": "semantic_tbk",
+    "query": "Kendi borcunu ödemeyen taraf, diğer taraftan borcunu yerine getirmesini isteyebilir mi?",
+    "expected_law": "TBK",
+    "expected_article": "97"
+  },
+  {
+    "id": "ho_tbk_09",
+    "category": "semantic_tbk",
+    "query": "Borcunu hiç yerine getirmeyen kişi karşı tarafın zararını ödemek zorunda mıdır?",
+    "expected_law": "TBK",
+    "expected_article": "112"
+  },
+  {
+    "id": "ho_tbk_10",
+    "category": "semantic_tbk",
+    "query": "Borcunu zamanında ödemeyen bir kişiye karşı yasal olarak gecikme süreci nasıl başlatılır?",
+    "expected_law": "TBK",
+    "expected_article": "117"
+  },
+  {
+    "id": "ho_tbk_11",
+    "category": "semantic_tbk",
+    "query": "Borcunu zamanında yerine getirmeyen tarafa karşı sözleşmeden dönme hakkı nasıl kullanılır?",
+    "expected_law": "TBK",
+    "expected_article": "125"
+  },
+  {
+    "id": "ho_tbk_12",
+    "category": "semantic_tbk",
+    "query": "Kanunda özel bir süre belirtilmemişse borçlar için hak arama süresi kaç yıldır?",
+    "expected_law": "TBK",
+    "expected_article": "146"
+  },
+  {
+    "id": "ho_tbk_13",
+    "category": "semantic_tbk",
+    "query": "Ev kirası alacakları veya otel konaklama bedelleri için dava açma süresi kaç yıldır?",
+    "expected_law": "TBK",
+    "expected_article": "147"
+  },
+  {
+    "id": "ho_tbk_14",
+    "category": "semantic_tbk",
+    "query": "Ortaklaşa borca girenlerden herhangi birinden borcun tamamı talep edilebilir mi?",
+    "expected_law": "TBK",
+    "expected_article": "161"
+  },
+  {
+    "id": "ho_tbk_15",
+    "category": "semantic_tbk",
+    "query": "Belirli süreli konut kiralama kontratı bittiğinde ev sahibi kiracıyı hemen çıkarabilir mi?",
+    "expected_law": "TBK",
+    "expected_article": "347"
+  },
+  {
+    "id": "ho_tbk_16",
+    "category": "semantic_tbk",
+    "query": "Kiracının belirli bir tarihte evi boşaltacağına dair verdiği yazılı sözün geçerlilik şartları nelerdir?",
+    "expected_law": "TBK",
+    "expected_article": "352"
+  },
+  {
+    "id": "ho_tbk_17",
+    "category": "semantic_tbk",
+    "query": "İnşaat işini teslim alan kişi işteki eksiklik ve kusurları ne kadar sürede bildirmelidir?",
+    "expected_law": "TBK",
+    "expected_article": "474"
+  },
+  {
+    "id": "ho_tbk_18",
+    "category": "semantic_tbk",
+    "query": "Bir başkası adına iş yürüten avukat veya temsilci işi yürütürken ne derece dikkatli olmak zorundadır?",
+    "expected_law": "TBK",
+    "expected_article": "506"
+  },
+  {
+    "id": "ho_tbk_19",
+    "category": "semantic_tbk",
+    "query": "Bir kimse borca ortak olurken eşinin de buna onay vermesi gerekir mi?",
+    "expected_law": "TBK",
+    "expected_article": "584"
+  },
+
+  {
+    "id": "ho_yargitay_01",
+    "category": "yargitay_intent",
+    "query": "Kira tespit davalarında Yargıtay'ın güncel içtihatları ne yöndedir?",
+    "expected_source": "yargitay"
+  },
+  {
+    "id": "ho_yargitay_02",
+    "category": "yargitay_intent",
+    "query": "Kat karşılığı inşaat sözleşmelerinin feshinde Yargıtay kararları nelerdir?",
+    "expected_source": "yargitay"
+  }
+]

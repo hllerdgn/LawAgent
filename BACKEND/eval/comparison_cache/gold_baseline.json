@@ -1,0 +1,1857 @@
+[
+  {
+    "id": "tkhk_01",
+    "category": "semantic_tkhk",
+    "query": "Ayıplı mal aldım, satıcıya karşı hangi seçimlik haklarım var?",
+    "expected_law": "TKHK",
+    "expected_article": "11",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 4492.3,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "11",
+        "source": "mevzuat",
+        "skor": 81.25,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "226",
+        "source": "mevzuat",
+        "skor": 2.6517,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "227",
+        "source": "mevzuat",
+        "skor": 2.376,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "475",
+        "source": "mevzuat",
+        "skor": 2.0139,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "15",
+        "source": "mevzuat",
+        "skor": 1.6835,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_02",
+    "category": "semantic_tkhk",
+    "query": "Mesafeli sözleşmede cayma hakkımı ne zaman kullanabilirim?",
+    "expected_law": "TKHK",
+    "expected_article": "48",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 1068.6,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 83.9587,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "49",
+        "source": "mevzuat",
+        "skor": 2.2358,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 1.989,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "18",
+        "source": "mevzuat",
+        "skor": 1.9778,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "255",
+        "source": "mevzuat",
+        "skor": 1.9002,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_03",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisinde cayma hakkımı kaç gün içinde kullanabilirim?",
+    "expected_law": "TKHK",
+    "expected_article": "24",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 949.7,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "24",
+        "source": "mevzuat",
+        "skor": 150.0,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 4.6356,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 3.9441,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "49",
+        "source": "mevzuat",
+        "skor": 3.6043,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "18",
+        "source": "mevzuat",
+        "skor": 3.3506,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_04",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisi sözleşmesinin geçerlilik şartları nelerdir?",
+    "expected_law": "TKHK",
+    "expected_article": "23",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 904.0,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "23",
+        "source": "mevzuat",
+        "skor": 66.2539,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "22",
+        "source": "mevzuat",
+        "skor": 2.7996,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "24",
+        "source": "mevzuat",
+        "skor": 2.6415,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "33",
+        "source": "mevzuat",
+        "skor": 2.1829,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 1.476,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_05",
+    "category": "semantic_tkhk",
+    "query": "Tüketici kredisini erken kapatırsam faizden indirim alır mıyım?",
+    "expected_law": "TKHK",
+    "expected_article": "27",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 944.9,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "27",
+        "source": "mevzuat",
+        "skor": 5.3843,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "37",
+        "source": "mevzuat",
+        "skor": 3.506,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "24",
+        "source": "mevzuat",
+        "skor": 3.1571,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "26",
+        "source": "mevzuat",
+        "skor": 1.9143,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "25",
+        "source": "mevzuat",
+        "skor": 1.7343,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_06",
+    "category": "semantic_tkhk",
+    "query": "Konut finansmanında temerrüde düşersem ne olur?",
+    "expected_law": "TKHK",
+    "expected_article": "33",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 897.0,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "33",
+        "source": "mevzuat",
+        "skor": 84.1812,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "34",
+        "source": "mevzuat",
+        "skor": 3.4165,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "28",
+        "source": "mevzuat",
+        "skor": 1.8757,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "106",
+        "source": "mevzuat",
+        "skor": 1.6141,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "121",
+        "source": "mevzuat",
+        "skor": 1.5279,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_07",
+    "category": "semantic_tkhk",
+    "query": "Abonelik sözleşmemi feshedersem depozitom iade edilir mi?",
+    "expected_law": "TKHK",
+    "expected_article": "52",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 934.0,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "52",
+        "source": "mevzuat",
+        "skor": 84.1033,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 0.8251,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "347",
+        "source": "mevzuat",
+        "skor": 0.8084,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "342",
+        "source": "mevzuat",
+        "skor": 0.7479,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "270",
+        "source": "mevzuat",
+        "skor": 0.7066,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_08",
+    "category": "semantic_tkhk",
+    "query": "Devre tatil sözleşmesinden cayabilir miyim?",
+    "expected_law": "TKHK",
+    "expected_article": "50",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 878.4,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 86.3795,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "269",
+        "source": "mevzuat",
+        "skor": 1.9904,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "160",
+        "source": "mevzuat",
+        "skor": 1.6904,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "347",
+        "source": "mevzuat",
+        "skor": 1.2563,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "430",
+        "source": "mevzuat",
+        "skor": 1.1852,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_09",
+    "category": "semantic_tkhk",
+    "query": "Paket tur sözleşmesinde esaslı değişiklik olursa cayabilir miyim?",
+    "expected_law": "TKHK",
+    "expected_article": "51",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 930.9,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "51",
+        "source": "mevzuat",
+        "skor": 87.5,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "50",
+        "source": "mevzuat",
+        "skor": 1.1371,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "52",
+        "source": "mevzuat",
+        "skor": 0.9979,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "30",
+        "source": "mevzuat",
+        "skor": 0.7724,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "1498",
+        "source": "mevzuat",
+        "skor": 0.6643,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_10",
+    "category": "semantic_tkhk",
+    "query": "Sipariş etmediğim bir ürün gönderildi, ödeme yapmak zorunda mıyım?",
+    "expected_law": "TKHK",
+    "expected_article": "7",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 936.8,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "7",
+        "source": "mevzuat",
+        "skor": 1.0,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "213",
+        "source": "mevzuat",
+        "skor": 0.5881,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "45",
+        "source": "mevzuat",
+        "skor": 0.5821,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "271",
+        "source": "mevzuat",
+        "skor": 0.557,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "226",
+        "source": "mevzuat",
+        "skor": 0.5013,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_11",
+    "category": "semantic_tkhk",
+    "query": "Tüketici hakem heyetine başvurunun parasal sınırı nedir?",
+    "expected_law": "TKHK",
+    "expected_article": "68",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 945.7,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "68",
+        "source": "mevzuat",
+        "skor": 149.297,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "88",
+        "source": "mevzuat",
+        "skor": 3.4501,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "70",
+        "source": "mevzuat",
+        "skor": 2.9874,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 1.8201,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "66",
+        "source": "mevzuat",
+        "skor": 1.6263,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tkhk_12",
+    "category": "semantic_tkhk",
+    "query": "Garanti belgesi düzenleme yükümlülüğü kaç yıl geçerlidir?",
+    "expected_law": "TKHK",
+    "expected_article": "56",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 952.2,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "56",
+        "source": "mevzuat",
+        "skor": 146.3463,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "57",
+        "source": "mevzuat",
+        "skor": 2.1794,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "12",
+        "source": "mevzuat",
+        "skor": 0.8612,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "16",
+        "source": "mevzuat",
+        "skor": 0.7688,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "55",
+        "source": "mevzuat",
+        "skor": 0.6499,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_01",
+    "category": "semantic_ttk",
+    "query": "Limited şirket müdürünün ortaklara karşı sorumluluğu nedir?",
+    "expected_law": "TTK",
+    "expected_article": "632",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 933.9,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "632",
+        "source": "mevzuat",
+        "skor": 116.9439,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "625",
+        "source": "mevzuat",
+        "skor": 5.4099,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "623",
+        "source": "mevzuat",
+        "skor": 3.5143,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "624",
+        "source": "mevzuat",
+        "skor": 2.8487,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "626",
+        "source": "mevzuat",
+        "skor": 2.3306,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_02",
+    "category": "semantic_ttk",
+    "query": "Limited şirkette müdürlük yetkisi devredilebilir mi?",
+    "expected_law": "TTK",
+    "expected_article": "625",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 1117.3,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "625",
+        "source": "mevzuat",
+        "skor": 149.0331,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "623",
+        "source": "mevzuat",
+        "skor": 2.935,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "375",
+        "source": "mevzuat",
+        "skor": 2.624,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "595",
+        "source": "mevzuat",
+        "skor": 2.3903,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "632",
+        "source": "mevzuat",
+        "skor": 1.7798,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_03",
+    "category": "semantic_ttk",
+    "query": "Limited şirkette sermaye payının devri nasıl yapılır?",
+    "expected_law": "TTK",
+    "expected_article": "595",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 938.3,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "595",
+        "source": "mevzuat",
+        "skor": 150.0,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "1007",
+        "source": "mevzuat",
+        "skor": 3.5328,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "593",
+        "source": "mevzuat",
+        "skor": 3.2946,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "151",
+        "source": "mevzuat",
+        "skor": 2.5651,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "497",
+        "source": "mevzuat",
+        "skor": 2.2351,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_04",
+    "category": "semantic_ttk",
+    "query": "Anonim şirkette yönetim kurulu görevini devredebilir mi?",
+    "expected_law": "TTK",
+    "expected_article": "375",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 967.6,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "375",
+        "source": "mevzuat",
+        "skor": 144.9063,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "395",
+        "source": "mevzuat",
+        "skor": 3.774,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "625",
+        "source": "mevzuat",
+        "skor": 3.3433,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "367",
+        "source": "mevzuat",
+        "skor": 3.1089,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "364",
+        "source": "mevzuat",
+        "skor": 2.878,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_05",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu toplantıya nasıl çağrılır?",
+    "expected_law": "TTK",
+    "expected_article": "392",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 860.6,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "392",
+        "source": "mevzuat",
+        "skor": 5.778,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "617",
+        "source": "mevzuat",
+        "skor": 4.4253,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "409",
+        "source": "mevzuat",
+        "skor": 3.885,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "410",
+        "source": "mevzuat",
+        "skor": 3.5745,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "414",
+        "source": "mevzuat",
+        "skor": 3.3174,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_06",
+    "category": "semantic_ttk",
+    "query": "Genel kurul kararının butlanı ile iptali arasındaki fark nedir?",
+    "expected_law": "TTK",
+    "expected_article": "445",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 940.7,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "445",
+        "source": "mevzuat",
+        "skor": 126.5616,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "450",
+        "source": "mevzuat",
+        "skor": 4.7126,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "391",
+        "source": "mevzuat",
+        "skor": 4.212,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "424",
+        "source": "mevzuat",
+        "skor": 3.7701,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "558",
+        "source": "mevzuat",
+        "skor": 3.5341,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_07",
+    "category": "semantic_ttk",
+    "query": "Yönetim kurulu üyesinin azli gündemde olmalı mı?",
+    "expected_law": "TTK",
+    "expected_article": "413",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 907.9,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "413",
+        "source": "mevzuat",
+        "skor": 130.5816,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "364",
+        "source": "mevzuat",
+        "skor": 5.7,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "392",
+        "source": "mevzuat",
+        "skor": 3.36,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "363",
+        "source": "mevzuat",
+        "skor": 2.4222,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "474",
+        "source": "mevzuat",
+        "skor": 1.949,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_08",
+    "category": "semantic_ttk",
+    "query": "Anonim şirket genel kurulu yılda kaç kez toplanır?",
+    "expected_law": "TTK",
+    "expected_article": "409",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 935.1,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "409",
+        "source": "mevzuat",
+        "skor": 150.0,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "617",
+        "source": "mevzuat",
+        "skor": 4.0791,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "415",
+        "source": "mevzuat",
+        "skor": 2.5412,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "414",
+        "source": "mevzuat",
+        "skor": 2.3417,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "410",
+        "source": "mevzuat",
+        "skor": 2.1968,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_09",
+    "category": "semantic_ttk",
+    "query": "Çekin ibraz süresi kaç gündür?",
+    "expected_law": "TTK",
+    "expected_article": "796",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 927.7,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "796",
+        "source": "mevzuat",
+        "skor": 143.9451,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "814",
+        "source": "mevzuat",
+        "skor": 3.6062,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "816",
+        "source": "mevzuat",
+        "skor": 3.0044,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "808",
+        "source": "mevzuat",
+        "skor": 2.5254,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "779",
+        "source": "mevzuat",
+        "skor": 2.2517,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_10",
+    "category": "semantic_ttk",
+    "query": "Karşılıksız çıkan çekte hamilin tazminat hakkı var mı?",
+    "expected_law": "TTK",
+    "expected_article": "814",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 746.8,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "814",
+        "source": "mevzuat",
+        "skor": 90.9722,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "807",
+        "source": "mevzuat",
+        "skor": 2.7466,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "805",
+        "source": "mevzuat",
+        "skor": 2.3952,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "792",
+        "source": "mevzuat",
+        "skor": 2.1244,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "808",
+        "source": "mevzuat",
+        "skor": 1.905,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "ttk_11",
+    "category": "semantic_ttk",
+    "query": "Bono ile poliçe arasındaki fark nedir?",
+    "expected_law": "TTK",
+    "expected_article": "776",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 758.1,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "776",
+        "source": "mevzuat",
+        "skor": 150.0,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "777",
+        "source": "mevzuat",
+        "skor": 4.6784,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "830",
+        "source": "mevzuat",
+        "skor": 3.5955,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "671",
+        "source": "mevzuat",
+        "skor": 3.3332,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "831",
+        "source": "mevzuat",
+        "skor": 2.8809,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_01",
+    "category": "semantic_tbk",
+    "query": "Gabin nedeniyle sözleşmeyi iptal edebilir miyim?",
+    "expected_law": "TBK",
+    "expected_article": "28",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 957.7,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "28",
+        "source": "mevzuat",
+        "skor": 69.7125,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "39",
+        "source": "mevzuat",
+        "skor": 3.25,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "617",
+        "source": "mevzuat",
+        "skor": 2.4689,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "616",
+        "source": "mevzuat",
+        "skor": 2.0135,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "420",
+        "source": "mevzuat",
+        "skor": 1.8428,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_02",
+    "category": "semantic_tbk",
+    "query": "İkrah ile yapılan sözleşmenin iptali için süre nedir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "37",
+      "38",
+      "39"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 915.7,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "39",
+        "source": "mevzuat",
+        "skor": 4.3725,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "640",
+        "source": "mevzuat",
+        "skor": 2.356,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "368",
+        "source": "mevzuat",
+        "skor": 1.9762,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "281",
+        "source": "mevzuat",
+        "skor": 1.8254,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 1.6869,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_03",
+    "category": "semantic_tbk",
+    "query": "Müteselsil borçlulukta alacaklı kime başvurabilir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "161",
+      "162"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 906.2,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "161",
+        "source": "mevzuat",
+        "skor": 89.0733,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "163",
+        "source": "mevzuat",
+        "skor": 5.149,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "169",
+        "source": "mevzuat",
+        "skor": 4.739,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "593",
+        "source": "mevzuat",
+        "skor": 3.6223,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "586",
+        "source": "mevzuat",
+        "skor": 2.7806,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_04",
+    "category": "semantic_tbk",
+    "query": "İşçi alacaklarında zamanaşımı süresi kaç yıldır?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "146",
+      "147"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 915.5,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "146",
+        "source": "mevzuat",
+        "skor": 3.75,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "153",
+        "source": "mevzuat",
+        "skor": 2.416,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "147",
+        "source": "mevzuat",
+        "skor": 2.2331,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "72",
+        "source": "mevzuat",
+        "skor": 1.7523,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "157",
+        "source": "mevzuat",
+        "skor": 1.5965,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_05",
+    "category": "semantic_tbk",
+    "query": "Vekilin özen borcunun kapsamı nedir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "506",
+      "513"
+    ],
+    "expected_source": null,
+    "rank": 2,
+    "hit10": true,
+    "elapsed_ms": 691.6,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 0.9225,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "506",
+        "source": "mevzuat",
+        "skor": 0.9166,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "504",
+        "source": "mevzuat",
+        "skor": 0.6503,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "113",
+        "source": "mevzuat",
+        "skor": 0.4391,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "614",
+        "source": "mevzuat",
+        "skor": 0.3386,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_06",
+    "category": "semantic_tbk",
+    "query": "Kefalet sözleşmesinde eşin rızası gerekir mi?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "583",
+      "584"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 924.1,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "584",
+        "source": "mevzuat",
+        "skor": 5.824,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "583",
+        "source": "mevzuat",
+        "skor": 4.8662,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "349",
+        "source": "mevzuat",
+        "skor": 2.2699,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "587",
+        "source": "mevzuat",
+        "skor": 2.1045,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "582",
+        "source": "mevzuat",
+        "skor": 1.9181,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_07",
+    "category": "semantic_tbk",
+    "query": "Eser sözleşmesinde müteahhidin ayıba karşı sorumluluğu nedir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "474",
+      "475",
+      "482"
+    ],
+    "expected_source": null,
+    "rank": 2,
+    "hit10": true,
+    "elapsed_ms": 943.0,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "472",
+        "source": "mevzuat",
+        "skor": 5.7515,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "474",
+        "source": "mevzuat",
+        "skor": 5.3105,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "475",
+        "source": "mevzuat",
+        "skor": 3.8173,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 3.7935,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "482",
+        "source": "mevzuat",
+        "skor": 3.2014,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_08",
+    "category": "semantic_tbk",
+    "query": "Borçlu temerrüde düşerse alacaklının hakları nelerdir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "117",
+      "119"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 893.5,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "117",
+        "source": "mevzuat",
+        "skor": 95.0807,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "125",
+        "source": "mevzuat",
+        "skor": 4.1389,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "106",
+        "source": "mevzuat",
+        "skor": 3.0231,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "163",
+        "source": "mevzuat",
+        "skor": 2.7961,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "100",
+        "source": "mevzuat",
+        "skor": 2.584,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_09",
+    "category": "semantic_tbk",
+    "query": "Haksız fiilden doğan tazminat davasında zamanaşımı süresi nedir?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "72",
+      "49",
+      "50"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 902.0,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "72",
+        "source": "mevzuat",
+        "skor": 4.75,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "146",
+        "source": "mevzuat",
+        "skor": 3.1509,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "73",
+        "source": "mevzuat",
+        "skor": 2.2598,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "157",
+        "source": "mevzuat",
+        "skor": 1.9699,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "231",
+        "source": "mevzuat",
+        "skor": 1.7362,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "tbk_10",
+    "category": "semantic_tbk",
+    "query": "Kira bedeli ödenmezse tahliye süreci nasıl işler?",
+    "expected_law": "TBK",
+    "expected_article": [
+      "347",
+      "350",
+      "352"
+    ],
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 915.2,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 4.3874,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "350",
+        "source": "mevzuat",
+        "skor": 4.11,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 3.4646,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "362",
+        "source": "mevzuat",
+        "skor": 3.4195,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "347",
+        "source": "mevzuat",
+        "skor": 2.7478,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "direct_01",
+    "category": "direct_madde",
+    "query": "TBK madde 352 nedir?",
+    "expected_law": "TBK",
+    "expected_article": "352",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 760.7,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 94.9574,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 35.0,
+        "cross_score": null
+      },
+      {
+        "law": "HMK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 20.7531,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "354",
+        "source": "mevzuat",
+        "skor": 1.6961,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "358",
+        "source": "mevzuat",
+        "skor": 1.3617,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "direct_02",
+    "category": "direct_madde",
+    "query": "TTK 632 ne diyor?",
+    "expected_law": "TTK",
+    "expected_article": "632",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 717.2,
+    "top5": [
+      {
+        "law": "TTK",
+        "article_no": "632",
+        "source": "mevzuat",
+        "skor": 106.9188,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "632",
+        "source": "mevzuat",
+        "skor": 26.0823,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "315",
+        "source": "mevzuat",
+        "skor": 3.0337,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "653",
+        "source": "mevzuat",
+        "skor": 2.4319,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "635",
+        "source": "mevzuat",
+        "skor": 2.2693,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "direct_03",
+    "category": "direct_madde",
+    "query": "TKHK m. 48 neyi düzenliyor?",
+    "expected_law": "TKHK",
+    "expected_article": "48",
+    "expected_source": null,
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 892.5,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 110.8321,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 24.6251,
+        "cross_score": null
+      },
+      {
+        "law": "TTK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 16.672,
+        "cross_score": null
+      },
+      {
+        "law": "HMK",
+        "article_no": "48",
+        "source": "mevzuat",
+        "skor": 13.2704,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": "88",
+        "source": "mevzuat",
+        "skor": 3.7103,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "yargitay_01",
+    "category": "yargitay_intent",
+    "query": "Kira bedeli ödenmezse tahliye ile ilgili Yargıtay kararları var mı?",
+    "expected_law": null,
+    "expected_article": null,
+    "expected_source": "yargitay",
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 923.8,
+    "top5": [
+      {
+        "law": "TBK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 28.5,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "350",
+        "source": "mevzuat",
+        "skor": 4.1919,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "352",
+        "source": "mevzuat",
+        "skor": 3.7232,
+        "cross_score": null
+      },
+      {
+        "law": "İİK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 3.4377,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": "362",
+        "source": "mevzuat",
+        "skor": 3.4145,
+        "cross_score": null
+      }
+    ]
+  },
+  {
+    "id": "yargitay_02",
+    "category": "yargitay_intent",
+    "query": "Ayıplı mal davalarında Yargıtay nasıl karar veriyor?",
+    "expected_law": null,
+    "expected_article": null,
+    "expected_source": "yargitay",
+    "rank": 1,
+    "hit10": true,
+    "elapsed_ms": 959.5,
+    "top5": [
+      {
+        "law": "TKHK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 14.2489,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 8.1808,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 7.7805,
+        "cross_score": null
+      },
+      {
+        "law": "TBK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 7.3155,
+        "cross_score": null
+      },
+      {
+        "law": "TKHK",
+        "article_no": null,
+        "source": "yargitay",
+        "skor": 6.6196,
+        "cross_score": null
+      }
+    ]
+  }
+]

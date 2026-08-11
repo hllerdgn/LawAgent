@@ -1,106 +1,268 @@
-import React, { useState } from 'react';
-import { Button } from '../../components/Button';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../components/Input';
-import { Save } from 'lucide-react';
+import { Save, CheckCircle2, Sliders, Palette, Building2, Sparkles } from 'lucide-react';
+import { useTheme } from '../../../themes/ThemeProvider';
+import { IMPLEMENTED_THEMES, THEME_DISPLAY_NAMES } from '../../../themes/registry';
+import type { HallmarkThemeId } from '../../../themes/types';
 
 export function AdminSettings() {
+  const { themeId, setThemeId, theme } = useTheme();
+
   const [settings, setSettings] = useState({
-    siteName: 'FEK Hukuk & Danışmanlık',
-    email: 'info@fekhukuk.com',
-    phone: '0(212) 000 00 00',
-    address: 'Büyükdere Cad. No: 123, Levent, İstanbul 34394',
-    about: 'Müvekkillerime güvenilir, profesyonel ve çözüm odaklı hukuki danışmanlık hizmeti sunuyorum.',
+    clientId: 'lawagent-demo',
+    siteName: 'LawAgent AI',
+    themeId: themeId as string,
+    welcomeMessage: 'Merhaba! LawAgent AI hukuki asistanına hoş geldiniz. Size nasıl yardımcı olabilirim?',
+    email: 'contact@lawagent.ai',
+    phone: '+90 212 555 0100',
+    address: 'İstanbul, Türkiye',
+    about: 'LawAgent AI kullanıcılara güvenilir, profesyonel ve yapay zeka destekli hukuki karar desteği sunar.',
+    ragK: '5',
+    aiModel: 'Meta-Llama-3-8B-Instruct',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setSettings({ ...settings, [e.target.name]: e.target.value });
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    setSettings((prev) => ({ ...prev, themeId }));
+  }, [themeId]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSettings((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'themeId') {
+      setThemeId(value as HallmarkThemeId);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Ayarlar kaydedildi!');
+    localStorage.setItem('lawagent_client_id', settings.clientId);
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 4000);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-[var(--color-primary)] mb-2">Ayarlar</h1>
-        <p className="text-[var(--color-text-secondary)]">
-          Site ayarlarını ve genel bilgileri düzenleyin
-        </p>
+    <div className="space-y-8 font-sans antialiased">
+      
+      {/* Top Header */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-slate-900 text-2xl font-bold font-serif">Sistem & White-Label Ayarları</h1>
+          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+            Multi-Tenant müşteri seçimi, Hallmark teması ve AI asistan RAG parametrelerini buradan yönetebilirsiniz.
+          </p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-[var(--color-text-primary)] mb-2">
-              Site Adı
-            </label>
-            <Input
-              name="siteName"
-              value={settings.siteName}
-              onChange={handleChange}
-            />
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 lg:p-8">
+        
+        {savedSuccess && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex items-center gap-3 text-xs">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <span className="font-semibold">Sistem ve Hallmark tema ayarları başarıyla kaydedildi!</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
+          
+          {/* 1. Multi-Tenant & Theme Section */}
+          <div className="pb-6 border-b border-slate-100 space-y-6">
+            <h3 className="text-slate-900 font-bold font-serif text-base flex items-center gap-2">
+              <Palette className="w-4 h-4 text-violet-600" />
+              <span>Hallmark Tema & White-Label Yapılandırması</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Aktif Müşteri / Tenant (Client ID)</span>
+                </label>
+                <select
+                  name="clientId"
+                  value={settings.clientId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                >
+                  <option value="lawagent-demo">lawagent-demo (LawAgent AI — Default)</option>
+                  <option value="yildiz-hukuk">yildiz-hukuk (Yıldız & Ortakları)</option>
+                  <option value="ozkan-avukatlik">ozkan-avukatlik (Özkan Hukuk)</option>
+                  <option value="kocak-hukuk">kocak-hukuk (Koçak Hukuk Bürosu)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Atanmış Hallmark Teması</span>
+                </label>
+                <select
+                  name="themeId"
+                  value={settings.themeId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                >
+                  {IMPLEMENTED_THEMES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {THEME_DISPLAY_NAMES[t.id as keyof typeof THEME_DISPLAY_NAMES] || t.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Live Theme Preview Badge */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold text-slate-800 flex items-center gap-2">
+                  <span>Seçili Tema:</span>
+                  <span className="px-2 py-0.5 rounded-md text-white text-[11px] font-mono uppercase" style={{ backgroundColor: theme.colors.accent }}>
+                    {theme.id} ({theme.genre})
+                  </span>
+                </div>
+                <p className="text-slate-500 text-xs mt-1">{theme.description}</p>
+              </div>
+
+              {/* Color Swatches */}
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono">RENKLER:</span>
+                <span className="w-4 h-4 rounded-full border border-slate-300 shadow-xs" style={{ backgroundColor: theme.colors.paper }} title="Paper (Arka Plan)" />
+                <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.ink }} title="Ink (Metin)" />
+                <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.accent }} title="Accent (Vurgu)" />
+                <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.accent2 }} title="Accent 2 (İkincil Vurgu)" />
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 2. Büro Genel Bilgileri */}
+          <div className="pb-6 border-b border-slate-100 space-y-4">
+            <h3 className="text-slate-900 font-bold font-serif text-base">
+              <span>Büro & Marka Bilgileri</span>
+            </h3>
+            
             <div>
-              <label className="block text-[var(--color-text-primary)] mb-2">
-                E-posta
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Büro / Proje Adı (White-Label Markası)
               </label>
               <Input
-                type="email"
-                name="email"
-                value={settings.email}
+                name="siteName"
+                value={settings.siteName}
                 onChange={handleChange}
+                className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-[var(--color-text-primary)] mb-2">
-                Telefon
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Chatbot Karşılama Mesajı
+              </label>
+              <textarea
+                name="welcomeMessage"
+                rows={2}
+                value={settings.welcomeMessage}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  İletişim E-Posta
+                </label>
+                <Input
+                  type="email"
+                  name="email"
+                  value={settings.email}
+                  onChange={handleChange}
+                  className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Telefon
+                </label>
+                <Input
+                  type="tel"
+                  name="phone"
+                  value={settings.phone}
+                  onChange={handleChange}
+                  className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Adres Bilgisi
               </label>
               <Input
-                type="tel"
-                name="phone"
-                value={settings.phone}
+                name="address"
+                value={settings.address}
                 onChange={handleChange}
+                className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-[var(--color-text-primary)] mb-2">
-              Adres
-            </label>
-            <Input
-              name="address"
-              value={settings.address}
-              onChange={handleChange}
-            />
+          {/* 3. AI Asistan & RAG Parametreleri */}
+          <div className="pb-4 space-y-4">
+            <h3 className="text-slate-900 font-bold font-serif text-base flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-amber-500" />
+              <span>AI Asistan & RAG Parametreleri</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Getirilecek Vektör Parçası (k Değeri)
+                </label>
+                <select
+                  name="ragK"
+                  value={settings.ragK}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="3">k = 3 (Hızlı Özet)</option>
+                  <option value="5">k = 5 (Standart & Önerilen)</option>
+                  <option value="7">k = 7 (Optimum RAG)</option>
+                  <option value="10">k = 10 (Derinlemesine Analiz)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Aktif LLM Modeli
+                </label>
+                <select
+                  name="aiModel"
+                  value={settings.aiModel}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="llama-3.3-70b-versatile">Groq Llama-3.3-70B (Production)</option>
+                  <option value="Meta-Llama-3-8B-Instruct">Meta Llama-3-8B-Instruct</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-[var(--color-text-primary)] mb-2">
-              Hakkımda Metni
-            </label>
-            <textarea
-              name="about"
-              value={settings.about}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
+          <div className="flex justify-end pt-2">
+            <button 
+              type="submit"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer border border-slate-800"
+            >
+              <Save className="w-4 h-4 text-amber-400" />
+              <span>Ayarları Kaydet</span>
+            </button>
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" variant="primary">
-              <Save className="w-5 h-5" />
-              Kaydet
-            </Button>
-          </div>
         </form>
       </div>
+
     </div>
   );
 }

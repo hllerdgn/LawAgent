@@ -1,1 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+/* Hallmark · Lumen Day Foundry — three-family type system
+ * display: Instrument Serif 400 (classical, upright, lowercase)
+ * body:    Geist 400/500/600 (humanist sans, precise)
+ * label:   JetBrains Mono 400/500 (mono UPPERCASE eyebrows + callouts)
+ * Max three families, no fourth. No italic weights loaded — Lumen bans italic.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
