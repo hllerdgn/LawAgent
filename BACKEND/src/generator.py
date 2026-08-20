@@ -90,28 +90,38 @@ def call_groq_completion(
 
     last_err = None
     for model in models_to_try:
-        try:
-            resp = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-            if model != _CURRENT_WORKING_MODEL:
-                log.info(f"Groq aktif modeli güncellendi: {model}")
-            _CURRENT_WORKING_MODEL = model
-            MODEL_NAME = model
-            raw_content = resp.choices[0].message.content or ""
-            return clean_llm_response(raw_content)
-        except (RateLimitError, APITimeoutError):
-            raise
-        except (APIStatusError, Exception) as e:
-            err_msg = str(e).lower()
-            if any(term in err_msg for term in ["not exist", "decommissioned", "not found", "404", "400", "invalid_request_error"]):
-                log.warning(f"Groq modeli '{model}' kullanılamadı ({e}), alternatif model deneniyor...")
-                last_err = e
-                continue
-            raise e
+        for attempt in range(2):
+            try:
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                if model != _CURRENT_WORKING_MODEL:
+                    log.info(f"Groq aktif modeli güncellendi: {model}")
+                _CURRENT_WORKING_MODEL = model
+                MODEL_NAME = model
+                raw_content = resp.choices[0].message.content or ""
+                return clean_llm_response(raw_content)
+            except RateLimitError as rle:
+                log.warning(f"Groq modeli '{model}' kota aşımı (429 RateLimit) aldı (deneme {attempt+1}): {rle}")
+                last_err = rle
+                time.sleep(1.0)
+                if attempt == 1:
+                    break
+            except APITimeoutError as toe:
+                log.warning(f"Groq modeli '{model}' zaman aşımına uğradı: {toe}")
+                last_err = toe
+                time.sleep(0.5)
+                break
+            except (APIStatusError, Exception) as e:
+                err_msg = str(e).lower()
+                if any(term in err_msg for term in ["not exist", "decommissioned", "not found", "404", "400", "invalid_request_error", "rate_limit", "429", "tokens per minute"]):
+                    log.warning(f"Groq modeli '{model}' kullanılamadı ({e}), alternatif model deneniyor...")
+                    last_err = e
+                    break
+                raise e
 
     if last_err:
         raise last_err
