@@ -225,6 +225,12 @@ def normalize_article(x: Any) -> str:
 
 
 _ESANLAMLILAR = {
+    # Genel Hukuk Alanı Eklemeleri
+    "borçlar hukuku": "Türk Borçlar Kanunu TBK sözleşme ifa borçlu temerrüdü alacaklı hakları borç ilişkisi fesih dönme tazminat TBK Madde 1 112 117 125",
+    "borçlar": "Türk Borçlar Kanunu TBK ifa borçlu alacaklı haklar sözleşme tazminat TBK Madde 1 112 117 125",
+    "borç ilişkisi": "Türk Borçlar Kanunu TBK borç ifa talep alacaklı borçlu TBK Madde 1 112",
+    "ticaret hukuku": "Türk Ticaret Kanunu TTK tacir şirket anonim limited yönetim kurulu ortak pay senet TTK Madde 1 375 553 595 625",
+    "tüketici hukuku": "Tüketicinin Korunması Hakkında Kanun TKHK tüketici hakları ayıplı mal cayma hakkı hakem heyeti TKHK Madde 1 11 48 68",
     # TBK Eklemeleri
     "gabin": "aşırı oransızlık sömürme sarsılma orantısız 28",
     "ikrah": "korkutma tehdit zorlama 37 38 39",
@@ -491,6 +497,69 @@ def expand_query(query: str) -> str:
     return query + " " + " ".join(ekler) if ekler else query
 
 
+_dynamic_expand_cache: Dict[str, str] = {}
+
+
+def expand_query_dynamic(query: str) -> str:
+    """
+    LLM Tabanlı Dinamik Hukuki Sorgu Genişletici.
+    Kullanıcının sorusunu analiz ederek ilgili kanun (TBK, TTK, TKHK) kavramlarını,
+    anahtar terimleri ve olası madde numaralarını anlık ve dinamik olarak çıkarır.
+    Statik sözlük bağımlılığını ortadan kaldırır.
+    """
+    q_clean = query.strip()
+    if len(q_clean.split()) < 3:
+        return expand_query(query)
+
+    cache_key = q_clean.lower()
+    if cache_key in _dynamic_expand_cache:
+        return _dynamic_expand_cache[cache_key]
+
+    base_expanded = expand_query(query)
+
+    try:
+        from groq import Groq
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key:
+            return base_expanded
+
+        g_client = Groq(api_key=groq_key)
+        model = os.getenv("GROQ_MODEL", "groq/compound-mini")
+
+        prompt = (
+            "Sen Türk hukuku (TBK, TTK, TKHK) mevzuat arama uzmanısın. "
+            "Kullanıcının sorusuna en uygun kanun maddelerini bulabilmek için "
+            "ilgili 4-8 hukuki anahtar kavramı ve kanun adını (TBK, TTK veya TKHK) "
+            "boşlukla ayırarak tek satırda yaz. Yorum veya açıklama ekleme.\n\n"
+            f"Soru: {query}\n"
+            "Hukuki Kavramlar:"
+        )
+
+        resp = g_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=80,
+        )
+        expanded_terms = resp.choices[0].message.content or ""
+        expanded_terms = re.sub(r"<think>.*?</think>", "", expanded_terms, flags=re.DOTALL).strip()
+        expanded_terms = re.sub(r"[\n\r\"']", " ", expanded_terms).strip()
+
+        if expanded_terms:
+            result = f"{query} {expanded_terms}"
+        else:
+            result = base_expanded
+
+        if len(_dynamic_expand_cache) >= 256:
+            _dynamic_expand_cache.pop(next(iter(_dynamic_expand_cache)))
+        _dynamic_expand_cache[cache_key] = result
+        return result
+
+    except Exception as e:
+        log.warning(f"[Dynamic Query Expansion] Fallback devreye girdi: {e}")
+        return base_expanded
+
+
 def detect_kanun_probs(query: str) -> Dict[str, float]:
     """Sorgudan olası kanun dağılımını döndürür.
     Tek kanun yerine ağırlıklı olasılık döndürür — çok kanunlu kavramları
@@ -501,16 +570,20 @@ def detect_kanun_probs(query: str) -> Dict[str, float]:
 
     # ── 1. Doğrudan kanun referansı (kesin) ──────────────────────────────────
     direct = {
-        "tbk": "TBK", "borçlar kanunu": "TBK", "6098": "TBK",
-        "ttk": "TTK", "ticaret kanunu": "TTK", "6102": "TTK",
-        "tkhk": "TKHK", "tüketicinin korunması": "TKHK", "6502": "TKHK",
-        "tmk": "TMK", "medeni kanun": "TMK", "4721": "TMK",
-        "iik": "İİK", "icra iflas": "İİK", "2004": "İİK",
-        "hmk": "HMK", "hukuk muhakemeleri": "HMK", "6100": "HMK",
+        "borçlar hukuku": "TBK", "borclar hukuku": "TBK", "borçlar kanunu": "TBK", "borclar kanunu": "TBK",
+        "borçlar": "TBK", "borclar": "TBK", "tbk": "TBK", "6098": "TBK",
+        "ticaret hukuku": "TTK", "ticaret kanunu": "TTK", "ttk": "TTK", "6102": "TTK",
+        "tüketici hukuku": "TKHK", "tüketici hakları": "TKHK", "tüketici haklari": "TKHK",
+        "tüketicinin korunması": "TKHK", "tuketici haklari": "TKHK", "tkhk": "TKHK", "6502": "TKHK",
+        "medeni hukuk": "TMK", "medeni kanun": "TMK", "tmk": "TMK", "4721": "TMK",
+        "icra iflas": "İİK", "icra iflas kanunu": "İİK", "iik": "İİK", "2004": "İİK",
+        "hukuk muhakemeleri": "HMK", "hmk": "HMK", "6100": "HMK",
     }
-    for kw, kanun in direct.items():
+    # Uzun anahtarlara öncelik vererek kontrol et
+    for kw, kanun in sorted(direct.items(), key=lambda x: -len(x[0])):
         if kw in q:
             probs[kanun] += 1.0  # Kesin eşleşme — tam ağırlık
+            break  # En spesifik kanun bulundu
 
     if probs:  # Açık kanun referansı varsa onu kullan
         total = sum(probs.values())
@@ -1137,8 +1210,8 @@ class LegalRetriever:
         query = query.replace("\u0307", "")
         query = _clean_query(query)  # Gürültü prefix/suffix temizleme
 
-        # Sorgu Genişletme (Sadece BM25 için değil, tüm süreci besler)
-        expanded_q = expand_query(query)
+        # Sorgu Genişletme (LLM tabanlı dinamik hukuki kavram sentezi)
+        expanded_q = expand_query_dynamic(query)
 
         kanun, madde, source_intent = (
             detect_kanun(query),
@@ -1306,7 +1379,7 @@ class LegalRetriever:
         # 5. Reranking / Diversity  (v2.2 & v2.3 Conditional TKHK)
         # ─────────────────────────────────────────────────────────────────────
         # Ortam değişkenlerini oku
-        _cross_on = os.environ.get("ENABLE_CROSS_RERANK", "false").lower() == "true"
+        _cross_on = os.environ.get("ENABLE_CROSS_RERANK", "true").lower() == "true"
         _llm_mode = os.environ.get("ENABLE_LLM_RERANK", "false").lower()
         _tkhk_on  = (
             os.environ.get("ENABLE_TKHK_RERANK", "false").lower() == "true" or
