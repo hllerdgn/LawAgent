@@ -266,6 +266,54 @@ _KAPSAM_DISI_YANITI = (
     "dışında kalmaktadır. Bu alanlarda yardımcı olmaktan memnuniyet duyarım."
 )
 
+# LLM Tabanlı Kapsam Kontrolü
+
+_KAPSAM_KONTROL_SISTEM = (
+    "Sen bir Türk hukuku kapsam denetçisisin. "
+    "Görevin: kullanıcının sorusunun yalnızca şu üç kanun kapsamında olup olmadığını belirlemek: "
+    "Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketicinin Korunması Hakkında Kanun (TKHK). "
+    "Selamlama ve genel sohbet mesajları da KAPSAM İÇİ say. "
+    "Yalnızca 'EVET' veya 'HAYIR' olarak yanıt ver. Başka hiçbir şey yazma."
+)
+
+
+def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
+    """LLM ile kapsam kontrolü.
+    True  = TBK/TTK/TKHK kapsamında → işleme devam et
+    False = Kapsam dışı → reddet
+    Hata durumunda keyword tabanlı is_legal_query() fallback olarak kullanılır.
+    """
+    # Önce açıkça kapsam dışı kelimelere hızlı bak (maliyet sıfır)
+    s = sorgu.lower()
+    if any(kd in s for kd in _KESIN_KAPSAM_DISI):
+        log.info(f"[Kapsam Kontrol / Keyword] Kapsam dışı: '{sorgu[:60]}'")
+        return False
+    if any(hd in s.split() for hd in _HUKUK_DISI):
+        log.info(f"[Kapsam Kontrol / Keyword] Hukuk dışı konu: '{sorgu[:60]}'")
+        return False
+
+    # LLM ile derin kapsam analizi
+    try:
+        yanit = call_groq_completion(
+            client=client,
+            messages=[
+                {"role": "system", "content": _KAPSAM_KONTROL_SISTEM},
+                {
+                    "role": "user",
+                    "content": f"Soru: {sorgu}\n\nBu soru TBK, TTK veya TKHK kapsamında mı? (EVET/HAYIR)",
+                },
+            ],
+            temperature=0.0,
+            max_tokens=5,
+        )
+        karar = yanit.strip().upper()
+        kapsam_ici = karar.startswith("EVET")
+        log.info(f"[Kapsam Kontrol / LLM] '{sorgu[:60]}' → {karar} → {'İçi' if kapsam_ici else 'Dışı'}")
+        return kapsam_ici
+    except Exception as e:
+        log.warning(f"[Kapsam Kontrol / LLM] Hata, keyword fallback devreye girdi: {e}")
+        return is_legal_query(sorgu)
+
 
 # İçtihat Talebi Kontrolü
 
@@ -646,9 +694,9 @@ class LegalGenerator:
             log.info(f"[Aşama 2] İçtihat talebi yakalandı → session: {session_id}")
             return self._generate_ictihat_only(session_id)
 
-        # 3. ÖN KAPSAM KONTROLÜ — Retrieval'dan ÖNCE, açıkça kapsam dışı sorguları hızla reddet
-        if not is_legal_query(sorgu):
-            log.info(f"[Ön Filtre] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
+        # 3. ÖN KAPSAM KONTROLÜ — Retrieval'dan ÖNCE, LLM ile kapsam dışı sorguları tespit et
+        if not is_in_scope_llm(self.client, sorgu):
+            log.info(f"[Ön Filtre / LLM] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
             self.memory.add_exchange(session_id, sorgu, _KAPSAM_DISI_YANITI)
             return {
                 "answer": _KAPSAM_DISI_YANITI,
