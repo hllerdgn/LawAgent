@@ -204,6 +204,21 @@ _HUKUK_DISI = {
     "fizik",
     "kimya",
 }
+
+# Kesin kapsam dışı konular — bu kelimeler sorguda geçerse direkt reddedilir
+_KESIN_KAPSAM_DISI = [
+    # Vergi hukuku
+    "vergi", "kdv", "gelir vergisi", "kurumlar vergisi", "mtv", "ötv", "stopaj",
+    # Ceza hukuku
+    "suç", "ceza", "hapis", "tutuklama", "gözaltı", "savcı", "müdahil", "beraat",
+    "uyuşturucu", "kaçakçılık", "dolandırıcılık", "sahte", "hırsız",
+    # Aile hukuku
+    "boşan", "boşama", "boşamak", "nafaka", "velayet", "evlilik",
+    # İdare hukuku
+    "belediye", "ruhsat", "ihale", "kamu ihale",
+    # Diğer kapsam dışı
+    "pasaport", "vize", "vatandaşlık", "askerlik",
+]
 _HUKUKI_SINYALLER = {
     "nedir",
     "nasıl",
@@ -239,7 +254,17 @@ def is_legal_query(sorgu: str) -> bool:
     s = sorgu.lower()
     if any(hd in s.split() for hd in _HUKUK_DISI):
         return False
+    # Kesin kapsam dışı konular → False
+    if any(kd in s for kd in _KESIN_KAPSAM_DISI):
+        return False
     return any(sig in s for sig in _HUKUKI_SINYALLER) or len(sorgu.split()) >= 3
+
+
+_KAPSAM_DISI_YANITI = (
+    "Üzgünüm, bu konu uzmanlık alanım olan TBK (Türk Borçlar Kanunu), "
+    "TTK (Türk Ticaret Kanunu) ve TKHK (Tüketicinin Korunması Hakkında Kanun) "
+    "dışında kalmaktadır. Bu alanlarda yardımcı olmaktan memnuniyet duyarım."
+)
 
 
 # İçtihat Talebi Kontrolü
@@ -621,7 +646,17 @@ class LegalGenerator:
             log.info(f"[Aşama 2] İçtihat talebi yakalandı → session: {session_id}")
             return self._generate_ictihat_only(session_id)
 
-        # 3. HUKUKİ FİLTRE KALDIRILDI - Retrieval'dan sonra kontrol edilecek
+        # 3. ÖN KAPSAM KONTROLÜ — Retrieval'dan ÖNCE, açıkça kapsam dışı sorguları hızla reddet
+        if not is_legal_query(sorgu):
+            log.info(f"[Ön Filtre] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
+            self.memory.add_exchange(session_id, sorgu, _KAPSAM_DISI_YANITI)
+            return {
+                "answer": _KAPSAM_DISI_YANITI,
+                "sources": [],
+                "filtered": True,
+                "intent": "OUT_OF_SCOPE",
+                "sure_ms": int((time.time() - t0) * 1000),
+            }
 
         try:
             # Intent ve K
@@ -660,41 +695,7 @@ class LegalGenerator:
             # Site document kontrolü
             has_site_doc = any(c.get("source") == "site_document" for c in chunks)
 
-            # 3. HUKUKİ FİLTRE (EĞER SİTE BELGESİ YOKSA)
-            if not is_legal_query(sorgu) and not has_site_doc:
-                filtered = "Ben bir hukuk ve site asistanıyım. Lütfen asistan konularıyla ilgili bir soru sorunuz."
-                self.memory.add_exchange(session_id, sorgu, filtered)
-                return {
-                    "answer": filtered,
-                    "sources": [],
-                    "filtered": True,
-                    "sure_ms": int((time.time() - t0) * 1000),
-                }
-
-            # Alaka kontrolü (kapsam dışı kelimeler)
-            kapsam_disi_kelimeler = [
-                "boşan",
-                "nafaka",
-                "velayet",
-                "miras",
-                "hapis",
-                "suç",
-                "öldür",
-                "yarala",
-            ]
-            if not has_site_doc and any(kelime in sorgu_temiz for kelime in kapsam_disi_kelimeler):
-                is_relevant = any(
-                    any(
-                        kw in str(c.get("text", "")).lower()
-                        for kw in kapsam_disi_kelimeler
-                    )
-                    for c in chunks
-                )
-                if not is_relevant:
-                    chunks = []
-                    log.info(
-                        f"[Alaka Kontrolü] Kapsam dışı sorgu: '{sorgu_temiz}' → chunks temizlendi."
-                    )
+            # (Kapsam dışı kelime kontrolü artık ön filtrede yapılıyor — bu blok kaldırıldı)
 
             # OUT_OF_SCOPE
             if not chunks:
