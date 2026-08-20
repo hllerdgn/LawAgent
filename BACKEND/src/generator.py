@@ -276,6 +276,9 @@ _KAPSAM_KONTROL_SISTEM = (
     "Yalnızca 'EVET' veya 'HAYIR' olarak yanıt ver. Başka hiçbir şey yazma."
 )
 
+# Aynı sorgu için tekrar LLM çağrısı yapılmasın (128 sorgu önbelleği)
+_scope_cache: Dict[str, bool] = {}
+
 
 def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
     """LLM ile kapsam kontrolü.
@@ -283,13 +286,22 @@ def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
     False = Kapsam dışı → reddet
     Hata durumunda keyword tabanlı is_legal_query() fallback olarak kullanılır.
     """
+    cache_key = sorgu.lower().strip()
+
+    # Önbellek kontrolü — aynı sorgu için LLM'e gitme
+    if cache_key in _scope_cache:
+        log.info(f"[Kapsam Kontrol / Cache] '{sorgu[:60]}' → {'İçi' if _scope_cache[cache_key] else 'Dışı'}")
+        return _scope_cache[cache_key]
+
     # Önce açıkça kapsam dışı kelimelere hızlı bak (maliyet sıfır)
-    s = sorgu.lower()
+    s = cache_key
     if any(kd in s for kd in _KESIN_KAPSAM_DISI):
         log.info(f"[Kapsam Kontrol / Keyword] Kapsam dışı: '{sorgu[:60]}'")
+        _scope_cache[cache_key] = False
         return False
     if any(hd in s.split() for hd in _HUKUK_DISI):
         log.info(f"[Kapsam Kontrol / Keyword] Hukuk dışı konu: '{sorgu[:60]}'")
+        _scope_cache[cache_key] = False
         return False
 
     # LLM ile derin kapsam analizi
@@ -317,6 +329,10 @@ def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
             log.warning(f"[Kapsam Kontrol / LLM] Belirsiz yanıt '{karar[:30]}', kapsam içi varsayıldı")
             kapsam_ici = True
         log.info(f"[Kapsam Kontrol / LLM] '{sorgu[:60]}' → {karar[:20]} → {'İçi' if kapsam_ici else 'Dışı'}")
+        # Önbelleğe kaydet (max 128 kayıt)
+        if len(_scope_cache) >= 128:
+            _scope_cache.pop(next(iter(_scope_cache)))
+        _scope_cache[cache_key] = kapsam_ici
         return kapsam_ici
     except Exception as e:
         log.warning(f"[Kapsam Kontrol / LLM] Hata, keyword fallback devreye girdi: {e}")

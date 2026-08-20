@@ -914,9 +914,9 @@ export function ChatbotWidget() {
       try {
         let data = null;
 
-        // 1. Öncelik: Hugging Face Space (8 saniye hızlı deneme)
+        // 1. Öncelik: Hugging Face Space (35 saniye — LLM scope check + retrieval + yanıt üretimi)
         try {
-          data = await attemptFetch(primaryUrl, 8000);
+          data = await attemptFetch(primaryUrl, 35000);
         } catch (hfError) {
           console.warn("Hugging Face Space hızlı yanıt vermedi veya uykuda. Localhost deneniyor...", hfError);
           // 2. Öncelik: Localhost sunucuları (7860 & 8000)
