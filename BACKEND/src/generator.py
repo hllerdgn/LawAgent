@@ -786,8 +786,34 @@ class LegalGenerator:
                     {"role": "user", "content": f"SORU: {sorgu}"},
                 ],
                 temperature=0.2,
-                max_tokens=1000,
+                max_tokens=2500,  # Reasoning modelleri <think> bloğu üretir; yeterli alan gerekli
             )
+
+            # Yanıt boş geldiyse (think bloğu token limitini doldurdu) → sonraki modelle yeniden dene
+            if not yanit.strip():
+                log.warning("[Yanıt] Boş yanıt alındı, sonraki modelle yeniden deneniyor...")
+                _next_models = [m for m in GROQ_CANDIDATE_MODELS if m != MODEL_NAME]
+                for _fallback in _next_models:
+                    try:
+                        import groq as _groq_mod
+                        _fb_client = _groq_mod.Groq(api_key=GROQ_API_KEY)
+                        _fb_resp = _fb_client.chat.completions.create(
+                            model=_fallback,
+                            messages=[
+                                {"role": "system", "content": sistem_prompt},
+                                {"role": "user", "content": f"SORU: {sorgu}"},
+                            ],
+                            temperature=0.2,
+                            max_tokens=2500,
+                        )
+                        _fb_yanit = clean_llm_response(_fb_resp.choices[0].message.content or "")
+                        if _fb_yanit.strip():
+                            yanit = _fb_yanit
+                            log.info(f"[Yanıt] Fallback model '{_fallback}' ile yanıt alındı.")
+                            break
+                    except Exception as _fb_err:
+                        log.warning(f"[Yanıt] Fallback '{_fallback}' başarısız: {_fb_err}")
+                        continue
 
             # Hallüsinasyon kontrolü
             is_faithful, validation_warning, _ = (
