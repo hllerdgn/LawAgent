@@ -72,8 +72,12 @@ MODEL_NAME = _CURRENT_WORKING_MODEL
 def clean_llm_response(text: str) -> str:
     if not text:
         return ""
-    # Strip <think>...</think> reasoning traces if present
-    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    # Strip closed <think>...</think> reasoning traces (multi-line)
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # Strip unclosed <think>... blocks (model forgot closing tag)
+    text = re.sub(r"<think>.*", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # Strip any remaining stray tags
+    text = re.sub(r"</think>", "", text, flags=re.IGNORECASE)
     return text.strip()
 
 
