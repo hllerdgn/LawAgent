@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { Mail, MailOpen, Trash2, Reply, CheckCircle2, Search } from 'lucide-react';
 
 export function AdminMessages() {
-  const [messages, setMessages] = useState([
+  const INITIAL_MESSAGES = [
     { 
       id: '1', 
       name: 'Ahmet Yılmaz', 
@@ -30,15 +31,49 @@ export function AdminMessages() {
       date: '1 gün önce',
       read: true
     },
-  ]);
+  ];
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_contact_messages');
+      return saved ? JSON.parse(saved) : INITIAL_MESSAGES;
+    } catch (e) {
+      return INITIAL_MESSAGES;
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('lawagent_contact_messages');
+        if (saved) setMessages(JSON.parse(saved));
+      } catch (e) {}
+    };
+
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_messages_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_messages_updated', handleUpdate);
+    };
+  }, []);
+
+  const saveMessages = (newMsgs: any[]) => {
+    setMessages(newMsgs);
+    try {
+      localStorage.setItem('lawagent_contact_messages', JSON.stringify(newMsgs));
+    } catch (e) {}
+  };
 
   const toggleRead = (id: string) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, read: !m.read } : m));
+    const updated = messages.map((m: any) => m.id === id ? { ...m, read: !m.read } : m);
+    saveMessages(updated);
   };
 
   const handleDelete = (id: string) => {
     if (confirm('Bu mesajı silmek istediğinize emin misiniz?')) {
-      setMessages(messages.filter(m => m.id !== id));
+      const updated = messages.filter((m: any) => m.id !== id);
+      saveMessages(updated);
     }
   };
 

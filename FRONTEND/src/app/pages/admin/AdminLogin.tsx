@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input } from '../../components/Input';
+
 import { Scale, Lock, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export function AdminLogin() {
@@ -65,13 +65,13 @@ export function AdminLogin() {
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
+                <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@lawagent.ai"
-                  className="pl-11 bg-slate-950/80 border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 rounded-xl"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none rounded-xl text-sm transition-colors"
                   required
                 />
               </div>
@@ -83,13 +83,13 @@ export function AdminLogin() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
+                <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-11 bg-slate-950/80 border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 rounded-xl"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none rounded-xl text-sm transition-colors"
                   required
                 />
               </div>
@@ -113,7 +113,7 @@ export function AdminLogin() {
             <div className="pt-3 border-t border-slate-800 text-center">
               <button
                 type="button"
-                onClick={fillDemo}
+                onClick={handleFillDemo}
                 className="text-xs text-amber-400/80 hover:text-amber-400 transition-colors underline cursor-pointer"
               >
                 Demo Bilgilerini Otomatik Doldur (admin@lawagent.ai / demo123)

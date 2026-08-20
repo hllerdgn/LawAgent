@@ -29,6 +29,76 @@ const BLOG_POSTS = [
 ];
 
 export function BlogPage() {
+  const DEFAULT_POSTS = [
+    {
+      title: "ticaret hukukunda sık karşılaşılan uyuşmazlıklar ve çözüm yolları",
+      slug: "ticaret-hukukunda-sik-karsilasilan-sorunlar",
+      excerpt: "6102 sayılı türk ticaret kanunu çerçevesinde şirket ortakları uyuşmazlıkları, ticari alacak tahsili ve sözleşme ihlalleri hakkında rehber.",
+      date: "15 ocak 2025",
+      readTime: "5 dk",
+      category: "TTK · TİCARET",
+    },
+    {
+      title: "iş sözleşmesi feshi ve kıdem tazminatı hakları",
+      slug: "is-sozlesmesi-feshi-haklarinizi-bilin",
+      excerpt: "işçinin ve işverenin 4857 sayılı iş kanunu kapsamındaki hakları, fesih bildirimi süreleri ve arabuluculuk başvuru adımları.",
+      date: "10 ocak 2025",
+      readTime: "6 dk",
+      category: "TBK · İŞ",
+    },
+    {
+      title: "6502 sayılı tkhk kapsamında tüketici hakları rehberi",
+      slug: "tuketici-haklarinda-yeni-duzenlemeler",
+      excerpt: "ayıplı mal iadesi, mesafeli satış cayma hakkı ve tüketici hakem heyetlerine e-devlet üzerinden başvuru yöntemleri.",
+      date: "5 ocak 2025",
+      readTime: "4 dk",
+      category: "TKHK · TÜKETİCİ",
+    },
+  ];
+
+  const [posts, setPosts] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_blog_posts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: any) => ({
+          title: p.title.toLowerCase(),
+          slug: p.slug || p.title.toLowerCase().replace(/\s+/g, '-'),
+          excerpt: p.title + ' hakkında detaylı hukuki inceleme ve mevzuat analiz raporu.',
+          date: p.date || 'Bugün',
+          readTime: '5 dk',
+          category: p.status === 'Yayında' ? 'MEVZUAT · İNCELEME' : 'TASLAK · REHBER',
+        }));
+      }
+    } catch (e) {}
+    return DEFAULT_POSTS;
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('lawagent_blog_posts');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setPosts(parsed.map((p: any) => ({
+            title: p.title.toLowerCase(),
+            slug: p.slug || p.title.toLowerCase().replace(/\s+/g, '-'),
+            excerpt: p.title + ' hakkında detaylı hukuki inceleme ve mevzuat analiz raporu.',
+            date: p.date || 'Bugün',
+            readTime: '5 dk',
+            category: p.status === 'Yayında' ? 'MEVZUAT · İNCELEME' : 'TASLAK · REHBER',
+          })));
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_blog_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_blog_updated', handleUpdate);
+    };
+  }, []);
+
   return (
     <>
       {/* Page hero */}
@@ -89,7 +159,7 @@ export function BlogPage() {
           </header>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1px", borderTop: "1px solid var(--color-rule)" }}>
-            {BLOG_POSTS.map((post) => (
+            {posts.map((post) => (
               <Link
                 key={post.slug}
                 to={`/blog/${post.slug}`}

@@ -874,30 +874,68 @@ export function ChatbotWidget() {
     localStorage.setItem("chatbot_session_id", sessionId);
 
     const sendRequest = async () => {
-      try {
-        const apiUrl = `${import.meta.env.VITE_API_URL || "https://hllerdgn-lawagent-backend.hf.space"}/ask`;
+      const primaryUrl = "https://hllerdgn-lawagent-backend.hf.space/ask";
+      const fallbackUrls = [
+        "http://localhost:7860/ask",
+        "http://localhost:8000/ask"
+      ];
+      
+      const payload = JSON.stringify({
+        query: messageText,
+        session_id: sessionId,
+        k: parseInt(localStorage.getItem('lawagent_rag_k') || '7', 10),
+      });
+
+      const attemptFetch = async (targetUrl: string, timeoutMs: number) => {
         const controller = new AbortController();
         abortControllerRef.current = controller;
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s: HF Space cold start
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "bypass-tunnel-reminder": "69420",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            query: messageText,
-            session_id: sessionId,
-            k: 7,
-          }),
-          signal: controller.signal,
-          mode: "cors",
-        });
-        clearTimeout(timeoutId);
-        abortControllerRef.current = null;
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(targetUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: payload,
+            signal: controller.signal,
+            mode: "cors",
+            redirect: "follow",
+          });
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          clearTimeout(timeoutId);
+          throw e;
+        }
+      };
+
+      try {
+        let data = null;
+
+        // 1. Öncelik: Hugging Face Space (8 saniye hızlı deneme)
+        try {
+          data = await attemptFetch(primaryUrl, 8000);
+        } catch (hfError) {
+          console.warn("Hugging Face Space hızlı yanıt vermedi veya uykuda. Localhost deneniyor...", hfError);
+          // 2. Öncelik: Localhost sunucuları (7860 & 8000)
+          for (const fallbackUrl of fallbackUrls) {
+            try {
+              data = await attemptFetch(fallbackUrl, 10000);
+              console.log(`Localhost (${fallbackUrl}) üzerinden yanıt alındı.`);
+              break;
+            } catch (localErr) {
+              console.warn(`Fallback ${fallbackUrl} erişilemedi.`);
+            }
+          }
+        }
+
+        // 3. Öncelik: Eğer localhost açık değilse, HF Space uykudan uyanana kadar bekle (Cold Start)
+        if (!data) {
+          console.log("Local sunucu yok. HF Space Cold Start uyanışı bekleniyor...");
+          data = await attemptFetch(primaryUrl, 45000);
+        }
         let rawAnswer =
           data.answer || data.response || data.text || "Yanıt alınamadı.";
         let parsed = parseMessage(rawAnswer);
@@ -927,11 +965,22 @@ export function ChatbotWidget() {
             actionsDisabled: false,
           },
         ]);
-        setActiveTypingMessageId(newMessageId);
-        setShouldStopTyping(false);
-        setTimeout(() => {
-          setVisibleActions((prev) => ({ ...prev, [newMessageId]: true }));
-        }, 500);
+        // Save query to localStorage for Live User Feed telemetry
+        try {
+          const nowStr = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+          const newRecord = {
+            name: `Anonim Oturum #${sessionId.slice(-4)}`,
+            subject: messageText,
+            answer: parsed.content.length > 220 ? parsed.content.slice(0, 220) + "..." : parsed.content,
+            date: `Bugün ${nowStr}`,
+            raw_date: new Date().toISOString(),
+          };
+          const existingStr = localStorage.getItem('lawagent_recent_queries');
+          const existing = existingStr ? JSON.parse(existingStr) : [];
+          const updated = [newRecord, ...existing.filter((q: any) => q.subject !== messageText)].slice(0, 20);
+          localStorage.setItem('lawagent_recent_queries', JSON.stringify(updated));
+          window.dispatchEvent(new Event('lawagent_queries_updated'));
+        } catch (e) {}
 
         if (connectionStatus === "offline") setConnectionStatus("online");
         return true;

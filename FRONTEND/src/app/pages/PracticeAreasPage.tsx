@@ -26,6 +26,71 @@ const AREAS = [
 ];
 
 export function PracticeAreasPage() {
+  const DEFAULT_AREAS = [
+    {
+      slug: "ticaret-hukuku",
+      label: "01 · TİCARET HUKUKU",
+      title: "türk ticaret kanunu (ttk)",
+      sub: "6102 sayılı kanun · 1535 madde",
+      body: "şirket kuruluşu, haksız rekabet, ticari sözleşmeler, ticari uyuşmazlıkların çözümü ve şirketler hukukuna dair sorularınız için.",
+    },
+    {
+      slug: "is-hukuku",
+      label: "02 · İŞ HUKUKU",
+      title: "türk borçlar kanunu (tbk)",
+      sub: "6098 sayılı kanun · 818 madde",
+      body: "iş akitlerinin feshi, kıdem ve ihbar tazminatları, işçi-işveren uyuşmazlıkları ve arabuluculuk süreçleri.",
+    },
+    {
+      slug: "tuketici-hukuku",
+      label: "03 · TÜKETİCİ HUKUKU",
+      title: "tüketicinin korunması hakkında kanun (tkhk)",
+      sub: "6502 sayılı kanun · 84 madde",
+      body: "ayıplı mal ve hizmetler, mesafeli satış cayma hakkı, hakem heyeti ve tüketici mahkemesi süreçleri.",
+    },
+  ];
+
+  const [areas, setAreas] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_practice_areas');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((item: any, idx: number) => ({
+          slug: item.slug || `alan-${item.id}`,
+          label: `0${idx + 1} · ${item.title.toUpperCase()}`,
+          title: item.title.toLowerCase(),
+          sub: 'güncel mevzuat normu',
+          body: item.description.toLowerCase(),
+        }));
+      }
+    } catch (e) {}
+    return DEFAULT_AREAS;
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('lawagent_practice_areas');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setAreas(parsed.map((item: any, idx: number) => ({
+            slug: item.slug || `alan-${item.id}`,
+            label: `0${idx + 1} · ${item.title.toUpperCase()}`,
+            title: item.title.toLowerCase(),
+            sub: 'güncel mevzuat normu',
+            body: item.description.toLowerCase(),
+          })));
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_practice_areas_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_practice_areas_updated', handleUpdate);
+    };
+  }, []);
+
   return (
     <>
       {/* Page hero */}
@@ -79,8 +144,8 @@ export function PracticeAreasPage() {
       {/* Stat row */}
       <div className="lumen-stats lumen-shell">
         <div className="lumen-stat">
-          <span className="lumen-stat__num">3</span>
-          <span className="lumen-stat__label">temel kanun</span>
+          <span className="lumen-stat__num">{areas.length}</span>
+          <span className="lumen-stat__label">temel kanun & alan</span>
         </div>
         <div className="lumen-stat__divider" aria-hidden="true"/>
         <div className="lumen-stat">
@@ -100,15 +165,14 @@ export function PracticeAreasPage() {
           <header className="lumen-section__head">
             <span className="eyebrow">01 · uygulama alanları</span>
             <h2 id="areas-cards-title" className="lumen-section__title">
-              türk hukukunun üç temel <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>mevzuatı</em>.
+              türk hukukunun {areas.length} temel <em style={{ fontStyle: "normal", color: "var(--color-accent-2)" }}>mevzuatı</em>.
             </h2>
             <p className="lumen-section__lede">
-              her alan için özel olarak indekslenmiş vektör veri tabanı. ilgili
-              kanun maddesine kaynak referansıyla yanıt.
+              eklenen {areas.length} farklı uygulama alanı için özel olarak indekslenmiş vektör veri tabanı. ilgili kanun maddesine kaynak referansıyla yanıt.
             </p>
           </header>
           <div className="lumen-cards" role="list">
-            {AREAS.map((area) => (
+            {areas.map((area) => (
               <Link
                 key={area.slug}
                 to={`/practice-areas/${area.slug}`}

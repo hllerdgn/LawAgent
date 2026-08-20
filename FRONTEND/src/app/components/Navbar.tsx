@@ -13,12 +13,29 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
+  const [siteName, setSiteName] = useState(() => {
+    return localStorage.getItem('lawagent_site_name') || 'lawagent';
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      const saved = localStorage.getItem('lawagent_site_name');
+      if (saved) setSiteName(saved);
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_settings_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_settings_updated', handleUpdate);
+    };
+  }, []);
+
   return (
     <header className="lumen-nav" role="banner">
       <div className="lumen-shell lumen-nav__inner">
         {/* Brand wordmark */}
         <Link to="/" className="lumen-nav__brand" aria-label="LawAgent ana sayfa">
-          lawagent
+          {siteName.toLowerCase()}
           <span
             style={{
               fontFamily: "var(--font-label)",

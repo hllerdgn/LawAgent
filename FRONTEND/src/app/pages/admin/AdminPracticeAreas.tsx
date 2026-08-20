@@ -9,13 +9,31 @@ interface PracticeArea {
 }
 
 export function AdminPracticeAreas() {
-  const [areas, setAreas] = useState<PracticeArea[]>([
+  const DEFAULT_AREAS: PracticeArea[] = [
     { id: '1', title: 'Ticaret Hukuku (TTK)', description: 'Şirket kuruluşu, birleşme/devralma ve ticari uyuşmazlıklar.', slug: 'ticaret-hukuku' },
     { id: '2', title: 'İş Hukuku (TBK)', description: 'İş sözleşmeleri, işçi-işveren hakları ve arabuluculuk.', slug: 'is-hukuku' },
     { id: '3', title: 'Tüketici Hukuku (TKHK)', description: 'Ayıplı mal iadesi, mesafeli satış ve Hakem Heyetleri.', slug: 'tuketici-hukuku' },
-  ]);
+  ];
+
+  const [areas, setAreas] = useState<PracticeArea[]>(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_practice_areas');
+      return saved ? JSON.parse(saved) : DEFAULT_AREAS;
+    } catch (e) {
+      return DEFAULT_AREAS;
+    }
+  });
+
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', description: '', slug: '' });
+
+  const saveAreas = (newAreas: PracticeArea[]) => {
+    setAreas(newAreas);
+    try {
+      localStorage.setItem('lawagent_practice_areas', JSON.stringify(newAreas));
+      window.dispatchEvent(new Event('lawagent_practice_areas_updated'));
+    } catch (e) {}
+  };
 
   const handleEdit = (area: PracticeArea) => {
     setIsEditing(area.id);
@@ -23,13 +41,15 @@ export function AdminPracticeAreas() {
   };
 
   const handleSave = (id: string) => {
-    setAreas(areas.map(a => a.id === id ? { ...a, ...editForm } : a));
+    const updated = areas.map(a => a.id === id ? { ...a, ...editForm } : a);
+    saveAreas(updated);
     setIsEditing(null);
   };
 
   const handleDelete = (id: string) => {
     if (confirm('Bu çalışma alanını silmek istediğinizden emin misiniz?')) {
-      setAreas(areas.filter(a => a.id !== id));
+      const updated = areas.filter(a => a.id !== id);
+      saveAreas(updated);
     }
   };
 
@@ -41,7 +61,8 @@ export function AdminPracticeAreas() {
       description: 'Açıklama giriniz...',
       slug: `yeni-alan-${newId}`
     };
-    setAreas([...areas, newArea]);
+    const updated = [...areas, newArea];
+    saveAreas(updated);
     handleEdit(newArea);
   };
 

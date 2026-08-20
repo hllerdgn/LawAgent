@@ -37,12 +37,20 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-900">
+    <div className="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-900 relative overflow-x-hidden">
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-30 md:hidden transition-opacity"
+        />
+      )}
+
       {/* Sidebar */}
       <aside 
         className={`bg-slate-950 text-slate-200 border-r border-slate-800 transition-all duration-300 ${
-          sidebarOpen ? 'w-72' : 'w-20'
-        } flex flex-col justify-between z-30 shadow-2xl relative`}
+          sidebarOpen ? 'w-72 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'
+        } flex flex-col justify-between z-40 shadow-2xl fixed md:sticky top-0 h-screen`}
       >
         <div>
           {/* Top Branding */}
@@ -78,6 +86,9 @@ export function AdminLayout() {
                   <li key={item.path}>
                     <Link
                       to={item.path}
+                      onClick={() => {
+                        if (window.innerWidth < 768) setSidebarOpen(false);
+                      }}
                       className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all duration-200 group ${
                         isActive
                           ? 'bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/30 shadow-sm'
@@ -145,28 +156,37 @@ export function AdminLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200/80 px-6 py-4 sticky top-0 z-20 shadow-xs">
+        <header className="bg-white border-b border-slate-200/80 px-4 md:px-6 py-4 sticky top-0 z-20 shadow-xs">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                • RAG Motoru & Sunucu Aktif
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="md:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200"
+                aria-label="Menüyü Aç/Kapat"
+              >
+                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                RAG Motoru Aktif
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link 
                 to="/" 
                 target="_blank"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-2 rounded-lg transition-colors border border-slate-200/60"
               >
-                <span>Kamu Sayfasını Gör</span>
+                <span className="hidden sm:inline">Kamu Sayfasını Gör</span>
+                <span className="sm:hidden">Site</span>
                 <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-8 overflow-auto bg-slate-50">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-slate-50">
           <Outlet />
         </main>
       </div>

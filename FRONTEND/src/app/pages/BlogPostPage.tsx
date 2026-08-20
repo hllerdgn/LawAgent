@@ -6,7 +6,7 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 export function BlogPostPage() {
   const { slug } = useParams();
 
-  const post = {
+  const DEFAULT_POST = {
     title: 'Ticaret Hukukunda Sık Karşılaşılan Uyuşmazlıklar ve Çözüm Yolları',
     date: '15 Ocak 2025',
     readTime: '5 dk okuma',
@@ -29,6 +29,28 @@ export function BlogPostPage() {
       <p>Ticari ilişkilerinizde hukuki riskleri önceden öngörmek ve sözleşmelerinizi uzman desteğiyle yapılandırmak olası davaları engellemenin en ekonomik yoludur.</p>
     `
   };
+
+  const [post, setPost] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_blog_posts');
+      if (saved) {
+        const posts = JSON.parse(saved);
+        const found = posts.find((p: any) => p.slug === slug || p.id === slug);
+        if (found) {
+          return {
+            title: found.title,
+            date: found.date || 'Bugün',
+            readTime: '5 dk okuma',
+            category: found.category || 'Mevzuat Hukuku',
+            author: 'LawAgent AI Ekibi',
+            image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200',
+            content: found.content || `<p>${found.title} hakkında detaylı bilgi ve hukuki analiz rehberi.</p>`,
+          };
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_POST;
+  });
 
   return (
     <div className="w-full bg-slate-50 font-sans antialiased">

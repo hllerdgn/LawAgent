@@ -48,7 +48,74 @@ for env_path in _ENV_ADAYLARI:
         break
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL_NAME = "llama-3.3-70b-versatile"
+_DEFAULT_CONFIG_MODEL = os.getenv("GROQ_MODEL", "groq/compound-mini")
+
+GROQ_FALLBACK_MODELS = [
+    _DEFAULT_CONFIG_MODEL,
+    "groq/compound-mini",
+    "qwen/qwen3.6-27b",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "llama-3.3-70b-versatile",
+]
+_SEEN_MODELS = set()
+GROQ_CANDIDATE_MODELS = []
+for _m in GROQ_FALLBACK_MODELS:
+    if _m and _m not in _SEEN_MODELS:
+        _SEEN_MODELS.add(_m)
+        GROQ_CANDIDATE_MODELS.append(_m)
+
+_CURRENT_WORKING_MODEL = GROQ_CANDIDATE_MODELS[0]
+MODEL_NAME = _CURRENT_WORKING_MODEL
+
+
+def clean_llm_response(text: str) -> str:
+    if not text:
+        return ""
+    # Strip <think>...</think> reasoning traces if present
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    return text.strip()
+
+
+def call_groq_completion(
+    client: Groq,
+    messages: List[Dict[str, str]],
+    temperature: float = 0.2,
+    max_tokens: int = 1000,
+) -> str:
+    global _CURRENT_WORKING_MODEL, MODEL_NAME
+    models_to_try = [_CURRENT_WORKING_MODEL] + [
+        m for m in GROQ_CANDIDATE_MODELS if m != _CURRENT_WORKING_MODEL
+    ]
+
+    last_err = None
+    for model in models_to_try:
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            if model != _CURRENT_WORKING_MODEL:
+                log.info(f"Groq aktif modeli güncellendi: {model}")
+            _CURRENT_WORKING_MODEL = model
+            MODEL_NAME = model
+            raw_content = resp.choices[0].message.content or ""
+            return clean_llm_response(raw_content)
+        except (RateLimitError, APITimeoutError):
+            raise
+        except (APIStatusError, Exception) as e:
+            err_msg = str(e).lower()
+            if any(term in err_msg for term in ["not exist", "decommissioned", "not found", "404", "400", "invalid_request_error"]):
+                log.warning(f"Groq modeli '{model}' kullanılamadı ({e}), alternatif model deneniyor...")
+                last_err = e
+                continue
+            raise e
+
+    if last_err:
+        raise last_err
+    raise RuntimeError("Uygun bir Groq modeli bulunamadı.")
 
 if not GROQ_API_KEY:
     log.warning("GROQ_API_KEY bulunamadı! .env dosyasını kontrol et.")
@@ -306,8 +373,8 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
     if len(sorgu.split()) < 4 or len(sorgu.split()) > 30:
         return sorgu
     try:
-        resp = client.chat.completions.create(
-            model=MODEL_NAME,
+        yeni = call_groq_completion(
+            client=client,
             messages=[
                 {"role": "system", "content": _REWRITE_SYSTEM},
                 {"role": "user", "content": f"Soru: {sorgu}\n\nYeniden yazılmış hali:"},
@@ -315,7 +382,6 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
             temperature=0.0,
             max_tokens=100,
         )
-        yeni = resp.choices[0].message.content.strip()
         return yeni if yeni and len(yeni) <= 300 else sorgu
     except Exception as e:
         log.warning(f"Query rewrite hatası: {e}")
@@ -459,8 +525,8 @@ class LegalGenerator:
             context = build_context(ictihat_chunks)
             ictihat_prompt = _ICTIHAT_PROMPT_TEMPLATE.format(context=context)
             try:
-                resp = self.client.chat.completions.create(
-                    model=MODEL_NAME,
+                yanit = call_groq_completion(
+                    client=self.client,
                     messages=[
                         {"role": "system", "content": ictihat_prompt},
                         {
@@ -471,7 +537,6 @@ class LegalGenerator:
                     temperature=0.1,
                     max_tokens=800,
                 )
-                yanit = resp.choices[0].message.content.strip()
             except Exception as e:
                 log.error(f"İçtihat üretim hatası: {e}")
                 yanit = "İçtihat bilgilerini getirirken teknik bir sorun oluştu. Lütfen tekrar deneyin."
@@ -643,8 +708,8 @@ class LegalGenerator:
             else:
                 sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context)
 
-            resp = self.client.chat.completions.create(
-                model=MODEL_NAME,
+            yanit = call_groq_completion(
+                client=self.client,
                 messages=[
                     {"role": "system", "content": sistem_prompt},
                     {"role": "user", "content": f"SORU: {sorgu}"},
@@ -652,7 +717,6 @@ class LegalGenerator:
                 temperature=0.2,
                 max_tokens=1000,
             )
-            yanit = resp.choices[0].message.content.strip()
 
             # Hallüsinasyon kontrolü
             is_faithful, validation_warning, _ = (
@@ -776,6 +840,7 @@ def create_app() -> FastAPI:
         hallucination_check: Optional[Dict] = None
         sure_ms: int = 0
         filtered: bool = False
+        error: Optional[str] = None
 
     gen = LegalGenerator()
 
@@ -892,7 +957,8 @@ def create_app() -> FastAPI:
                     total_questions += 1
                     ans = "Cevaplanmadı."
                     if i + 1 < len(messages) and messages[i+1]["role"] == "assistant":
-                        ans = messages[i+1]["content"][:100] + "..."
+                        ans_text = messages[i+1]["content"]
+                        ans = ans_text[:220] + "..." if len(ans_text) > 220 else ans_text
                     
                     # Format date: "2026-05-21T15:30:58" -> "21-05-2026 15:30"
                     raw_ts = messages[i]["timestamp"]
@@ -904,7 +970,7 @@ def create_app() -> FastAPI:
                         pass
 
                     recent_queries.append({
-                        "name": f"Oturum {session_id[:6]}",
+                        "name": f"Oturum #{session_id[:6]}",
                         "subject": messages[i]["content"],
                         "answer": ans,
                         "date": formatted_date,
@@ -917,7 +983,7 @@ def create_app() -> FastAPI:
             "site_docs": site_docs_count,
             "law_docs": law_docs_count,
             "total_questions": total_questions,
-            "recent_queries": recent_queries[:5]
+            "recent_queries": recent_queries[:10]
         }
 
     return app

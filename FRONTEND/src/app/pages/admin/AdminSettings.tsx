@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '../../components/Input';
+
 import { Save, CheckCircle2, Sliders, Palette, Building2, Sparkles } from 'lucide-react';
 import { useTheme } from '../../../themes/ThemeProvider';
 import { IMPLEMENTED_THEMES, THEME_DISPLAY_NAMES } from '../../../themes/registry';
 import type { HallmarkThemeId } from '../../../themes/types';
+import { PRESET_CLIENTS } from '../../../config/clients';
 
 export function AdminSettings() {
   const { themeId, setThemeId, theme } = useTheme();
@@ -17,18 +18,61 @@ export function AdminSettings() {
     phone: '+90 212 555 0100',
     address: 'İstanbul, Türkiye',
     about: 'LawAgent AI kullanıcılara güvenilir, profesyonel ve yapay zeka destekli hukuki karar desteği sunar.',
-    ragK: '5',
-    aiModel: 'Meta-Llama-3-8B-Instruct',
+    ragK: '7',
+    aiModel: 'llama-3.3-70b-versatile',
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // Mount anında localStorage'dan kayıtlı ayarları yükle
   useEffect(() => {
-    setSettings((prev) => ({ ...prev, themeId }));
-  }, [themeId]);
+    const savedClientId = localStorage.getItem('lawagent_client_id') || 'lawagent-demo';
+    const preset = PRESET_CLIENTS[savedClientId] || PRESET_CLIENTS['lawagent-demo'];
+    
+    const savedThemeId = localStorage.getItem('lawagent_theme_id') || preset.themeId || themeId;
+    const savedSiteName = localStorage.getItem('lawagent_site_name') || preset.name;
+    const savedWelcome = localStorage.getItem('lawagent_welcome_message') || preset.welcomeMessage;
+    const savedEmail = localStorage.getItem('lawagent_email') || preset.contactInfo.email;
+    const savedPhone = localStorage.getItem('lawagent_phone') || preset.contactInfo.phone;
+    const savedAddress = localStorage.getItem('lawagent_address') || preset.contactInfo.address;
+    const savedAbout = localStorage.getItem('lawagent_about') || 'LawAgent AI kullanıcılara güvenilir, profesyonel ve yapay zeka destekli hukuki karar desteği sunar.';
+    const savedK = localStorage.getItem('lawagent_rag_k') || '7';
+    const savedModel = localStorage.getItem('lawagent_ai_model') || 'llama-3.3-70b-versatile';
+
+    setSettings({
+      clientId: savedClientId,
+      siteName: savedSiteName,
+      themeId: savedThemeId,
+      welcomeMessage: savedWelcome,
+      email: savedEmail,
+      phone: savedPhone,
+      address: savedAddress,
+      about: savedAbout,
+      ragK: savedK,
+      aiModel: savedModel,
+    });
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'clientId') {
+      const preset = PRESET_CLIENTS[value] || PRESET_CLIENTS['lawagent-demo'];
+      const newTheme = preset.themeId as HallmarkThemeId;
+      setSettings((prev) => ({
+        ...prev,
+        clientId: value,
+        siteName: preset.name,
+        themeId: newTheme,
+        welcomeMessage: preset.welcomeMessage,
+        email: preset.contactInfo.email,
+        phone: preset.contactInfo.phone,
+        address: preset.contactInfo.address,
+      }));
+      setThemeId(newTheme);
+      return;
+    }
+
     setSettings((prev) => ({ ...prev, [name]: value }));
 
     if (name === 'themeId') {
@@ -39,9 +83,23 @@ export function AdminSettings() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('lawagent_client_id', settings.clientId);
+    localStorage.setItem('lawagent_site_name', settings.siteName);
+    localStorage.setItem('lawagent_theme_id', settings.themeId);
+    localStorage.setItem('lawagent_welcome_message', settings.welcomeMessage);
+    localStorage.setItem('lawagent_email', settings.email);
+    localStorage.setItem('lawagent_phone', settings.phone);
+    localStorage.setItem('lawagent_address', settings.address);
+    localStorage.setItem('lawagent_about', settings.about);
+    localStorage.setItem('lawagent_rag_k', settings.ragK);
+    localStorage.setItem('lawagent_ai_model', settings.aiModel);
+
+    setThemeId(settings.themeId as HallmarkThemeId);
+    window.dispatchEvent(new Event('lawagent_settings_updated'));
+
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 4000);
   };
+
 
   return (
     <div className="space-y-8 font-sans antialiased">

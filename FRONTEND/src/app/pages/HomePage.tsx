@@ -111,6 +111,81 @@ function PrismApparatus() {
 }
 
 export function HomePage() {
+  const DEFAULT_PRACTICE_AREAS = [
+    {
+      slug: "is-hukuku",
+      code: "TBK",
+      label: "01 · İŞ HUKUKU",
+      title: "iş hukuku",
+      sub: "türk borçlar kanunu",
+      body: "iş sözleşmeleri, kıdem ve ihbar tazminatı, işçi-işveren uyuşmazlıkları ve iş güvenliği konularında mevzuat destekli yanıtlar.",
+      stat: "818 madde",
+    },
+    {
+      slug: "ticaret-hukuku",
+      code: "TTK",
+      label: "02 · TİCARET HUKUKU",
+      title: "ticaret hukuku",
+      sub: "türk ticaret kanunu",
+      body: "şirket kuruluşu, ticari işletme devri, anonim ve limited şirket işlemleri, ticari uyuşmazlıklar.",
+      stat: "1535 madde",
+    },
+    {
+      slug: "tuketici-hukuku",
+      code: "TKHK",
+      label: "03 · TÜKETİCİ HUKUKU",
+      title: "tüketici hukuku",
+      sub: "tüketicinin korunması hakkında kanun",
+      body: "tüketici hakları, ayıplı mal ve hizmet, cayma hakkı, garanti belgeleri ve tüketici mahkemeleri.",
+      stat: "84 madde",
+    },
+  ];
+
+  const [practiceAreas, setPracticeAreas] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('lawagent_practice_areas');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((item: any, idx: number) => ({
+          slug: item.slug || `alan-${item.id}`,
+          code: 'MEVZUAT',
+          label: `0${idx + 1} · ${item.title.toUpperCase()}`,
+          title: item.title.toLowerCase(),
+          sub: 'güncel mevzuat normu',
+          body: item.description.toLowerCase(),
+          stat: 'indekslendi',
+        }));
+      }
+    } catch (e) {}
+    return DEFAULT_PRACTICE_AREAS;
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('lawagent_practice_areas');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setPracticeAreas(parsed.map((item: any, idx: number) => ({
+            slug: item.slug || `alan-${item.id}`,
+            code: 'MEVZUAT',
+            label: `0${idx + 1} · ${item.title.toUpperCase()}`,
+            title: item.title.toLowerCase(),
+            sub: 'güncel mevzuat normu',
+            body: item.description.toLowerCase(),
+            stat: 'indekslendi',
+          })));
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_practice_areas_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_practice_areas_updated', handleUpdate);
+    };
+  }, []);
+
   return (
     <>
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -184,16 +259,15 @@ export function HomePage() {
           <header className="lumen-section__head">
             <span className="eyebrow">01 · uygulama alanları</span>
             <h2 id="areas-title" className="lumen-section__title">
-              türk hukukunun üç temel{" "}
+              türk hukukunun {practiceAreas.length} temel{" "}
               <span style={{ color: "var(--color-accent-2)" }}>mevzuatı</span>.
             </h2>
             <p className="lumen-section__lede">
-              rag mimarisi, türk hukuk sisteminin en kritik üç kanun başlığında
-              eğitilmiş vektör veritabanından beslenir.
+              rag mimarisi, eklenen {practiceAreas.length} farklı kanun ve uzmanlık alanında eğitilmiş vektör veritabanından beslenir.
             </p>
           </header>
           <div className="lumen-cards" role="list">
-            {PRACTICE_AREAS.map((area) => (
+            {practiceAreas.map((area) => (
               <Link key={area.slug} to={`/practice-areas/${area.slug}`}
                 className="lumen-card" role="listitem">
                 <span className="lumen-card__eyebrow">{area.label}</span>

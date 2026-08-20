@@ -661,13 +661,15 @@ Sadece JSON döndür, başka açıklama yapma:
 {{"1": puan, "2": puan, ...}}"""
 
     try:
+        model = os.getenv("GROQ_MODEL", "groq/compound-mini")
         resp = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=200,
         )
         raw = resp.choices[0].message.content.strip()
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
         # JSON için temizle (bazen kod bloğu içinde gelebilir)
         raw = re.sub(r"```[\w]*\n?", "", raw).strip()
         scores = json.loads(raw)
@@ -771,9 +773,9 @@ def rerank_tkhk_candidates(query: str, candidates: List[Dict], timeout: float = 
 
     def _call_llm() -> List[Dict]:
         from groq import Groq
-        groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
+        model = os.getenv("GROQ_MODEL", "groq/compound-mini")
         resp = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model,
             messages=[
                 {"role": "system", "content": TKHK_SYSTEM_PROMPT},
                 {"role": "user", "content": user_msg},
@@ -782,6 +784,7 @@ def rerank_tkhk_candidates(query: str, candidates: List[Dict], timeout: float = 
             max_tokens=400,
         )
         content = resp.choices[0].message.content.strip()
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
         content = re.sub(r"```[\w]*\n?", "", content).strip()
         data = json.loads(content)
         ranking = data.get("ranking", [])
@@ -932,13 +935,15 @@ def _hyde_generate(query: str) -> Optional[str]:
             "ve hukuki terimleri ekle. En fazla 150 kelime, sadece kanun maddesi metni döndür.\n\n"
             f"Soru: {query}\n\nKanun maddesi:"
         )
+        model = os.getenv("GROQ_MODEL", "groq/compound-mini")
         resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=250,
         )
         hyp = resp.choices[0].message.content.strip()
+        hyp = re.sub(r"<think>.*?</think>", "", hyp, flags=re.DOTALL).strip()
         log.info(f"[HyDE] Üretilen belge: {hyp[:120]}...")
         return hyp
     except Exception as e:

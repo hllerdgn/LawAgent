@@ -22,37 +22,45 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const getLocalQueries = (): RecentQuery[] => {
+    try {
+      const saved = localStorage.getItem('lawagent_recent_queries');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
   const fetchStats = async () => {
     setLoading(true);
     setError('');
+
+    const localQueries = getLocalQueries();
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://hllerdgn-lawagent-backend.hf.space';
       const res = await fetch(`${baseUrl}/admin/stats`);
       if (!res.ok) throw new Error('Sunucu hatası');
-      const data = await res.json();
-      setStatsData(data);
+      const data: AdminStats = await res.json();
+
+      // Backend verisi ile lokal canlı soruları birleştir (tekrarları temizle)
+      const combinedQueries = [...localQueries, ...(data.recent_queries || [])];
+      const uniqueQueries = combinedQueries.filter(
+        (q, idx, self) => idx === self.findIndex((t) => t.subject === q.subject)
+      );
+
+      setStatsData({
+        ...data,
+        total_questions: Math.max(data.total_questions || 0, uniqueQueries.length),
+        recent_queries: uniqueQueries,
+      });
     } catch (err: any) {
-      // Fallback mock data when backend endpoint is unreachable during offline preview
+      // Offline fallback: Yalnızca kullanıcının gerçekten sorduğu lokal soruları göster (şablon soru KULLANMA)
       setStatsData({
         site_docs: 4,
         law_docs: 1250,
-        total_questions: 148,
-        recent_queries: [
-          {
-            name: "Anonim Oturum #1092",
-            subject: "İşverenin kıdem tazminatını ödememesi ve 5 yıllık zamanaşımı süresi",
-            answer: "4857 Sayılı İş Kanunu uyarınca kıdem tazminatında zamanaşımı 5 yıldır. Zorunlu arabuluculuk başvuru adımları takip edilmelidir.",
-            date: "Bugün 15:42",
-            raw_date: "2025-01-15T15:42:00"
-          },
-          {
-            name: "Anonim Oturum #1091",
-            subject: "Ayıplı mal iadesinde Tüketici Hakem Heyeti paracıl sınırı",
-            answer: "6502 Sayılı TKHK uyarınca 2025 yılı Tüketici Hakem Heyeti parasal sınırları dahilinde e-Devlet kapısından başvuru yapılabilir.",
-            date: "Bugün 14:20",
-            raw_date: "2025-01-15T14:20:00"
-          }
-        ]
+        total_questions: localQueries.length,
+        recent_queries: localQueries,
       });
     } finally {
       setLoading(false);
@@ -61,6 +69,17 @@ export function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
+
+    const handleUpdate = () => {
+      fetchStats();
+    };
+
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_queries_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_queries_updated', handleUpdate);
+    };
   }, []);
 
   const stats = [

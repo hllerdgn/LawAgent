@@ -54,6 +54,28 @@ export function ContactPage() {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
+
+    const newMessage = {
+      id: Date.now().toString(),
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || '',
+      subject: formData.subject,
+      message: formData.message,
+      date: 'Az önce',
+      raw_date: new Date().toISOString(),
+      read: false,
+    };
+
+    try {
+      const existingStr = localStorage.getItem('lawagent_contact_messages');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      localStorage.setItem('lawagent_contact_messages', JSON.stringify([newMessage, ...existing]));
+      window.dispatchEvent(new Event('lawagent_messages_updated'));
+    } catch (e) {
+      console.warn('LocalStorage kayıt hatası:', e);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitSuccess(true);

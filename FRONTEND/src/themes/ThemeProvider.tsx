@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import type { HallmarkThemeId, ThemeConfig } from './types';
 import { resolveTheme, DEFAULT_THEME_ID } from './registry';
+import { PRESET_CLIENTS } from '../config/clients';
 
 interface ThemeContextType {
   theme: ThemeConfig;
@@ -67,13 +68,51 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ initialThemeId = DEFAULT_THEME_ID, children }: ThemeProviderProps) {
-  const [themeId, setThemeId] = useState<HallmarkThemeId>(initialThemeId);
+  const [themeId, setThemeIdState] = useState<HallmarkThemeId>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('lawagent_theme_id');
+      if (savedTheme && resolveTheme(savedTheme as HallmarkThemeId)) {
+        return savedTheme as HallmarkThemeId;
+      }
+      const savedClient = localStorage.getItem('lawagent_client_id');
+      if (savedClient && PRESET_CLIENTS[savedClient]) {
+        return PRESET_CLIENTS[savedClient].themeId as HallmarkThemeId;
+      }
+    }
+    return initialThemeId;
+  });
+
+  const setThemeId = (id: HallmarkThemeId) => {
+    setThemeIdState(id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lawagent_theme_id', id);
+    }
+  };
 
   const theme = useMemo(() => resolveTheme(themeId), [themeId]);
 
   useEffect(() => {
     applyThemeToElement(theme);
   }, [theme]);
+
+  // Sayfa yenileme / Admin ayarlar değişikliği dinleyicisi
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem('lawagent_theme_id');
+        if (savedTheme && savedTheme !== themeId) {
+          setThemeIdState(savedTheme as HallmarkThemeId);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleSettingsUpdate);
+    window.addEventListener('lawagent_settings_updated', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('storage', handleSettingsUpdate);
+      window.removeEventListener('lawagent_settings_updated', handleSettingsUpdate);
+    };
+  }, [themeId]);
 
   const value = useMemo(
     () => ({
@@ -94,3 +133,4 @@ export function useTheme(): ThemeContextType {
   }
   return context;
 }
+

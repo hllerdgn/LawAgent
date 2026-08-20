@@ -3,6 +3,22 @@ import { Link } from "react-router-dom";
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const [siteName, setSiteName] = React.useState(() => {
+    return localStorage.getItem('lawagent_site_name') || 'lawagent';
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      const saved = localStorage.getItem('lawagent_site_name');
+      if (saved) setSiteName(saved);
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('lawagent_settings_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('lawagent_settings_updated', handleUpdate);
+    };
+  }, []);
 
   return (
     <footer className="lumen-footer" role="contentinfo">
@@ -10,7 +26,7 @@ export function Footer() {
         <div className="lumen-footer__inner">
           {/* Brand */}
           <div>
-            <div className="lumen-footer__brand">lawagent</div>
+            <div className="lumen-footer__brand">{siteName.toLowerCase()}</div>
             <p className="lumen-footer__tagline">
               türk hukuku için tasarlanmış yapay zeka hukuk asistanı.
               rag v2 mimarisi ile mevzuat kaynaklı yanıtlar.
