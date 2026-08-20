@@ -304,11 +304,19 @@ def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
                 },
             ],
             temperature=0.0,
-            max_tokens=5,
+            max_tokens=400,  # Reasoning modelleri <think> bloğu açar; 5 token yetmez
         )
         karar = yanit.strip().upper()
-        kapsam_ici = karar.startswith("EVET")
-        log.info(f"[Kapsam Kontrol / LLM] '{sorgu[:60]}' → {karar} → {'İçi' if kapsam_ici else 'Dışı'}")
+        # Yanıt içinde EVET veya HAYIR ara (startswith() yerine — model prefix ekleyebilir)
+        if re.search(r"\bEVET\b", karar):
+            kapsam_ici = True
+        elif re.search(r"\bHAYIR\b", karar):
+            kapsam_ici = False
+        else:
+            # Belirsiz yanıt → güvenli taraf: kapsam içi say, retrieval'a bırak
+            log.warning(f"[Kapsam Kontrol / LLM] Belirsiz yanıt '{karar[:30]}', kapsam içi varsayıldı")
+            kapsam_ici = True
+        log.info(f"[Kapsam Kontrol / LLM] '{sorgu[:60]}' → {karar[:20]} → {'İçi' if kapsam_ici else 'Dışı'}")
         return kapsam_ici
     except Exception as e:
         log.warning(f"[Kapsam Kontrol / LLM] Hata, keyword fallback devreye girdi: {e}")
