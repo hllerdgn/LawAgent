@@ -518,6 +518,7 @@ TEMEL VE KESİN KURALLAR:
    Asla "Türk Konsum Kanunu", "Tüketici Kanunu", "Borçlar Hukuku Kanunu" gibi gayriresmi veya uydurma tabirler kullanma.
 5. METİN İÇİ ATIF KURALI (CITATION): Kaynaktan aldığın her bilginin hemen sonuna kaynak etiketini [K1], [K2] şeklinde iliştir. (Örnek: "Tüketici, mesafeli sözleşmelerde on dört gün içinde herhangi bir gerekçe göstermeksizin cayma hakkına sahiptir [K1].")
 6. TARAFLI / GENEL YORUM YASAĞI: Kaynak metninde yazmayan subjektif yorumlar ("bu hak tüketiciler için harika bir avantajdır" vb.) ekleme; nesnel, duru ve akademik bir Türk hukuku üslubu kullan.
+7. GENEL VE SOYUT SORULAR (SIFAT BELİRSİZLİĞİ): Eğer kullanıcı "Borçlar hukuku kapsamında temel haklarım nelerdir?" gibi genel bir soru soruyorsa ve sıfatı (alacaklı mı, borçlu mu vb.) belirtilmemişse: Borçlar hukukunda tek bir soyut "temel haklar listesi" bulunmadığını, hakların borç ilişkisindeki alacaklı (ifa talebi, temerrüt ve seçimlik haklar, tazminat) veya borçlu (def'i hakları, ifa, aşırı ifa güçlüğü / uyarlama) konumuna göre belirlendiğini izah ederek sağlanan kaynaklar çerçevesinde yapılandırılmış bir açıklama sun.
 
 YANIT PLANI:
 ### Hukuki Değerlendirme

@@ -502,13 +502,14 @@ _dynamic_expand_cache: Dict[str, str] = {}
 
 def expand_query_dynamic(query: str) -> str:
     """
-    LLM Tabanlı Dinamik Hukuki Sorgu Genişletici.
-    Kullanıcının sorusunu analiz ederek ilgili kanun (TBK, TTK, TKHK) kavramlarını,
-    anahtar terimleri ve olası madde numaralarını anlık ve dinamik olarak çıkarır.
-    Statik sözlük bağımlılığını ortadan kaldırır.
+    Kavram Odaklı Dinamik Hukuki Sorgu Anlayıcı ve Genişletici (Concept-Based Query Understanding).
+    Sorguyu hukuki olarak analiz eder; doktrinsel kurumları, taraf haklarını ve kavramları
+    (ifa, temerrüt, tazminat, seçimlik haklar, def'i, fesih vb.) dinamik olarak üretir.
+    KESİNLİKLE sabit madde numarası üretmez veya zorlamaz; retrieval motorunun anlamsal uzayda
+    doğru maddeleri kendisinin bulmasını sağlar.
     """
     q_clean = query.strip()
-    if len(q_clean.split()) < 3:
+    if len(q_clean.split()) < 2:
         return expand_query(query)
 
     cache_key = q_clean.lower()
@@ -527,10 +528,13 @@ def expand_query_dynamic(query: str) -> str:
         model = os.getenv("GROQ_MODEL", "groq/compound-mini")
 
         prompt = (
-            "Sen Türk hukuku (TBK, TTK, TKHK) mevzuat arama uzmanısın. "
-            "Kullanıcının sorusuna en uygun kanun maddelerini bulabilmek için "
-            "ilgili 4-8 hukuki anahtar kavramı ve kanun adını (TBK, TTK veya TKHK) "
-            "boşlukla ayırarak tek satırda yaz. Yorum veya açıklama ekleme.\n\n"
+            "Sen bir Türk Hukuku uzmanısın. Kullanıcının sorusundaki hukuki uyuşmazlığı ve doktrinsel kavramları analiz et.\n"
+            "GÖREV: Soruyla doğrudan ilgili 5-8 temel hukuki kavramı, kurum adını ve taraf haklarını (ör. ifa talebi, temerrüt, tazminat, dönme, def'i hakları, uyarlama vb.) "
+            "boşlukla ayırarak tek satırda yaz.\n"
+            "KURALLAR:\n"
+            "1. KESİNLİKLE madde numarası (m. 112 vb.) YAZMA.\n"
+            "2. Kullanıcının sıfatını (alacaklı/borçlu/tüketici) kesin varsayma; olası tüm hukuki kurum ve hak kavramlarını ekle.\n"
+            "3. Yorum veya açıklama ekleme.\n\n"
             f"Soru: {query}\n"
             "Hukuki Kavramlar:"
         )
@@ -539,7 +543,7 @@ def expand_query_dynamic(query: str) -> str:
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_tokens=80,
+            max_tokens=70,
         )
         expanded_terms = resp.choices[0].message.content or ""
         expanded_terms = re.sub(r"<think>.*?</think>", "", expanded_terms, flags=re.DOTALL).strip()
