@@ -23,6 +23,8 @@ from pydantic import BaseModel
 
 from retriever import LegalRetriever
 import pdf_processor
+from legal_normalizer import full_post_process, normalize_legal_terminology, sanitize_markdown_typography
+from citation_engine import build_grounded_context, validate_and_extract_citations
 
 # Logging
 
@@ -500,34 +502,32 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
 
 
 # Sistem Promptları
-_SISTEM_PROMPT_TEMPLATE = """Sen sadece Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK) ve Tüketicinin Korunması Hakkında Kanun (TKHK) alanlarında uzmanlaşmış, profesyonel bir Yapay Zeka Hukuk Asistanısın.
+_SISTEM_PROMPT_TEMPLATE = """Sen, Türk Hukuku alanında uzmanlaşmış, yalnızca sağlanan yasal kaynaklara dayanarak bilgi veren profesyonel bir Yapay Zeka Hukuk Asistanısın.
 
-BAĞLAM (HUKUKİ DEĞERLENDİRME İÇİN KULLANILACAK TEMEL METİN):
-{context}
+GÖREVİN:
+Kullanıcının sorusunu, aşağıda <HUKUKI_KAYNAKLAR> bloğu içerisinde verilen resmi kanun maddeleri ve içtihat metinlerini temel alarak yanıtlamaktır.
 
-TEMEL İLKELER VE GÖREVLER:
-1. İki Aşamalı Yanıt Yapısı: Kullanıcıya sunacağın yanıtı kesinlikle 'Hukuki Değerlendirme' (veya özel belgeler için 'Kısa Bilgi') ve 'Dayanak Mevzuat' (veya özel belgeler için 'Dayanak Belge') olmak üzere iki ana başlık altında yapılandır.
-2. Etkileşimli Kapanış: Yanıtını sonlandırırken kullanıcıyı yönlendirmek amacıyla etkileşimli bir soru sor. Eğer soru kanunlarla (TBK/TTK/TKHK) ilgiliyse "Bu konuyla ilgili daha detaylı bilgi almak veya emsal kararları incelemek ister misiniz?" şeklinde bir kapanış ekle. Eğer soru bağlamdaki özel bir belgeyle (örn. sisteme yüklenen CV) ilgiliyse, "Bu belge hakkında başka bir sorunuz var mı?" gibi uygun bir kapanış sorusu sor. (Soru tamamen kapsam dışıysa soru ekleme.)
-3. İçtihat Yasağı: Bu ilk aşamada, bağlamda yer alsa dahi Yargıtay kararlarına, esas/karar numaralarına veya daire isimlerine kesinlikle atıf yapma.
-4. Dayanak Gösterme ve Madde Numaraları (KRİTİK):
-   - Sadece BAĞLAM metninde açıkça belirtilen bilgileri ve kanun maddelerini referans göster.
-   - Eğer bağlam bir kanun maddesi ise referans formatı: (TBK m. 117), (TKHK m. 11).
-   - Eğer bağlam sisteme yüklenmiş özel bir belge ise (örn. CV), doğrudan o belgenin içeriğini dayanak göster.
-5. Kapsam Dışı Durumlar ve Özel Belgeler:
-   - Eğer kullanıcının sorusu açıkça BAĞLAM içerisinde sunulan özel bir belge ile ilgiliyse, yalnızca o belgedeki bilgilere dayanarak cevap ver.
-   - Eğer kullanıcının sorusu genel bir hukuki kavram veya hak sorgusuysa, BAĞLAMDA yer alan kanun maddelerini sentezleyerek 'Hukuki Değerlendirme' bölümünde net, doyurucu ve yapılandırılmış bir açıklama sun.
-   - Yalnızca soru tamamen TBK, TTK veya TKHK dışında kalan (örneğin Ceza, Aile, İdare Hukuku gibi) bir alana aitse şu ifadeyi kullan: "Üzgünüm, mevcut veri tabanım ve uzmanlık alanım yalnızca Türk Borçlar Kanunu, Türk Ticaret Kanunu ve Tüketicinin Korunması Hakkında Kanun ile sınırlıdır. Sorunuzdaki hukuki uyuşmazlık uzmanlık alanım dışında kalmaktadır."
-6. Uydurma Yasağı: Bağlamda geçmeyen hiçbir kanun veya madde numarası (TMK, CMK, HMK vb.) kullanma.
+TEMEL VE KESİN KURALLAR:
+1. SADECE SAĞLANAN KAYNAKLARI KULLAN: Cevabındaki her hukuki tespiti doğrudan <HUKUKI_KAYNAKLAR> içindeki metinlere dayandır. Kaynaklarda açıkça yer almayan hiçbir kanun hükmünü, ilkeyi, istisnayı veya mahkeme kararını parametrik hafızandan EKLEME.
+2. KAYNAK YOKSA AÇIKÇA BELİRT: Eğer kullanıcının sorusuna cevap vermek için sağlanan kaynaklar yetersizse, kesin hukuki çıkarım yapma; "Sunulan yasal kaynaklar çerçevesinde bu soruya dair doğrudan bir hüküm bulunmamaktadır." ifadesini kullan.
+3. KANUN VE MADDE UYDURMA YASAĞI: Kaynak listesinde bulunmayan hiçbir kanun adını (TMK, CMK, HMK vb.) veya madde numarasını kesinlikle yanıta dahil etme.
+4. RESMİ KANUN TERMİNOLOJİSİ: Kanun isimlerini ilk kullanımda tam ve resmi adıyla, kısaltmasını parantez içinde vererek kullan:
+   - "6502 sayılı Tüketicinin Korunması Hakkında Kanun (TKHK)"
+   - "6098 sayılı Türk Borçlar Kanunu (TBK)"
+   - "6102 sayılı Türk Ticaret Kanunu (TTK)"
+   Asla "Türk Konsum Kanunu", "Tüketici Kanunu", "Borçlar Hukuku Kanunu" gibi gayriresmi veya uydurma tabirler kullanma.
+5. METİN İÇİ ATIF KURALI (CITATION): Kaynaktan aldığın her bilginin hemen sonuna kaynak etiketini [K1], [K2] şeklinde iliştir. (Örnek: "Tüketici, mesafeli sözleşmelerde on dört gün içinde herhangi bir gerekçe göstermeksizin cayma hakkına sahiptir [K1].")
+6. TARAFLI / GENEL YORUM YASAĞI: Kaynak metninde yazmayan subjektif yorumlar ("bu hak tüketiciler için harika bir avantajdır" vb.) ekleme; nesnel, duru ve akademik bir Türk hukuku üslubu kullan.
 
-YANIT FORMATI:
-**Hukuki Değerlendirme** (veya Özel belge ise **Kısa Bilgi**)
-[Profesyonel, tatmin edici ve nesnel bir dille yazılmış hukuki analiz veya belge özeti]
+YANIT PLANI:
+### Hukuki Değerlendirme
+[Kullanıcının sorusuna doğrudan, net ve kaynaklara dayalı hukuki analiz. İlgili yerlerde [K1], [K2] etiketleri kullanılır.]
 
-**Dayanak Mevzuat** (veya Özel belge ise **Dayanak Belge**)
-- [Kanun/Belge Adı] [Madde/Bölüm No]: [İçeriğin Özeti]
+### Dayanak Hükümler
+- [Resmi Kanun Adı] m. [Madde No]: [Maddenin olaya uygulanan temel kuralının 1 cümlelik özeti]
 
 ---
-[Konuya uygun etkileşimli kapanış sorusu]
+[Gerekiyorsa konuya uygun etkileşimli tek bir profesyonel yönlendirme sorusu]
 """
 
 _ICTIHAT_PROMPT_TEMPLATE = """Sen Türk Borçlar, Ticaret ve Tüketici Hukuku alanlarında uzmanlaşmış, profesyonel bir Yapay Zeka Hukuk Asistanısın.
@@ -557,7 +557,7 @@ BAĞLAM (REFERANS ALINACAK BİLGİ KAYNAĞI):
 
 TEMEL İLKELER VE GÖREVLER:
 1. Dil Zorunluluğu: Yanıtlarını her zaman SADECE TÜRKÇE olarak oluştur. Yabancı dilde veya farklı alfabelerde (ör. Çince vb.) hiçbir ifade kullanma.
-2. Bağlama Sadakat: Yanıtlarını KESİNLİKLE sadece sana sağlanan BAĞLAM içerisindeki verilere dayanarak oluştur. Kendi ön bilgilerini, genel kültürünü veya dış kaynaklı bilgileri yanıtına ASLA dahil etme. (Örneğin; bağlamda bir kurumda staj yapıldığı geçiyorsa, o kurumun tarihi veya ne iş yaptığı hakkında genel bilgi verme.)
+2. Bağlama Sadakat: Yanıtlarını KESİNLİKLE sadece sana sağlanan BAĞLAM içerisindeki verilere dayanarak oluştur. Kendi ön bilgilerini, genel kültürünü veya dış kaynaklı bilgileri yanıtına ASLA dahil etme.
 3. Bilgi Eksikliği Durumu: Eğer kullanıcının sorduğu soruya dair bağlamda herhangi bir bilgi bulunmuyorsa, sadece şu ifadeyi kullan: "İncelediğim belgeler içerisinde bu konu hakkında herhangi bir bilgi bulunmamaktadır." Bu ifadenin dışına çıkma.
 4. Kimlik Soruları: "Sen kimsin?" veya benzeri kimlik sorularına, "Sisteme yüklenen belgeler üzerinden size yardımcı olmak üzere tasarlanmış bir yapay zeka asistanıyım." şeklinde profesyonel ve kısa bir yanıt ver; bu tür sorularda dayanak belge gösterme.
 5. Etkileşimli Kapanış: Yanıtını tamamladıktan sonra, bir alt satıra geçerek kullanıcıyı iletişime teşvik eden şu nazik kapanış sorusunu mutlaka ekle: "Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?"
@@ -572,28 +572,8 @@ YANIT FORMATI:
 Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?
 """
 
-def build_context(chunks: list, source_filter: Optional[str] = None) -> str:
-    satirlar = []
-    for i, c in enumerate(chunks, 1):
-        source_type = str(c.get("source", "Mevzuat")).upper()
-        if source_filter and source_type != source_filter.upper():
-            continue
-        
-        if source_type == "SITE_DOCUMENT":
-            kaynak_adi = c.get("filename", "Bilinmeyen Belge")
-            satirlar.append(
-                f"--- KAYNAK {i} ---\n"
-                f"BELGE: {kaynak_adi}\n"
-                f"METİN: {c.get('text', '')}"
-            )
-        else:
-            satirlar.append(
-                f"--- KAYNAK {i} ---\n"
-                f"KANUN: {c.get('law', '?')}\n"
-                f"MADDE: {c.get('article_no', '?')}\n"
-                f"METİN: {c.get('text', '')}"
-            )
-    return "\n\n".join(satirlar)
+def build_context(chunks: list, source_filter: Optional[str] = None) -> Tuple[str, Dict[str, Dict]]:
+    return build_grounded_context(chunks, source_filter=source_filter)
 
 
 # Singleton Retriever
@@ -636,8 +616,8 @@ class LegalGenerator:
         ]
 
         if ictihat_chunks:
-            context = build_context(ictihat_chunks)
-            ictihat_prompt = _ICTIHAT_PROMPT_TEMPLATE.format(context=context)
+            context_str, _ = build_context(ictihat_chunks)
+            ictihat_prompt = _ICTIHAT_PROMPT_TEMPLATE.format(context=context_str)
             try:
                 yanit = call_groq_completion(
                     client=self.client,
@@ -651,6 +631,7 @@ class LegalGenerator:
                     temperature=0.1,
                     max_tokens=800,
                 )
+                yanit = full_post_process(yanit)
             except Exception as e:
                 log.error(f"İçtihat üretim hatası: {e}")
                 yanit = "İçtihat bilgilerini getirirken teknik bir sorun oluştu. Lütfen tekrar deneyin."
@@ -770,8 +751,6 @@ class LegalGenerator:
             # Site document kontrolü
             has_site_doc = any(c.get("source") == "site_document" for c in chunks)
 
-            # (Kapsam dışı kelime kontrolü artık ön filtrede yapılıyor — bu blok kaldırıldı)
-
             # OUT_OF_SCOPE
             if not chunks:
                 no_result = (
@@ -791,12 +770,12 @@ class LegalGenerator:
             # Tüm chunk'ları belleğe kaydet (içtihat aşaması için)
             self.memory.save_chunks(session_id, chunks)
 
-            # Mevzuat veya Site Belgesi odaklı yanıt
-            context = build_context(chunks)
+            # Mevzuat veya Site Belgesi odaklı yapılandırılmış bağlam
+            context_str, source_map = build_context(chunks)
             if has_site_doc:
-                sistem_prompt = _SITE_SISTEM_PROMPT_TEMPLATE.format(context=context)
+                sistem_prompt = _SITE_SISTEM_PROMPT_TEMPLATE.format(context=context_str)
             else:
-                sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context)
+                sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context_str)
 
             yanit = call_groq_completion(
                 client=self.client,
@@ -804,8 +783,8 @@ class LegalGenerator:
                     {"role": "system", "content": sistem_prompt},
                     {"role": "user", "content": f"SORU: {sorgu}"},
                 ],
-                temperature=0.2,
-                max_tokens=2500,  # Reasoning modelleri <think> bloğu üretir; yeterli alan gerekli
+                temperature=0.1,
+                max_tokens=2500,
             )
 
             # Yanıt boş geldiyse (think bloğu token limitini doldurdu) → sonraki modelle yeniden dene
@@ -822,7 +801,7 @@ class LegalGenerator:
                                 {"role": "system", "content": sistem_prompt},
                                 {"role": "user", "content": f"SORU: {sorgu}"},
                             ],
-                            temperature=0.2,
+                            temperature=0.1,
                             max_tokens=2500,
                         )
                         _fb_yanit = clean_llm_response(_fb_resp.choices[0].message.content or "")
@@ -834,42 +813,36 @@ class LegalGenerator:
                         log.warning(f"[Yanıt] Fallback '{_fallback}' başarısız: {_fb_err}")
                         continue
 
-            # Hallüsinasyon kontrolü
+            # ── 1. Post-Processing (Terminoloji ve Tipografi Normalizasyonu) ──
+            yanit = full_post_process(yanit)
+
+            # ── 2. Deterministik Atıf Doğrulama & Kaynak Eşleme ─────────────
+            sanitized_yanit, validated_sources, is_grounded = validate_and_extract_citations(
+                yanit, source_map, fallback_chunks=chunks
+            )
+            yanit = sanitized_yanit
+
+            # ── 3. Hallüsinasyon Kontrolü ────────────────────────────────────
             is_faithful, validation_warning, _ = (
                 self.hallucination_validator.validate_faithfulness(yanit, chunks)
             )
-            if not is_faithful:
+            if not is_faithful and validation_warning:
                 yanit = yanit + f"\n\n{validation_warning}"
 
             log.info(
-                f"[Aşama 1] Başarılı: intent={intent}, k={k}, faithful={is_faithful}, sources={len(chunks)}"
+                f"[Aşama 1] Başarılı: intent={intent}, k={k}, faithful={is_faithful}, sources={len(validated_sources)}"
             )
             self.memory.add_exchange(session_id, sorgu, yanit)
 
-            # Kaynak listesi
-            sources = []
-            for c in chunks:
-                if str(c.get("source", "")).lower() != "yargitay":
-                    sources.append(
-                        {
-                            "kanun": c.get("law") or c.get("filename") or "Mevzuat",
-                            "madde": (
-                                str(c.get("article_no"))
-                                if c.get("article_no") is not None
-                                else ""
-                            ),
-                            "ozet": c.get("text") or "",
-                        }
-                    )
-
             return {
                 "answer": yanit,
-                "sources": sources,
+                "sources": validated_sources,
                 "intent": intent,
                 "query_rewritten": yeni_sorgu if yeni_sorgu != sorgu else None,
                 "hallucination_check": {
                     "is_faithful": is_faithful,
                     "warning": validation_warning,
+                    "is_grounded": is_grounded,
                 },
                 "sure_ms": int((time.time() - t0) * 1000),
                 "filtered": False,
