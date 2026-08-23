@@ -1,0 +1,43 @@
+# Docker build context'ine dahil edilmeyecek dosyalar
+# (Docker image boyutunu küçültür, build hızlandırır)
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.pyo
+
+# ── Sanal ortam ───────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Büyük veri dosyaları (volume ile mount edilecek) ──────
+src/data/qdrant_storage/
+src/data/*.pkl
+# Not: *.json dosyaları pipeline tarafından oluşturulacak
+# Eğer mevcut corpus'larla başlamak istiyorsanız bu satırı kaldırın:
+# src/data/*.json
+
+# ── Gizli bilgiler ────────────────────────────────────────
+.env
+
+# ── IDE ve işletim sistemi ───────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ── Log ve geçici dosyalar ────────────────────────────────
+*.log
+logs/
+*.tmp
+
+# ── Node.js (frontend varsa) ──────────────────────────────
+node_modules/
+
+# ── Jupyter ───────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
