@@ -1,132 +1,118 @@
 # ⚖️ LawAgent AI — Türk Hukuku RAG Sistemi
 
-> TÜBİTAK 2209/A kapsamında geliştirilen, Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketici Kanunu (TKHK) ve Yargıtay kararlarını kapsayan yapay zeka destekli akıllı hukuk asistanı projesidir.
-
-Bu proje iki ana bileşenden oluşmaktadır:
-1. **BACKEND (FastAPI & RAG):** Hukuki metinleri işleyen, vektör tabanlı arama yapan ve yapay zeka entegrasyonu sağlayan Python sunucusu.
-2. **FRONTEND (React & Vite):** Kullanıcıların hukuk asistanıyla etkileşime girebileceği modern ve dinamik arayüz.
+> Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketicinin Korunması Hakkında Kanun (TKHK) ve Yargıtay emsal kararlarını kapsayan, yapay zeka destekli akıllı hukuk asistanı projesidir.
 
 ---
 
-## ⚠️ ÖNEMLİ BİLGİ: GitHub'dan İndirilen Dosyalar Hakkında
+## 🏛️ Mimari ve Bileşenler
 
-Bu projeyi GitHub'dan indirdiğinizde, `.gitignore` kuralları gereği **hukuki veri seti (`.json` dosyaları) ve vektör veritabanı (Qdrant) indirilmez.** Bu dosyalar boyutu çok büyük olduğu için Git'te takip edilmez. 
+Proje iki ana katmandan oluşmaktadır:
 
-**Bu nedenle projeyi ilk kez kurduğunuzda öncelikle veri kazıma (scraping) ve vektör oluşturma (embedding) ardışık düzenini (pipeline) çalıştırmanız ZORUNLUDUR.** Aksi halde API sunucusu eksik veri hatası vererek çalışmayacaktır.
+1. **BACKEND (FastAPI & Hibrit RAG):** 
+   - **Retriever:** Mürşit-Base-TR-Retrieval (Dense Vektör) + BM25+ (Sparse Keyword) + Density-Aware Hybrid Fusion.
+   - **Reranker:** Cross-Encoder (BAAI/bge-reranker-base) ile yüksek hassasiyetli yeniden sıralama.
+   - **Generator:** Llama-3.3-70b (Groq API) ile deterministik [K1], [K2] atıflı hukuki yanıt üretimi.
+   - **Legal Intent:** Sıfır gecikmeli hukuki niyet, sıfat ve kavram türü (Hak/Yükümlülük/Sorumluluk/Yetki) analiz motoru.
+   - **Citation Engine:** Üretilen yanıtları kaynak maddelerle deterministik olarak doğrulayan ve filtreleyen atıf motoru.
+
+2. **FRONTEND (React 18 & Vite & Tailwind v4):** 
+   - Çoklu tema motoru (Hallmark Design System: Lumen, Cobalt, Carnival, Grid, Hum), interaktif sohbet arayüzü ve yönetici paneli.
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma Rehberi
-
-Projeyi yerel bilgisayarınızda ayağa kaldırmak için aşağıdaki adımları sırasıyla izleyin.
+## 🚀 Hızlı Başlangıç
 
 ### 1. Ön Koşullar
-- **Python 3.11+** (Backend için)
-- **Node.js 18+** (Frontend için)
-- **Groq API Anahtarı:** LLM (Llama-3) kullanımı için [console.groq.com](https://console.groq.com) üzerinden ücretsiz bir API anahtarı almanız gerekir.
+- **Python 3.10+**
+- **Node.js 18+**
+- **Groq API Anahtarı:** [console.groq.com](https://console.groq.com) üzerinden temin edilebilir.
+- **Qdrant Vektör Veritabanı:** Yerel Docker veya Qdrant Cloud.
 
-### 2. Repoyu Klonlayın
-```bash
-git clone https://github.com/KULLANICI_ADI/LawAgent.git
-cd LawAgent
-```
+---
 
-### 3. Backend Kurulumu ve Veri Tabanının Hazırlanması
-
-Öncelikle sanal ortamı kurup veritabanını sıfırdan oluşturmalıyız.
+### 2. Backend Kurulumu ve Başlatılması
 
 ```bash
 cd BACKEND
 
-# 1. Sanal ortam (venv) oluşturun ve aktif edin
+# 1. Sanal ortamı hazırlayın
 python -m venv .venv
-# Windows için: .venv\Scripts\activate
-# Mac/Linux için: source .venv/bin/activate
+# Windows: .venv\Scripts\activate
+# Linux/Mac: source .venv/bin/activate
 
 # 2. Bağımlılıkları yükleyin
 pip install -r requirements.txt
 
-# 3. Ortam değişkenlerini yapılandırın
-# .env.example dosyasının bir kopyasını alıp adını .env yapın.
+# 3. Ortam değişkenlerini ayarlayın
 cp .env.example .env
-# Oluşturulan .env dosyasını bir metin editörüyle açıp GROQ_API_KEY bilginizi ekleyin.
+# .env dosyasına GROQ_API_KEY ve varsa QDRANT_URL bilgilerinizi ekleyin.
 
-# 4. VERİ TABANINI OLUŞTURUN (ZORUNLU İLK ADIM)
-# Mevzuat ve Yargıtay sitelerinden güncel veriler çekilecek, parçalanacak ve vektörleştirilecektir.
-# İşlem internet hızınıza ve bilgisayarınıza bağlı olarak birkaç dakika sürebilir.
-# Windows PowerShell için:
-.\run_pipeline.ps1
-
-# Linux/Mac Bash için:
-bash run_pipeline.sh
-
-# 5. Sunucuyu başlatın
-python src/generator.py --api
+# 4. Sunucuyu başlatın
+python main.py --api
+# veya interaktif CLI modunda test etmek için:
+python main.py --interactive
 ```
-*(Sunucu başarıyla başlatıldığında `http://localhost:8000` portunda çalışacaktır. Bu terminali kapatmayın.)*
 
-### 4. Frontend Kurulumu ve Başlatılması
+---
 
-Backend çalışmaya devam ederken, **yeni bir terminal penceresi açın** ve kullanıcı arayüzünü ayağa kaldırın.
+### 3. Frontend Kurulumu ve Başlatılması
+
+Yeni bir terminal penceresinde:
 
 ```bash
 cd FRONTEND
 
-# 1. Gerekli kütüphaneleri yükleyin
+# 1. Bağımlılıkları yükleyin
 npm install
 
-# 2. Geliştirme ortamı yapılandırması (Opsiyonel)
-# Eğer Backend localhost:8000 portunda çalışıyorsa Vite yapılandırması genellikle sorunsuz çalışır.
-# Sorun yaşarsanız FRONTEND dizinine bir .env dosyası oluşturup aşağıdaki değeri ekleyebilirsiniz:
-# VITE_API_URL=http://localhost:8000
-
-# 3. Arayüzü başlatın
+# 2. Geliştirme sunucusunu başlatın
 npm run dev
 ```
-*(Terminalde beliren `http://localhost:5173` bağlantısına tıklayarak LawAgent web arayüzüne ulaşabilirsiniz.)*
+
+Arayüze `http://localhost:5173` adresinden erişebilirsiniz.
 
 ---
 
-## 📦 Mimari Yapı ve Teknolojiler
+## 📦 Proje Dizin Yapısı
 
-```
-LawAgent/
-├── docs/                   # Proje dökümantasyonu ve fizibilite raporları
-│   └── uyap-feasibility.md # UYAP Entegrasyonu Fizibilite Raporu
-├── BACKEND/
+```text
+Bitirme-projesi/
+├── BACKEND/                        # Python Backend Katmanı
+│   ├── config/                     # settings.py & embedding_models.py
+│   ├── core/                       # logging.py & exceptions.py
+│   ├── infrastructure/             # groq_client.py & qdrant_client.py
+│   ├── services/                   # prompts.py & reranker.py
+│   ├── api/                        # schemas.py & app.py (FastAPI)
+│   ├── src/                        # Çekirdek RAG motoru (retriever, generator, legal_intent)
+│   ├── main.py                     # Kanonik giriş noktası
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── requirements.txt
+│
+├── FRONTEND/                       # React 18 + Vite + Tailwind v4 Web Arayüzü
 │   ├── src/
-│   │   ├── scraper_mevzuat/    # mevzuat.gov.tr veri kazıma (Scrapy)
-│   │   ├── scraper_yargi/      # yargitay.gov.tr veri kazıma (Scrapy)
-│   │   ├── scraper/            # Ön işleme (preprocessing) ve parçalama (chunking)
-│   │   ├── data/               # (İndirilmez!) Corpus JSON'ları ve Qdrant DB burada oluşur
-│   │   ├── embedder.py         # Mursit-Base-TR-Retrieval vektörleştirme
-│   │   ├── retriever.py        # BM25 + Dense hybrid arama motoru
-│   │   └── generator.py        # FastAPI Sunucusu & Llama-3 (Groq) entegrasyonu
-│   └── run_pipeline.ps1/sh     # Tüm veri akışını otomatize eden betikler
-└── FRONTEND/
-    ├── src/
-    │   ├── app/pages/          # Web arayüzü ana sayfaları (Home, About, vb.)
-    │   └── app/components/     # UI Bileşenleri
-    └── package.json            # Node.js yapılandırması
+│   │   ├── app/pages/              # Web sayfaları (Home, Admin, Blog, vb.)
+│   │   ├── themes/                 # Hallmark çoklu tema sistemi
+│   │   └── config/                 # Multi-tenant yapılandırması
+│   └── package.json
+│
+├── docs/                           # Sistem ve Mimari Dokümantasyonu
+│   ├── uptime-monitoring.md        # Uptime ve Keep-Alive izleme rehberi
+│   └── retrieval_mimarisi_kapsamli.md # Kapsamlı RAG mimarisi teknik dokümanı
+│
+├── .github/workflows/              # HF Space 7/24 Keep-Alive iş akışı
+├── .env.example                    # Örnek ortam değişkenleri
+└── .gitignore                      # Git takip kuralları
 ```
 
-| Bileşen | Teknoloji |
-|---------|-----------|
-| **Frontend** | React, Vite, TypeScript, TailwindCSS |
-| **API Server** | FastAPI, Uvicorn |
-| **Web Scraping**| Scrapy, BeautifulSoup4 |
-| **Vektör DB** | Qdrant (Local) |
-| **LLM (Model)** | Llama-3.3-70b (Groq Üzerinden) |
-
 ---
-
-## 📸 Uygulama Ekran Görüntüsü
-
-![LawAgent AI Chatbot Arayüzü](lawagent_chatbot_screenshot.png)
 
 ## 📚 Dokümantasyon
 
-*   [UYAP Entegrasyonu Fizibilite Raporu](docs/uyap-feasibility.md): UYAP sistemi ile resmi entegrasyon imkanları, teknik/hukuki engeller ve alternatif veri kaynakları hakkında analiz.
+* [Kapsamlı Retrieval ve RAG Mimarisi](docs/retrieval_mimarisi_kapsamli.md): Hybrid retrieval, density-aware alpha, Cross-Encoder reranking ve deterministik atıf motoru detayları.
+* [Uptime & Keep-Alive Monitoring](docs/uptime-monitoring.md): Hugging Face Spaces sunucusunun 7/24 uyanık ve kesintisiz tutulması için GitHub Actions izleme rehberi.
+
+---
 
 ## 📄 Lisans
 Bu proje Bitirme Projesi kapsamında geliştirilmiştir.

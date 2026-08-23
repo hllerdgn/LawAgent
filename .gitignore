@@ -36,16 +36,16 @@ qdrant_storage/
 *.index
 
 # ════════════════════════════════════════════════
-# 4. POSTER, MEDYA VE OLUŞTURULAN DOSYALAR
+# 4. KİŞİSEL BELGELER, TEZ, SUNUM VE MEDYA (ASSETS)
 # ════════════════════════════════════════════════
-# Poster ve görsel dosyaları (oluşturulan / büyük dosyalar)
+assets/
+assets/*
 *.pdf
 *.svg
 *.pptx
 *.docx
 lawagent_poster.png
 lawagent_qr.png
-lawagent_chatbot_screenshot.png
 poster_preview.png
 poster_preview_with_qr.png
 QR_Kodum_1-1024.png
@@ -54,11 +54,7 @@ poster.html
 screenshot_chatbot.html
 take_poster_screenshot.js
 take_screenshot.js
-# Kök dizin node_modules (Puppeteer araçları için kurulmuştu)
 /package.json
-
-# İstisna: Uygulama ekran görüntüsü README için tutulacak
-!lawagent_chatbot_screenshot.png
 
 # ════════════════════════════════════════════════
 # 5. İŞLETİM SİSTEMİ & ARAÇLAR
