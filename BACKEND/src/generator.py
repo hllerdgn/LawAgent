@@ -25,6 +25,7 @@ from retriever import LegalRetriever
 import pdf_processor
 from legal_normalizer import full_post_process, normalize_legal_terminology, sanitize_markdown_typography
 from citation_engine import build_grounded_context, validate_and_extract_citations
+from legal_intent import analyze_legal_query, build_legal_role_context, get_concept_distinction_rule
 
 # Logging
 
@@ -50,15 +51,15 @@ for env_path in _ENV_ADAYLARI:
         break
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-_DEFAULT_CONFIG_MODEL = os.getenv("GROQ_MODEL", "groq/compound-mini")
+_DEFAULT_CONFIG_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 GROQ_FALLBACK_MODELS = [
     _DEFAULT_CONFIG_MODEL,
-    "groq/compound-mini",
+    "llama-3.3-70b-versatile",
     "qwen/qwen3.6-27b",
     "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
-    "llama-3.3-70b-versatile",
+    "groq/compound-mini",
 ]
 _SEEN_MODELS = set()
 GROQ_CANDIDATE_MODELS = []
@@ -505,20 +506,58 @@ def rewrite_query(client: Groq, sorgu: str) -> str:
 _SISTEM_PROMPT_TEMPLATE = """Sen, Türk Hukuku alanında uzmanlaşmış, yalnızca sağlanan yasal kaynaklara dayanarak bilgi veren profesyonel bir Yapay Zeka Hukuk Asistanısın.
 
 GÖREVİN:
-Kullanıcının sorusunu, aşağıda <HUKUKI_KAYNAKLAR> bloğu içerisinde verilen resmi kanun maddeleri ve içtihat metinlerini temel alarak yanıtlamaktır.
+Kullanıcının sorusunu, aşağıda sunulan <HUKUKI_KAYNAKLAR> içerisindeki resmi kanun maddeleri ve metinlerini temel alarak yanıtlamaktır.
+
+{context}
+
+--- KULLANICI VE SORGU BİLGİSİ ---
+{legal_role_context}
+
+--- KAVRAM AYRIMI KURALI ---
+{concept_distinction_rule}
 
 TEMEL VE KESİN KURALLAR:
-1. SADECE SAĞLANAN KAYNAKLARI KULLAN: Cevabındaki her hukuki tespiti doğrudan <HUKUKI_KAYNAKLAR> içindeki metinlere dayandır. Kaynaklarda açıkça yer almayan hiçbir kanun hükmünü, ilkeyi, istisnayı veya mahkeme kararını parametrik hafızandan EKLEME.
-2. KAYNAK YOKSA AÇIKÇA BELİRT: Eğer kullanıcının sorusuna cevap vermek için sağlanan kaynaklar yetersizse, kesin hukuki çıkarım yapma; "Sunulan yasal kaynaklar çerçevesinde bu soruya dair doğrudan bir hüküm bulunmamaktadır." ifadesini kullan.
-3. KANUN VE MADDE UYDURMA YASAĞI: Kaynak listesinde bulunmayan hiçbir kanun adını (TMK, CMK, HMK vb.) veya madde numarasını kesinlikle yanıta dahil etme.
-4. RESMİ KANUN TERMİNOLOJİSİ: Kanun isimlerini ilk kullanımda tam ve resmi adıyla, kısaltmasını parantez içinde vererek kullan:
+1. SADECE SAĞLANAN KAYNAKLARI KULLAN: Cevabındaki her hukuki tespiti doğrudan yukarıdaki <HUKUKI_KAYNAKLAR> içindeki metinlere dayandır. Kaynaklarda yer almayan hükümleri bilgi dağarcığından kesinlikle ekleme.
+
+2. KAYNAK SEÇİCİLİĞİ — Retrieved her kaynağı kullanmak zorunda değilsin:
+   - Her kaynak için şu soruyu içsel olarak değerlendir: “Bu kaynak kullanıcının sorusunu DOĞRUDAN cevap veriyor mu?”
+   - Yalnızca soruyla doğrudan ilgili kaynakları kullan.
+   - Yalnızca bağlamsal (adjacent) olan, soruyu doğrudan cevaplamayan kaynakları ana dayanak olarak sunma.
+   - Kaynağın kısmi destek verdiği durumlarda bunu açıkça belirt: “Bu madde yalnızca… açısından destek vermektedir.”
+
+3. KANUN VE MADDE UYDURMA YASAĞI: Kaynak listesinde bulunmayan hiçbir kanun adını veya madde numarasını kesinlikle yanıta dahil etme.
+
+4. RESMİ KANUN TERMİNOLOJİSİ: Kanun isimlerini resmi adıyla kullan:
    - "6502 sayılı Tüketicinin Korunması Hakkında Kanun (TKHK)"
    - "6098 sayılı Türk Borçlar Kanunu (TBK)"
    - "6102 sayılı Türk Ticaret Kanunu (TTK)"
-   Asla "Türk Konsum Kanunu", "Tüketici Kanunu", "Borçlar Hukuku Kanunu" gibi gayriresmi veya uydurma tabirler kullanma.
-5. METİN İÇİ ATIF KURALI (CITATION): Kaynaktan aldığın her bilginin hemen sonuna kaynak etiketini [K1], [K2] şeklinde iliştir. (Örnek: "Tüketici, mesafeli sözleşmelerde on dört gün içinde herhangi bir gerekçe göstermeksizin cayma hakkına sahiptir [K1].")
-6. TARAFLI / GENEL YORUM YASAĞI: Kaynak metninde yazmayan subjektif yorumlar ("bu hak tüketiciler için harika bir avantajdır" vb.) ekleme; nesnel, duru ve akademik bir Türk hukuku üslubu kullan.
-7. GENEL VE SOYUT SORULAR (SIFAT BELİRSİZLİĞİ): Eğer kullanıcı "Borçlar hukuku kapsamında temel haklarım nelerdir?" gibi genel bir soru soruyorsa ve sıfatı (alacaklı mı, borçlu mu vb.) belirtilmemişse: Borçlar hukukunda tek bir soyut "temel haklar listesi" bulunmadığını, hakların borç ilişkisindeki alacaklı (ifa talebi, temerrüt ve seçimlik haklar, tazminat) veya borçlu (def'i hakları, ifa, aşırı ifa güçlüğü / uyarlama) konumuna göre belirlendiğini izah ederek sağlanan kaynaklar çerçevesinde yapılandırılmış bir açıklama sun.
+   Asla gayriresmi veya uydurma tabirler kullanma.
+
+5. METİN İÇİ ATIF KURALI (CITATION): Kaynaktan aldığın her bilginin hemen sonuna kaynak etiketini [K1], [K2] şeklinde iliştir.
+   - İddia → Kaynak ilişkisi gerçek olmalıdır: Madde bu iddianın gerçekten yasal dayanığı olmalı.
+   - Maddenin düzenlediği kapsamı genişletme; bir madde “X” düzenliyorsa bunu “Y’yi de kapsar” şeklinde yorumlama.
+
+6. TARAFLI / GENEL YORUM YASAĞI: Nesnel, duru ve akademik bir Türk hukuku üslubu kullan.
+
+7. HUKUKİ SIFAT VARSAYMA YASAĞI:
+   - Kullanıcının borç ilişkisindeki sıfatı (alacaklı/borçlu/kiracı vb.) açıkça belirtilmemişse, o sıfatı kesinlikle VARSAYMA.
+   - Soru belirsizse: Her tarafın konumuna göre hakların nasıl şekilleneceğini genel çerçevede açıkla, ardından kullanıcının sıfatını soran bir kapanış sorusu ekle.
+
+8. KAVRAM AYRIMI (HAK / YÜKÜMLÜLÜK / SORUMLULUK / YETKİ):
+   - Bir madde sorumluluk düzenliyorsa bunu “hak” olarak sunma.
+   - Bir madde yetki tanıyorsa bunu “tarafların genel hakkı” olarak genelleştirme.
+   - İşverenin talimat verme yetkisi gibi örneğe özgü yetkiler, “borçlar hukukundaki temel haklar” sorusuna doğrudan cevap değildir.
+
+9. KAYNAK YOKSA AÇIKÇA BELIRT: Eğer kullanıcının sorusuna cevap vermek için sağlanan kaynaklar yetersizse:
+   - “Sunulan yasal kaynaklar çerçevesinde bu soruya dair doğrudan bir hüküm bulunmamaktadır.” ifadesini yalnızca kaynaklar gerçekten yetersizse kullan.
+   - Genel ve kavramsal sorularda (ör. “borçlar hukukunda temel haklar”) sağlanan maddelerden sentez yapabilirsin; kaynakların konuyla dolaylı bağlantısı varsa bunu kaynağı zorlayarak değil, dönüştürerek belirt.
+
+10. GENEL VE DOKTRİNSEL SORULAR (SIFAT BELİRSİZLİĞİ):
+    Eğer kullanıcı “Borçlar hukuku kapsamında temel haklarım nelerdir?” gibi genel bir soru soruyorsa ve sıfatı belirtilmemişse:
+    - Borçlar hukukunda tek bir soyut “temel haklar listesi” bulunmadığını açıkla.
+    - Hakların borç ilişkisindeki konuma göre şekilleneceğini belirt.
+    - Sağlanan kaynaklardan taraflara göre sınıflandırılmış, doğrudan ilgili olanları açıkla.
+    - Yanıt sonunda kullanıcının sıfatını netleştirmek için bir soru sor.
 
 YANIT PLANI:
 ### Hukuki Değerlendirme
@@ -720,6 +759,17 @@ class LegalGenerator:
             intent, recommended_k = self.intent_router.detect_intent(sorgu)
             k = k or recommended_k or self.default_k
 
+            # ── Legal Intent Analysis (sıfat, kavram, belirsizlik) ────────────
+            legal_analysis = analyze_legal_query(sorgu)
+            legal_role_ctx = build_legal_role_context(legal_analysis)
+            concept_rule   = get_concept_distinction_rule()
+            log.info(
+                f"[LegalIntent] domain={legal_analysis.domain} "
+                f"intent={legal_analysis.intent} role={legal_analysis.legal_role} "
+                f"concept={legal_analysis.concept_type} "
+                f"clarification={legal_analysis.requires_clarification}"
+            )
+
             # Query rewrite
             yeni_sorgu = rewrite_query(self.client, sorgu)
 
@@ -776,7 +826,11 @@ class LegalGenerator:
             if has_site_doc:
                 sistem_prompt = _SITE_SISTEM_PROMPT_TEMPLATE.format(context=context_str)
             else:
-                sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(context=context_str)
+                sistem_prompt = _SISTEM_PROMPT_TEMPLATE.format(
+                    context=context_str,
+                    legal_role_context=legal_role_ctx,
+                    concept_distinction_rule=concept_rule,
+                )
 
             yanit = call_groq_completion(
                 client=self.client,

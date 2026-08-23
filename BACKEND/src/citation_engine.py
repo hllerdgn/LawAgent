@@ -8,6 +8,7 @@ Bu modül:
      API 'sources' listesine ekler (kaynak uydurma ve mükerrerliği önler).
 """
 
+import os
 import re
 from typing import Dict, List, Tuple, Any, Optional
 from legal_normalizer import CANONICAL_LAW_NAMES
@@ -141,17 +142,26 @@ def validate_and_extract_citations(
                         "citation_key": "auto_matched",
                     })
                     
-    # Eğer hala kaynak listesi boşsa ve metin olumlu bir analiz ise, en yüksek skorlu 2 chunk'ı koy
+    # Eğer hala kaynak listesi boşsa ve metin olumlu bir analiz ise, skorlu chunk'ları koy
+    # v2.3: Skor eşiği — skoru düşük chunk'lar fallback olarak da eklenmez
+    MIN_FALLBACK_SCORE = float(os.environ.get("MIN_FALLBACK_SCORE", "0.25"))
     if not validated_sources and fallback_chunks and len(fallback_chunks) > 0:
-        for c in fallback_chunks[:2]:
+        for c in fallback_chunks[:3]:
+            # Hibrit skor veya cross_score eşiği kontrolü
+            _chunk_score = c.get("skor", c.get("cross_score", 1.0))
+            if _chunk_score < MIN_FALLBACK_SCORE:
+                continue
             law_name = c.get("law") or c.get("filename") or "Mevzuat"
             art_no = str(c.get("article_no", "")).strip()
-            validated_sources.append({
-                "kanun": get_canonical_law_title(law_name) if c.get("source") != "site_document" else law_name,
-                "madde": art_no,
-                "ozet": c.get("text", "")[:300],
-                "citation_key": "top_retrieved",
-            })
+            source_key_fb = f"{law_name}_{art_no}"
+            if source_key_fb not in seen_source_keys:
+                seen_source_keys.add(source_key_fb)
+                validated_sources.append({
+                    "kanun": get_canonical_law_title(law_name) if c.get("source") != "site_document" else law_name,
+                    "madde": art_no,
+                    "ozet": c.get("text", "")[:300],
+                    "citation_key": "top_retrieved",
+                })
             
     is_fully_grounded = len(invalid_tags) == 0
     return sanitized_answer.strip(), validated_sources, is_fully_grounded

@@ -62,6 +62,10 @@ class CFG:
     RERANKER_TOP_K: int = 30            # Rerank edilecek aday sayısı (asla tüm corpus değil)
     RERANKER_MAX_DOC_CHARS: int = 512   # Doküman metninin kesileceği maksimum karakter
     RERANKER_DEVICE: str = "cpu"        # Çalışma cihazı
+    # v2.3 — Minimum Relevance Score Filter
+    # Hybrid (normalize) skoru bu eşiğin altındaki chunk'lar final listeye girmez.
+    # Env var MIN_RELEVANCE_SCORE ile override edilebilir.
+    MIN_RELEVANCE_SCORE: float = float(os.environ.get("MIN_RELEVANCE_SCORE", "0.15"))
 
 
 BOLUM_ANAHTARLARI = ("GEREKÇE", "HÜKÜM", "KARAR", "UYUŞMAZLIK", "SONUÇ")
@@ -1232,9 +1236,10 @@ class LegalRetriever:
         else:
             alpha = self.cfg.ALPHA_DEFAULT
 
-        # 1. Dense Search (Orijinal query ile anlamsal arama)
+        # 1. Dense Search (Kavramsal olarak zenginleştirilmiş sorgu ile anlamsal arama)
         _t_retrieval_start = _time.perf_counter()
-        vec = self.embedder.encode_single(query)
+        dense_query = expanded_q if expanded_q else query
+        vec = self.embedder.encode_single(dense_query)
         dense_results = self._query_qdrant_with_retry(
             self._collection_name, query=vec, limit=self.cfg.TOP_K_DENSE, with_payload=True
         ).points
@@ -1438,33 +1443,71 @@ class LegalRetriever:
             f"total={_t_total_elapsed:.0f}ms"
         )
 
-        return self._filter_results(fused, k)
+        # ── v2.3 — Minimum Relevance Score Filter ──────────────────────────────
+        # Cross-encoder veya diversity penalty sonrası skorsuz chunk'ları temizle.
+        # Not: cross-encoder skor normalize etmez; skor sıfır veya None chunk'ları hariç tut.
+        _min_score = self.cfg.MIN_RELEVANCE_SCORE
+        _before = len(fused)
+        fused_filtered = []
+        for _c in fused:
+            _s = _c.get("skor", None)
+            # Cross-encoder sonrası 'skor' alanı olmayabilir; cross_score kontrol et
+            _cs = _c.get("cross_score", None)
+            if _s is not None and _s < _min_score and _cs is None:
+                log.debug(
+                    f"[MinScore] ELENDI: {_c.get('law','')} m.{_c.get('article_no','')} "
+                    f"hybrid_score={_s:.4f} < threshold={_min_score}"
+                )
+                continue
+            fused_filtered.append(_c)
+
+        _removed = _before - len(fused_filtered)
+        if _removed > 0:
+            log.info(f"[MinScore] {_removed} düşük ilgili chunk elendi (threshold={_min_score})")
+
+        return self._filter_results(fused_filtered, k)
 
 
     def _filter_results(self, results: List[Dict], k: int) -> List[Dict]:
         seen_art = defaultdict(int)  # mevzuat maddeleri için
         seen_dec = defaultdict(int)  # içtihat kararları için
         filtered = []
+        rejected_log = []
 
         for r in results:
             if r["source"] == "mevzuat":
                 key = f"{r['law']}_{r['article_no']}"
                 # Aynı maddeden en fazla 1 kez al (config'te MAX_SAME_ARTICLE=1 olmalı)
                 if seen_art[key] >= self.cfg.MAX_SAME_ARTICLE:
+                    rejected_log.append(
+                        f"{r.get('law','')} m.{r.get('article_no','')} "
+                        f"[duplicate, score={r.get('skor', r.get('cross_score', 0)):.4f}]"
+                    )
                     continue
                 seen_art[key] += 1
             elif r["source"] == "yargitay":
                 key = r["decision_id"]
                 # Aynı karardan sadece 1 kez al (diversity artırıldı)
                 if seen_dec[key] >= 1:
+                    rejected_log.append(f"Yargıtay:{key} [duplicate]")
                     continue
                 seen_dec[key] += 1
             elif r.get("source") == "site_document":
                 # Site belgeleri için ekstra kısıtlama koymayabiliriz
                 pass
+
+            log.debug(
+                f"[Filter] KABUL: {r.get('source','?')} "
+                f"{r.get('law','')} m.{r.get('article_no','')} "
+                f"score={r.get('skor', r.get('cross_score', 0)):.4f}"
+            )
             filtered.append(r)
             if len(filtered) >= k:
                 break
+
+        if rejected_log:
+            log.debug(f"[Filter] ELENEN ({len(rejected_log)} adet): {rejected_log[:10]}")
+
         return filtered
 
 
