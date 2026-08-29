@@ -1,24 +1,9 @@
-import React from "react";
 import { Link } from "react-router-dom";
+import { useSiteName } from '../hooks/useSiteName';
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const [siteName, setSiteName] = React.useState(() => {
-    return localStorage.getItem('lawagent_site_name') || 'lawagent';
-  });
-
-  React.useEffect(() => {
-    const handleUpdate = () => {
-      const saved = localStorage.getItem('lawagent_site_name');
-      if (saved) setSiteName(saved);
-    };
-    window.addEventListener('storage', handleUpdate);
-    window.addEventListener('lawagent_settings_updated', handleUpdate);
-    return () => {
-      window.removeEventListener('storage', handleUpdate);
-      window.removeEventListener('lawagent_settings_updated', handleUpdate);
-    };
-  }, []);
+  const siteName = useSiteName();
 
   return (
     <footer className="lumen-footer" role="contentinfo">

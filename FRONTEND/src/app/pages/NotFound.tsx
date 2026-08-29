@@ -21,12 +21,10 @@ export function NotFound() {
               Ana Sayfaya Dön
             </Button>
           </Link>
-          <button onClick={() => window.history.back()}>
-            <Button variant="secondary">
-              <ArrowLeft className="w-5 h-5" />
-              Geri Dön
-            </Button>
-          </button>
+          <Button variant="secondary" onClick={() => window.history.back()}>
+            <ArrowLeft className="w-5 h-5" />
+            Geri Dön
+          </Button>
         </div>
       </div>
     </div>

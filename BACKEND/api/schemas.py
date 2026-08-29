@@ -9,10 +9,28 @@ from pydantic import BaseModel, Field
 
 class AskRequest(BaseModel):
     """Soru-cevap istek gövdesi."""
-    query: str = Field(..., description="Kullanıcının hukuki sorusu")
-    k: int = Field(default=7, description="Retrieved chunk sayısı")
-    session_id: str = Field(default="default", description="Oturum kimliği")
-    client_id: Optional[str] = Field(default="lawagent-demo", description="Multi-tenant müşteri kimliği")
+    query: str = Field(
+        ...,
+        min_length=2,
+        max_length=1000,
+        description="Kullanıcının hukuki sorusu",
+    )
+    k: int = Field(
+        default=7,
+        ge=1,
+        le=20,
+        description="Retrieved chunk sayısı (1-20 arası)",
+    )
+    session_id: str = Field(
+        default="default",
+        max_length=64,
+        description="Oturum kimliği",
+    )
+    client_id: Optional[str] = Field(
+        default="lawagent-demo",
+        max_length=64,
+        description="Multi-tenant müşteri kimliği",
+    )
 
 
 class AskResponse(BaseModel):

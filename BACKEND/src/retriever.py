@@ -13,10 +13,10 @@ from typing import Any, Dict, List, Optional, Tuple
 # Bu dosyanın bulunduğu dizin (src/) — CWD'den bağımsız
 _SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# services/ klasörü BACKEND/ kökünde — hangi dizinden çalıştırılırsa çalıştırılsın bulsun
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _BACKEND_DIR not in sys.path:
-    sys.path.insert(0, _BACKEND_DIR)
+for _p in [_BACKEND_DIR, _SRC_DIR]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from qdrant_client.http import models as qm
 from embedder import MursitEmbedder, COLLECTION_NAME
@@ -25,47 +25,15 @@ from retrieval.reranker import CrossEncoderReranker, RerankerConfig
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-    datefmt="%H:%M:%S",
-)
-log = logging.getLogger("LawAgent.Retriever")
+from core.logging import log
+from config.settings import settings
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AYARLAR
+# AYARLAR (Single Source of Truth: config/settings.py)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-
-class CFG:
-    TOP_K_DENSE: int = 200
-    TOP_K_BM25: int = 200
-    FINAL_K: int = 15
-    MAX_SAME_ARTICLE: int = 1          # v2.1: 2→1, aynı maddeden tek chunk yeter
-    ALPHA_DEFAULT: float = 0.68
-    ALPHA_EXACT: float = 0.45
-    ALPHA_SEMANTIC: float = 0.72
-    BOOST_MADDE: float = 35.0
-    BOOST_ICTIHAT: float = 6.0
-    BOOST_KANUN: float = 6.0
-    HYDE_WEIGHT: float = 0.80
-    CACHE_PATH: str = os.path.join(_SRC_DIR, "data", "retriever_cache.pkl")
-    ENRICHED_PATH: str = os.path.join(_SRC_DIR, "data", "chunk_corpus_enriched.json")
-    # v2.1 — Kanun-İçi Density-Aware Fusion
-    ALPHA_SAME_LAW_BOOST: float = 0.10   # Dominant kanundan çok aday gelince dense ek artışı
-    SAME_LAW_DENSE_THRESHOLD: int = 40   # Bu sayının üzerinde aday → alpha boost aktif
-    # v2.1 — Diversity Penalty (Cross-Encoder kapalıyken aktif)
-    DIVERSITY_PENALTY: float = 0.05      # Her ek aynı-kanun adayı için %5 düşüş (max %30)
-    # v2.2 — Cross-Encoder Reranker
-    RERANKER_MODEL: str = "BAAI/bge-reranker-base"              # Öncelikli model (çok dilli)
-    RERANKER_FALLBACK: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # Yedek model
-    RERANKER_TOP_K: int = 30            # Rerank edilecek aday sayısı (asla tüm corpus değil)
-    RERANKER_MAX_DOC_CHARS: int = 512   # Doküman metninin kesileceği maksimum karakter
-    RERANKER_DEVICE: str = "cpu"        # Çalışma cihazı
-    # v2.3 — Minimum Relevance Score Filter
-    # Hybrid (normalize) skoru bu eşiğin altındaki chunk'lar final listeye girmez.
-    # Env var MIN_RELEVANCE_SCORE ile override edilebilir.
-    MIN_RELEVANCE_SCORE: float = float(os.environ.get("MIN_RELEVANCE_SCORE", "0.15"))
+# Geriye dönük uyumluluk için CFG alias'ı
+CFG = settings
 
 
 BOLUM_ANAHTARLARI = ("GEREKÇE", "HÜKÜM", "KARAR", "UYUŞMAZLIK", "SONUÇ")
@@ -228,102 +196,9 @@ def normalize_article(x: Any) -> str:
     return found.group(1) if found else ""
 
 
-_ESANLAMLILAR = {
-    # Genel Hukuk Alanı Eklemeleri
-    "borçlar hukuku": "Türk Borçlar Kanunu TBK sözleşme ifa borçlu temerrüdü alacaklı hakları borç ilişkisi fesih dönme tazminat TBK Madde 1 112 117 125",
-    "borçlar": "Türk Borçlar Kanunu TBK ifa borçlu alacaklı haklar sözleşme tazminat TBK Madde 1 112 117 125",
-    "borç ilişkisi": "Türk Borçlar Kanunu TBK borç ifa talep alacaklı borçlu TBK Madde 1 112",
-    "ticaret hukuku": "Türk Ticaret Kanunu TTK tacir şirket anonim limited yönetim kurulu ortak pay senet TTK Madde 1 375 553 595 625",
-    "tüketici hukuku": "Tüketicinin Korunması Hakkında Kanun TKHK tüketici hakları ayıplı mal cayma hakkı hakem heyeti TKHK Madde 1 11 48 68",
-    # TBK Eklemeleri
-    "gabin": "aşırı oransızlık sömürme sarsılma orantısız 28",
-    "ikrah": "korkutma tehdit zorlama 37 38 39",
-    "müteselsil": "zincirleme ortaklaşa dayanışma 161 162",
-    "kira": "kira sözleşmesi bildirim feshi uzama tahliye TBK Madde 347 350 352",
-    "tahliye": "kira kiracı tahliye bildirim süre fesih TBK Madde 347",
-    "işçi": "işçi alacakları zamanaşımı on yıl TBK Madde 146 147",
-    "haksız fiil": "haksız fiil tazminat zamanaşımı süre rücu TBK Madde 72 49 50",
-    "temerrüt": "temerrüd borçlu gecikme ihtar TBK Madde 117 119",
-    "vekalet": "vekâlet vekil özen borcu TBK Madde 506 513",
-    "kefalet": "kefil kefalet eş rıza TBK Madde 583 584",
-    "eser": "eser sözleşmesi müteahhit ayıp bedel TBK Madde 474 475 482",
-    "zamanaşımı": "süre hak düşürücü on yıl iki yıl TBK Madde 146 147 72 153 154",
-    # TKHK Eklemeleri
-    "aidat": "üyelik ücreti yıllık ücret kart çıkarma bedeli",
-    "promosyon": "hediye kültürel ürün süreli yayın 21",
-    "ayıplı": "ayıplı mal satıcı sorumluluk seçimlik haklar üretici TKHK Madde 10 11",
-    "ayıplı mal": "ayıplı mal satıcı üretici ithalatçı müteselsil sorumluluk seçimlik hak TKHK Madde 11 10",
-    "ayıplı hizmet": "ayıplı hizmet sağlayıcı seçimlik hak ücretsiz yeniden görme TKHK Madde 15 16",
-    "mesafeli": "mesafeli satış teslim süresi otuz gün cayma TKHK Madde 48",
-    "mesafeli sözleşme cayma": "mesafeli sözleşme cayma hakkı 14 gün istisnalar TKHK Madde 48",
-    "abonelik": "abonelik sözleşmesi haksız şart tüketici denetim TKHK Madde 5 52",
-    "abonelik fesih": "abonelik sözleşmesi fesih bildirim sağlayıcı tazminat depozito iade TKHK Madde 52",
-    "cayma": "cayma hakkı tüketici mesafeli sözleşme iade TKHK Madde 24 48",
-    "kredi": "tüketici kredisi cayma erken ödeme TKHK Madde 23 24 27",
-    "tüketici kredisi cayma": "cayma hakkı ondört gün tüketici kredisi TKHK Madde 24",
-    "tüketici kredisi geçerlilik": "geçerlilik şartı yazılı kredi sözleşmesi TKHK Madde 23",
-    "tüketici kredisi erken": "erken kapatma faiz masraf indirim TKHK Madde 27",
-    "tüketici kredisi temerrüt": "konut finansmanı temerrüt muacceliyet TKHK Madde 33",
-    "tüketici kredisi faiz": "faiz artışı bildirim belirsiz süreli TKHK Madde 26",
-    "haksız şart": "haksız şart tüketici sözleşmesi kesin hükümsüzlük geçersizlik TKHK Madde 5",
-    "devre tatil": "devre tatil sözleşmesi cayma hakkı bedel iade TKHK Madde 50",
-    "paket tur": "paket tur sözleşmesi esaslı değişiklik cayma düzenleyici TKHK Madde 51",
-    "garanti belgesi": "garanti belgesi sorumluluk iki yıl düzenleme yükümlülük TKHK Madde 56 57",
-    "sipariş edilmey": "sipariş edilmemiş mal hizmet gönderme tüketici bedel talep TKHK Madde 7",
-    "hakem heyeti": "tüketici hakem heyeti başvuru parasal sınır bağlayıcı karar TKHK Madde 68 70",
-    "tüketici mahkeme": "tüketici mahkemesi yetkili mahkeme uyuşmazlık konut TKHK Madde 73",
-    "işyeri dışı": "işyeri dışında sözleşme satıcı bilgilendirme yükümlülük cayma TKHK Madde 47",
-    "tüketici": "tüketici hakkı TKHK Madde 5 7 10 11 15 23 24 47 48 50 51 52 56 68 70 73",
-    # TTK
-    "unvan": "ticaret unvanı tecavüz koruma marka TTK Madde 50 52",
-    "müdür": "limited şirket müdür sorumluluk temsil TTK Madde 623 625 630 632 644",
-    "anonim şirketlerde müdür": "yönetim kurulu devredilemez görev yetki TTK Madde 375",
-    "anonim müdür": "yönetim kurulu devredilemez görev yetki TTK Madde 375",
-    "limited müdür sorumluluk": "limited şirket müdür ortaklara alacaklılara sorumluluk TTK Madde 632 644",
-    "limited müdür devredilemez": "limited şirket müdür devredilemez yetki vazgeçilemez TTK Madde 625",
-    "limited sermaye payı devri": "limited şirket sermaye payı devir noter onay TTK Madde 595",
-    "limited genel kurul devredilemez": "limited şirket ortaklar kurulu devredilemez yetki TTK Madde 616",
-    "limited ortak çıkma": "limited şirket ortak çıkma çıkarılma haklı sebep TTK Madde 638 640",
-    "bono": "emre yazılı senet kambiyo senedi zamanaşımı temel ilişki TTK Madde 776 777",
-    "bono poliçe fark": "bono emre yazılı senet poliçe ayırt edici özellik ciro TTK Madde 776 777",
-    "çek": "karşılıksızdır ibraz şerh hamilin hakları TTK Madde 796 808 814",
-    "çek ibraz": "çek ibraz süresi muhatap banka hamilin hakları başvuru TTK Madde 796 797 808",
-    "karşılıksız çek": "karşılıksız çek hamil tazminat cezai yaptırım TTK Madde 814",
-    "hesabında para bulunmayan": "karşılıksız çek hamil tazminat şerh TTK Madde 814",
-    "ibraz": "çek ibraz süresi muhatap banka hamilin hakları TTK Madde 796 797 808",
-    "poliçe protesto": "poliçe protesto kabul etmeme ödememe süre müracaat TTK Madde 713 714",
-    "rüçhan": "yeni pay alma öncelik sermaye artırımı 461",
-    "defter": "ticari defter tasdik delil niteliği 64 222",
-    "genel kurul": "anonim şirket genel kurul olağan toplantı zaman TTK Madde 409 410",
-    "genel kurul olağan": "anonim şirket genel kurul olağan toplantı yıllık TTK Madde 409 410",
-    "genel kurul butlan": "genel kurul kararı butlan iptal fark dava TTK Madde 445 447",
-    "anonim": "anonim şirket yönetim kurulu genel kurul TTK Madde 375 409 445 553",
-    "yönetim kurulu devredilemez": "yönetim kurulu devredilemez görev yetki vazgeçilemez TTK Madde 375",
-    "yönetim kurulu çağrı": "yönetim kurulu toplantı çağırma yetki TTK Madde 392",
-    "yönetim kurulu sorumluluk alacaklı": "yönetim kurulu üye sorumluluk şirket alacaklı TTK Madde 553",
-    "nama yazılı pay devri": "nama yazılı pay defteri kayıt şirket itiraz TTK Madde 490 493",
-    "hamiline yazılı pay": "hamiline yazılı pay devir MKK bildirim TTK Madde 489 486",
-    "gecikme faizi ticari": "ticari faiz gecikme TCMB Merkez Bankası oranı TTK Madde 1530",
-    "limited": "limited şirket müdür ortak pay devri TTK Madde 595 616 625 632 638",
-    "haksız rekabet": "dürüstlük kuralı rekabet davası TTK Madde 56 60",
-    # Ek kavram genişletmeleri (Genelleşmiş hukuki terimler)
-    "azil": "anonim şirket yönetim kurulu üyesi azil gündem TTK Madde 413",
-    "yönetim kurulu azil": "anonim şirket yönetim kurulu üyesi azil gündeme bağlılık TTK Madde 413",
-    "bana sorulmadan": "sipariş edilmemiş mal hizmet gönderme tüketici bedel talep TKHK Madde 7",
-    "adresime gönderilen": "sipariş edilmemiş mal hizmet gönderme tüketici bedel talep TKHK Madde 7",
-    "ücretsiz tamir": "garanti belgesi sorumluluk iki yıl düzenleme yükümlülük TKHK Madde 56 57",
-    "mahkemeye gitmeden": "tüketici hakem heyeti başvuru parasal sınır bağlayıcı karar TKHK Madde 68 70",
-    "evi boşaltacağına": "kiracı tahliye taahhüdü yazılı bildirim TBK Madde 352",
-    "tahliye taahhüdü": "kiracı tahliye taahhüdü yazılı bildirim TBK Madde 352",
-    "resmi yazılı": "geçerlilik şartı yazılı tüketici kredisi sözleşmesi TKHK Madde 23",
-    "ortaklaşa borç": "müteselsil borçluluk alacaklı başvurma dayanışma TBK Madde 161 162",
-    "kendi borcunu ödemeyen": "ödemezlik def'i borcun ifası karşılıklı sözleşme TBK Madde 97",
-    "emredici kurallara aykırı": "sözleşme özgürlüğü serbestisi emredici hukuk kuralları TBK Madde 26",
-    "hata yapan taraf": "yanılma esaslı hata sözleşmenin iptali TBK Madde 30 39",
-    "anlaşmaya vardığında": "sözleşmenin kurulması rıza icap kabul irade TBK Madde 1",
-
-    "yönetim kurulu azil": "anonim şirket yönetim kurulu üyesi azil gündeme bağlılık TTK Madde 413",
-}
+# ═══════════════════════════════════════════════════════════════════════════════
+# HUKUKİ KAVRAM VE SORGULAMA YÖNETİMİ
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -492,53 +367,49 @@ def _clean_query(query: str) -> str:
     return query.strip()
 
 
-def expand_query(query: str) -> str:
-    q = query.lower()
-    ekler = []
-    for anahtar, deger in _ESANLAMLILAR.items():
-        if anahtar in q:
-            ekler.append(deger)
-    return query + " " + " ".join(ekler) if ekler else query
-
-
 _dynamic_expand_cache: Dict[str, str] = {}
 
 
-def expand_query_dynamic(query: str) -> str:
+def expand_query_step_back(query: str, client: Any = None) -> str:
     """
-    Kavram Odaklı Dinamik Hukuki Sorgu Anlayıcı ve Genişletici (Concept-Based Query Understanding).
-    Sorguyu hukuki olarak analiz eder; doktrinsel kurumları, taraf haklarını ve kavramları
-    (ifa, temerrüt, tazminat, seçimlik haklar, def'i, fesih vb.) dinamik olarak üretir.
-    KESİNLİKLE sabit madde numarası üretmez veya zorlamaz; retrieval motorunun anlamsal uzayda
-    doğru maddeleri kendisinin bulmasını sağlar.
+    Step-Back Prompting & Hukuki Kavram Genişletici (Legal Concept Expansion).
+
+    Kullanıcının gündelik dilde sorduğu olaysal uyuşmazlığı:
+    1. Soyut hukuki kuruma ve taraf haklarına dönüştürür (Step-Back abstraction).
+    2. Doktrinsel terimler, kurum adları ve hukuki kavramlarla zenginleştirir.
+    3. KESİNLİKLE uydurma veya zoraki madde numarası enjekte ETMEZ.
+
+    Önbellekleme: 512 elemanlı in-memory LRU cache (<0.1ms cache hit).
+    Model: Groq llama-3.1-8b-instant (veya settings.EXPANSION_MODEL).
     """
-    q_clean = query.strip()
-    if len(q_clean.split()) < 2:
-        return expand_query(query)
+    q_clean = _clean_query(query).strip()
+    if not q_clean or len(q_clean.split()) < 2:
+        return query
 
     cache_key = q_clean.lower()
     if cache_key in _dynamic_expand_cache:
         return _dynamic_expand_cache[cache_key]
 
-    base_expanded = expand_query(query)
+    if not getattr(settings, "ENABLE_DYNAMIC_EXPANSION", True):
+        return query
 
     try:
         from groq import Groq
         groq_key = os.getenv("GROQ_API_KEY")
         if not groq_key:
-            return base_expanded
+            return query
 
-        g_client = Groq(api_key=groq_key)
-        model = os.getenv("GROQ_MODEL", "groq/compound-mini")
+        g_client = client or Groq(api_key=groq_key)
+        model = getattr(settings, "EXPANSION_MODEL", None) or os.getenv("GROQ_MODEL", "groq/compound-mini")
 
         prompt = (
-            "Sen bir Türk Hukuku uzmanısın. Kullanıcının sorusundaki hukuki uyuşmazlığı ve doktrinsel kavramları analiz et.\n"
-            "GÖREV: Soruyla doğrudan ilgili 5-8 temel hukuki kavramı, kurum adını ve taraf haklarını (ör. ifa talebi, temerrüt, tazminat, dönme, def'i hakları, uyarlama vb.) "
-            "boşlukla ayırarak tek satırda yaz.\n"
+            "Sen Türk Hukuku uzmanısın. Kullanıcının sorusunu analiz et ve doktrinsel hukuki kavramlara dönüştür.\n"
+            "GÖREV:\n"
+            "1. Sorudaki olayı genel hukuki kuruma dönüştür (Step-Back).\n"
+            "2. Doğrudan ilgili 4-7 temel hukuki kavramı ve taraf haklarını (ör. ifa talebi, temerrüt, ayıptan doğan seçimlik haklar, fesih, tazminat) boşlukla ayırarak yaz.\n"
             "KURALLAR:\n"
-            "1. KESİNLİKLE madde numarası (m. 112 vb.) YAZMA.\n"
-            "2. Kullanıcının sıfatını (alacaklı/borçlu/tüketici) kesin varsayma; olası tüm hukuki kurum ve hak kavramlarını ekle.\n"
-            "3. Yorum veya açıklama ekleme.\n\n"
+            "- KESİNLİKLE madde numarası (ör. m. 112, 347 vb.) YAZMA.\n"
+            "- Tablo, madde imi veya açıklama yapma; sadece kavramları tek satırda boşlukla ayırarak yaz.\n\n"
             f"Soru: {query}\n"
             "Hukuki Kavramlar:"
         )
@@ -547,25 +418,35 @@ def expand_query_dynamic(query: str) -> str:
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_tokens=70,
+            max_tokens=60,
         )
         expanded_terms = resp.choices[0].message.content or ""
         expanded_terms = re.sub(r"<think>.*?</think>", "", expanded_terms, flags=re.DOTALL).strip()
         expanded_terms = re.sub(r"[\n\r\"']", " ", expanded_terms).strip()
+        expanded_terms = re.sub(r"[#\*\|`_\[\]\(\)]", " ", expanded_terms)
+
+        # Ekstra güvenlik filtresi — kazara madde numarası yazılmışsa temizle
+        expanded_terms = re.sub(r"\b(madde|m\.)\s*\d+\b", "", expanded_terms, flags=re.IGNORECASE)
+        expanded_terms = " ".join(expanded_terms.split())
 
         if expanded_terms:
             result = f"{query} {expanded_terms}"
         else:
-            result = base_expanded
+            result = query
 
-        if len(_dynamic_expand_cache) >= 256:
+        if len(_dynamic_expand_cache) >= 512:
             _dynamic_expand_cache.pop(next(iter(_dynamic_expand_cache)))
         _dynamic_expand_cache[cache_key] = result
         return result
 
     except Exception as e:
-        log.warning(f"[Dynamic Query Expansion] Fallback devreye girdi: {e}")
-        return base_expanded
+        log.warning(f"[Step-Back Expansion] Hata, orijinal sorgu kullanılıyor: {e}")
+        return query
+
+
+# Geriye dönük uyumluluk için alias'lar
+expand_query_dynamic = expand_query_step_back
+expand_query = expand_query_step_back
 
 
 def detect_kanun_probs(query: str) -> Dict[str, float]:
@@ -1044,6 +925,7 @@ class LegalRetriever:
         reindex: bool = False,
         model_path: str = None,
         collection_name: str = None,
+        cfg: Any = None,
     ):
         """
         Parametreler:
@@ -1052,8 +934,9 @@ class LegalRetriever:
             model_path      : Fine-tuned model klasör yolu (None → varsayılan Mursit-Base-TR)
             collection_name : Qdrant koleksiyonu (None → 'lawagent_mursit')
                               Fine-tuned eval için 'lawagent_mursit_ft' kullanın.
+            cfg             : Özel konfigürasyon nesnesi (None → config.settings.settings)
         """
-        self.cfg = CFG()
+        self.cfg = cfg or settings
         # Fine-tuned eval için koleksiyon override
         self._collection_name = collection_name if collection_name else COLLECTION_NAME
         self.embedder = MursitEmbedder(quantize=quantize, model_name_or_path=model_path)
@@ -1218,8 +1101,8 @@ class LegalRetriever:
         query = query.replace("\u0307", "")
         query = _clean_query(query)  # Gürültü prefix/suffix temizleme
 
-        # Sorgu Genişletme (LLM tabanlı dinamik hukuki kavram sentezi)
-        expanded_q = expand_query_dynamic(query)
+        # Sorgu Genişletme (Dinamik Step-Back & Hukuki Kavram Sentezi)
+        expanded_q = expand_query_step_back(query)
 
         kanun, madde, source_intent = (
             detect_kanun(query),

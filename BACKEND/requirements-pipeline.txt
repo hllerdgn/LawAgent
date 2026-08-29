@@ -1,0 +1,7 @@
+# requirements-pipeline.txt — Veri toplama ve indeksleme pipeline'ı için
+# API production ortamında gerekli değildir.
+# Kullanım: pip install -r requirements-pipeline.txt
+
+scrapy
+bs4
+rank_bm25

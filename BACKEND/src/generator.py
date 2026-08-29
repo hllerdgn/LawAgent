@@ -26,15 +26,15 @@ import pdf_processor
 from legal_normalizer import full_post_process, normalize_legal_terminology, sanitize_markdown_typography
 from citation_engine import build_grounded_context, validate_and_extract_citations
 from legal_intent import analyze_legal_query, build_legal_role_context, get_concept_distinction_rule
-
-# Logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-    datefmt="%H:%M:%S",
+from memory import ConversationMemory
+from scope_checker import is_legal_query, is_in_scope_llm, KAPSAM_DISI_YANITI as _KAPSAM_DISI_YANITI
+from query_processor import is_ictihat_request, QueryIntentRouter, rewrite_query
+from services.prompts import (
+    SISTEM_PROMPT_TEMPLATE as _SISTEM_PROMPT_TEMPLATE,
+    ICTIHAT_PROMPT_TEMPLATE as _ICTIHAT_PROMPT_TEMPLATE,
+    SITE_SISTEM_PROMPT_TEMPLATE as _SITE_SISTEM_PROMPT_TEMPLATE,
 )
-log = logging.getLogger("LawAgent.Generator.v5.8")
+from core.logging import log
 
 # Env
 
@@ -134,292 +134,9 @@ def call_groq_completion(
         raise last_err
     raise RuntimeError("Uygun bir Groq modeli bulunamadı.")
 
+
 if not GROQ_API_KEY:
     log.warning("GROQ_API_KEY bulunamadı! .env dosyasını kontrol et.")
-
-
-# Session Memory
-
-
-class ConversationMemory:
-    def __init__(self, max_memory: int = 4):
-        self.memory: Dict[str, List[Dict[str, str]]] = defaultdict(list)
-        self.last_chunks: Dict[str, List[Dict]] = defaultdict(list)
-        self.max_memory = max_memory
-
-    def add_exchange(self, session_id: str, user_msg: str, assistant_msg: str):
-        if session_id not in self.memory:
-            self.memory[session_id] = []
-        self.memory[session_id].append(
-            {
-                "role": "user",
-                "content": user_msg,
-                "timestamp": datetime.now().isoformat(),
-            }
-        )
-        self.memory[session_id].append(
-            {
-                "role": "assistant",
-                "content": assistant_msg,
-                "timestamp": datetime.now().isoformat(),
-            }
-        )
-        if len(self.memory[session_id]) > self.max_memory * 2:
-            self.memory[session_id] = self.memory[session_id][-(self.max_memory * 2) :]
-
-    def save_chunks(self, session_id: str, chunks: List[Dict]):
-        self.last_chunks[session_id] = chunks
-
-    def get_chunks(self, session_id: str) -> List[Dict]:
-        return self.last_chunks.get(session_id, [])
-
-    def get_history(self, session_id: str) -> List[Dict[str, str]]:
-        return self.memory.get(session_id, [])
-
-    def get_context_string(self, session_id: str) -> str:
-        history = self.get_history(session_id)
-        if not history:
-            return ""
-        context_lines = ["--- ÖNCEKI BAĞLAM ---"]
-        for msg in history[-4:]:
-            role = "Kullanıcı" if msg["role"] == "user" else "Asistan"
-            context_lines.append(f"{role}: {msg['content'][:300]}")
-        return "\n".join(context_lines) + "\n\n"
-
-
-# Hukuki Filtre
-
-_HUKUK_DISI = {
-    "hava",
-    "yemek",
-    "müzik",
-    "film",
-    "spor",
-    "oyun",
-    "minecraft",
-    "magazin",
-    "haber",
-    "gündem",
-    "sağlık",
-    "doktor",
-    "ilaç",
-    "matematik",
-    "fizik",
-    "kimya",
-}
-
-# Kesin kapsam dışı konular — bu kelimeler sorguda geçerse direkt reddedilir
-_KESIN_KAPSAM_DISI = [
-    # Vergi hukuku
-    "vergi", "kdv", "gelir vergisi", "kurumlar vergisi", "mtv", "ötv", "stopaj",
-    # Ceza hukuku
-    "suç", "ceza", "hapis", "tutuklama", "gözaltı", "savcı", "müdahil", "beraat",
-    "uyuşturucu", "kaçakçılık", "dolandırıcılık", "sahte", "hırsız",
-    # Aile hukuku
-    "boşan", "boşama", "boşamak", "nafaka", "velayet", "evlilik",
-    # İdare hukuku
-    "belediye", "ruhsat", "ihale", "kamu ihale",
-    # Diğer kapsam dışı
-    "pasaport", "vize", "vatandaşlık", "askerlik",
-]
-_HUKUKI_SINYALLER = {
-    "nedir",
-    "nasıl",
-    "hak",
-    "kanun",
-    "madde",
-    "dava",
-    "sözleşme",
-    "tazminat",
-    "kira",
-    "borç",
-    "alacak",
-    "fesih",
-    "temerrüt",
-    "cayma",
-    "garanti",
-    "tahliye",
-    "tbk",
-    "tkhk",
-    "ttk",
-    "6098",
-    "6502",
-    "6102",
-    "mahkeme",
-    "icra",
-    "ipotek",
-    "miras",
-    "velayet",
-}
-
-
-def is_legal_query(sorgu: str) -> bool:
-    s = sorgu.lower()
-    if any(hd in s.split() for hd in _HUKUK_DISI):
-        return False
-    # Kesin kapsam dışı konular → False
-    if any(kd in s for kd in _KESIN_KAPSAM_DISI):
-        return False
-    return any(sig in s for sig in _HUKUKI_SINYALLER) or len(sorgu.split()) >= 3
-
-
-_KAPSAM_DISI_YANITI = (
-    "Üzgünüm, bu konu uzmanlık alanım olan TBK (Türk Borçlar Kanunu), "
-    "TTK (Türk Ticaret Kanunu) ve TKHK (Tüketicinin Korunması Hakkında Kanun) "
-    "dışında kalmaktadır. Bu alanlarda yardımcı olmaktan memnuniyet duyarım."
-)
-
-# LLM Tabanlı Kapsam Kontrolü
-
-_KAPSAM_KONTROL_SISTEM = (
-    "Sen bir Türk hukuku kapsam denetçisisin. "
-    "Görevin: kullanıcının sorusunun yalnızca şu üç kanun kapsamında olup olmadığını belirlemek: "
-    "Türk Borçlar Kanunu (TBK), Türk Ticaret Kanunu (TTK), Tüketicinin Korunması Hakkında Kanun (TKHK). "
-    "Selamlama ve genel sohbet mesajları da KAPSAM İÇİ say. "
-    "Yalnızca 'EVET' veya 'HAYIR' olarak yanıt ver. Başka hiçbir şey yazma."
-)
-
-# Aynı sorgu için tekrar LLM çağrısı yapılmasın (128 sorgu önbelleği)
-_scope_cache: Dict[str, bool] = {}
-
-
-def is_in_scope_llm(client: Groq, sorgu: str) -> bool:
-    """LLM ile kapsam kontrolü.
-    True  = TBK/TTK/TKHK kapsamında → işleme devam et
-    False = Kapsam dışı → reddet
-    Hata durumunda keyword tabanlı is_legal_query() fallback olarak kullanılır.
-    """
-    cache_key = sorgu.lower().strip()
-
-    # Önbellek kontrolü — aynı sorgu için LLM'e gitme
-    if cache_key in _scope_cache:
-        log.info(f"[Kapsam Kontrol / Cache] '{sorgu[:60]}' → {'İçi' if _scope_cache[cache_key] else 'Dışı'}")
-        return _scope_cache[cache_key]
-
-    # Önce açıkça kapsam dışı kelimelere hızlı bak (maliyet sıfır)
-    s = cache_key
-    if any(kd in s for kd in _KESIN_KAPSAM_DISI):
-        log.info(f"[Kapsam Kontrol / Keyword] Kapsam dışı: '{sorgu[:60]}'")
-        _scope_cache[cache_key] = False
-        return False
-    if any(hd in s.split() for hd in _HUKUK_DISI):
-        log.info(f"[Kapsam Kontrol / Keyword] Hukuk dışı konu: '{sorgu[:60]}'")
-        _scope_cache[cache_key] = False
-        return False
-
-    # LLM ile derin kapsam analizi
-    try:
-        yanit = call_groq_completion(
-            client=client,
-            messages=[
-                {"role": "system", "content": _KAPSAM_KONTROL_SISTEM},
-                {
-                    "role": "user",
-                    "content": f"Soru: {sorgu}\n\nBu soru TBK, TTK veya TKHK kapsamında mı? (EVET/HAYIR)",
-                },
-            ],
-            temperature=0.0,
-            max_tokens=400,  # Reasoning modelleri <think> bloğu açar; 5 token yetmez
-        )
-        karar = yanit.strip().upper()
-        # Yanıt içinde EVET veya HAYIR ara (startswith() yerine — model prefix ekleyebilir)
-        if re.search(r"\bEVET\b", karar):
-            kapsam_ici = True
-        elif re.search(r"\bHAYIR\b", karar):
-            kapsam_ici = False
-        else:
-            # Belirsiz yanıt → güvenli taraf: kapsam içi say, retrieval'a bırak
-            log.warning(f"[Kapsam Kontrol / LLM] Belirsiz yanıt '{karar[:30]}', kapsam içi varsayıldı")
-            kapsam_ici = True
-        log.info(f"[Kapsam Kontrol / LLM] '{sorgu[:60]}' → {karar[:20]} → {'İçi' if kapsam_ici else 'Dışı'}")
-        # Önbelleğe kaydet (max 128 kayıt)
-        if len(_scope_cache) >= 128:
-            _scope_cache.pop(next(iter(_scope_cache)))
-        _scope_cache[cache_key] = kapsam_ici
-        return kapsam_ici
-    except Exception as e:
-        log.warning(f"[Kapsam Kontrol / LLM] Hata, keyword fallback devreye girdi: {e}")
-        return is_legal_query(sorgu)
-
-
-# İçtihat Talebi Kontrolü
-
-_ICTIHAT_ISTEGI_KELIMELERI = {
-    "evet",
-    "isterim",
-    "istiyorum",
-    "göster",
-    "gösterin",
-    "bakalım",
-    "emsal",
-    "karar",
-    "içtihat",
-    "yargıtay",
-    "lütfen",
-    "tabii",
-    "tabi",
-    "olur",
-    "harika",
-    "güzel",
-}
-# ✅ Daha esnek tetikleyici: "emsal karar" - prompt'taki cümleyle birebir uyumlu
-_ICTIHAT_SORUSU_TETIKLEYICI = "emsal karar"
-
-
-def is_ictihat_request(sorgu: str, history: List[Dict]) -> bool:
-    if not history:
-        return False
-    last_msg = history[-1]
-    if last_msg.get("role") != "assistant":
-        return False
-    if _ICTIHAT_SORUSU_TETIKLEYICI not in last_msg.get("content", "").lower():
-        return False
-    sorgu_temiz = sorgu.lower().strip()
-    return any(kelime in sorgu_temiz for kelime in _ICTIHAT_ISTEGI_KELIMELERI)
-
-
-# Query Intent Router
-
-
-class QueryIntentRouter:
-    INTENT_DEFINITIONS = {
-        "INFO_RETRIEVAL": {
-            "keywords": ["nedir", "ne", "neyin", "nasıl", "hangi", "kaç"],
-            "retrieval_k": 7,
-        },
-        "COMPARISON": {
-            "keywords": ["fark", "arasında", "farklı", "ne kadar", "vs", "karşılaştır"],
-            "retrieval_k": 10,
-        },
-        "PROCEDURE": {
-            "keywords": ["süre", "yapılır", "adım", "işlem", "başvuru", "başvur"],
-            "retrieval_k": 8,
-        },
-        "RIGHTS_OBLIGATION": {
-            "keywords": ["hak", "sorumluluk", "yükümlülük", "ödeme", "iade"],
-            "retrieval_k": 7,
-        },
-        "CONSEQUENCE": {
-            "keywords": ["sonuç", "ceza", "para", "tazminat", "zarar", "risiko"],
-            "retrieval_k": 6,
-        },
-    }
-
-    def __init__(self, client: Groq):
-        self.client = client
-
-    def detect_intent(self, sorgu: str) -> Tuple[str, int]:
-        sorgu_lower = sorgu.lower()
-        best_intent = "INFO_RETRIEVAL"
-        best_score = 0
-        for intent, config in self.INTENT_DEFINITIONS.items():
-            score = sum(1 for kw in config["keywords"] if kw in sorgu_lower)
-            if score > best_score:
-                best_score = score
-                best_intent = intent
-        recommended_k = self.INTENT_DEFINITIONS[best_intent]["retrieval_k"]
-        log.info(f"Intent Detection: {best_intent} (k={recommended_k})")
-        return best_intent, recommended_k
 
 
 # Hallüsinasyon Kontrolü
@@ -467,150 +184,6 @@ class HallucinationValidator:
                 )
         return True, "", mentioned_articles
 
-
-# Query Rewrite
-
-_MADDE_REF_RE = re.compile(
-    r"\b(tbk|tkhk|ttk)\s*(?:m\.|madde)?\s*\d+\b|\b(6098|6502|6102)\b|\b(?:madde|m\.)\s*\d+\b",
-    re.IGNORECASE,
-)
-_REWRITE_SYSTEM = "Sen Türk hukuku uzmanısın. Kullanıcının sorusunu, anlamını bozmadan akademik hukuk terimleriyle yeniden yaz. Kanun kısaltmalarını (TBK, TKHK, TTK) koru. Sadece yeniden yazılmış soruyu döndür, açıklama ekleme."
-
-
-def has_madde_ref(sorgu: str) -> bool:
-    return bool(_MADDE_REF_RE.search(sorgu))
-
-
-def rewrite_query(client: Groq, sorgu: str) -> str:
-    if has_madde_ref(sorgu):
-        return sorgu
-    if len(sorgu.split()) < 4 or len(sorgu.split()) > 30:
-        return sorgu
-    try:
-        yeni = call_groq_completion(
-            client=client,
-            messages=[
-                {"role": "system", "content": _REWRITE_SYSTEM},
-                {"role": "user", "content": f"Soru: {sorgu}\n\nYeniden yazılmış hali:"},
-            ],
-            temperature=0.0,
-            max_tokens=100,
-        )
-        return yeni if yeni and len(yeni) <= 300 else sorgu
-    except Exception as e:
-        log.warning(f"Query rewrite hatası: {e}")
-        return sorgu
-
-
-# Sistem Promptları
-_SISTEM_PROMPT_TEMPLATE = """Sen, Türk Hukuku alanında uzmanlaşmış, yalnızca sağlanan yasal kaynaklara dayanarak bilgi veren profesyonel bir Yapay Zeka Hukuk Asistanısın.
-
-GÖREVİN:
-Kullanıcının sorusunu, aşağıda sunulan <HUKUKI_KAYNAKLAR> içerisindeki resmi kanun maddeleri ve metinlerini temel alarak yanıtlamaktır.
-
-{context}
-
---- KULLANICI VE SORGU BİLGİSİ ---
-{legal_role_context}
-
---- KAVRAM AYRIMI KURALI ---
-{concept_distinction_rule}
-
-TEMEL VE KESİN KURALLAR:
-1. SADECE SAĞLANAN KAYNAKLARI KULLAN: Cevabındaki her hukuki tespiti doğrudan yukarıdaki <HUKUKI_KAYNAKLAR> içindeki metinlere dayandır. Kaynaklarda yer almayan hükümleri bilgi dağarcığından kesinlikle ekleme.
-
-2. KAYNAK SEÇİCİLİĞİ — Retrieved her kaynağı kullanmak zorunda değilsin:
-   - Her kaynak için şu soruyu içsel olarak değerlendir: “Bu kaynak kullanıcının sorusunu DOĞRUDAN cevap veriyor mu?”
-   - Yalnızca soruyla doğrudan ilgili kaynakları kullan.
-   - Yalnızca bağlamsal (adjacent) olan, soruyu doğrudan cevaplamayan kaynakları ana dayanak olarak sunma.
-   - Kaynağın kısmi destek verdiği durumlarda bunu açıkça belirt: “Bu madde yalnızca… açısından destek vermektedir.”
-
-3. KANUN VE MADDE UYDURMA YASAĞI: Kaynak listesinde bulunmayan hiçbir kanun adını veya madde numarasını kesinlikle yanıta dahil etme.
-
-4. RESMİ KANUN TERMİNOLOJİSİ: Kanun isimlerini resmi adıyla kullan:
-   - "6502 sayılı Tüketicinin Korunması Hakkında Kanun (TKHK)"
-   - "6098 sayılı Türk Borçlar Kanunu (TBK)"
-   - "6102 sayılı Türk Ticaret Kanunu (TTK)"
-   Asla gayriresmi veya uydurma tabirler kullanma.
-
-5. METİN İÇİ ATIF KURALI (CITATION): Kaynaktan aldığın her bilginin hemen sonuna kaynak etiketini [K1], [K2] şeklinde iliştir.
-   - İddia → Kaynak ilişkisi gerçek olmalıdır: Madde bu iddianın gerçekten yasal dayanığı olmalı.
-   - Maddenin düzenlediği kapsamı genişletme; bir madde “X” düzenliyorsa bunu “Y’yi de kapsar” şeklinde yorumlama.
-
-6. TARAFLI / GENEL YORUM YASAĞI: Nesnel, duru ve akademik bir Türk hukuku üslubu kullan.
-
-7. HUKUKİ SIFAT VARSAYMA YASAĞI:
-   - Kullanıcının borç ilişkisindeki sıfatı (alacaklı/borçlu/kiracı vb.) açıkça belirtilmemişse, o sıfatı kesinlikle VARSAYMA.
-   - Soru belirsizse: Her tarafın konumuna göre hakların nasıl şekilleneceğini genel çerçevede açıkla, ardından kullanıcının sıfatını soran bir kapanış sorusu ekle.
-
-8. KAVRAM AYRIMI (HAK / YÜKÜMLÜLÜK / SORUMLULUK / YETKİ):
-   - Bir madde sorumluluk düzenliyorsa bunu “hak” olarak sunma.
-   - Bir madde yetki tanıyorsa bunu “tarafların genel hakkı” olarak genelleştirme.
-   - İşverenin talimat verme yetkisi gibi örneğe özgü yetkiler, “borçlar hukukundaki temel haklar” sorusuna doğrudan cevap değildir.
-
-9. KAYNAK YOKSA AÇIKÇA BELIRT: Eğer kullanıcının sorusuna cevap vermek için sağlanan kaynaklar yetersizse:
-   - “Sunulan yasal kaynaklar çerçevesinde bu soruya dair doğrudan bir hüküm bulunmamaktadır.” ifadesini yalnızca kaynaklar gerçekten yetersizse kullan.
-   - Genel ve kavramsal sorularda (ör. “borçlar hukukunda temel haklar”) sağlanan maddelerden sentez yapabilirsin; kaynakların konuyla dolaylı bağlantısı varsa bunu kaynağı zorlayarak değil, dönüştürerek belirt.
-
-10. GENEL VE DOKTRİNSEL SORULAR (SIFAT BELİRSİZLİĞİ):
-    Eğer kullanıcı “Borçlar hukuku kapsamında temel haklarım nelerdir?” gibi genel bir soru soruyorsa ve sıfatı belirtilmemişse:
-    - Borçlar hukukunda tek bir soyut “temel haklar listesi” bulunmadığını açıkla.
-    - Hakların borç ilişkisindeki konuma göre şekilleneceğini belirt.
-    - Sağlanan kaynaklardan taraflara göre sınıflandırılmış, doğrudan ilgili olanları açıkla.
-    - Yanıt sonunda kullanıcının sıfatını netleştirmek için bir soru sor.
-
-YANIT PLANI:
-### Hukuki Değerlendirme
-[Kullanıcının sorusuna doğrudan, net ve kaynaklara dayalı hukuki analiz. İlgili yerlerde [K1], [K2] etiketleri kullanılır.]
-
-### Dayanak Hükümler
-- [Resmi Kanun Adı] m. [Madde No]: [Maddenin olaya uygulanan temel kuralının 1 cümlelik özeti]
-
----
-[Gerekiyorsa konuya uygun etkileşimli tek bir profesyonel yönlendirme sorusu]
-"""
-
-_ICTIHAT_PROMPT_TEMPLATE = """Sen Türk Borçlar, Ticaret ve Tüketici Hukuku alanlarında uzmanlaşmış, profesyonel bir Yapay Zeka Hukuk Asistanısın.
-
-BAĞLAM (KULLANILACAK EMSAL KARARLAR):
-{context}
-
-TEMEL İLKELER VE GÖREVLER:
-Yalnızca sana sağlanan bağlamdaki Yargıtay kararlarını inceleyerek, aşağıdaki profesyonel formatta özetle.
-- Karar künyelerini (Esas ve Karar numaraları ile Daire bilgisini) hiçbir değişiklik yapmadan, aynen koru.
-- Her bir Yargıtay kararından çıkarılması gereken temel hukuki ilkeyi 1 veya 2 cümle ile öz, net ve profesyonel bir dille ifade et.
-- Eğer sağlanan bağlamda herhangi bir içtihat (emsal karar) bulunmuyorsa, sadece şu ifadeyi kullan: "Bu uyuşmazlığa ilişkin veri tabanımda kayıtlı emsal bir karar bulunmamaktadır."
-
-YANIT FORMATI:
-**Emsal Yargıtay Kararları**
-
-### [Hukuki Uyuşmazlık Konusu]
-- **Karar Künyesi:** [Daire Adı] — E. [Esas No] / K. [Karar No]
-- **Hukuki İlke:** [Karardan çıkarılan bağlayıcı hukuki kural]
-"""
-
-
-_SITE_SISTEM_PROMPT_TEMPLATE = """Sen, kendisine sağlanan kurumsal belgeler üzerinden kullanıcılara doğru ve net bilgi vermekle görevli, profesyonel bir Yapay Zeka Asistanısın.
-
-BAĞLAM (REFERANS ALINACAK BİLGİ KAYNAĞI):
-{context}
-
-TEMEL İLKELER VE GÖREVLER:
-1. Dil Zorunluluğu: Yanıtlarını her zaman SADECE TÜRKÇE olarak oluştur. Yabancı dilde veya farklı alfabelerde (ör. Çince vb.) hiçbir ifade kullanma.
-2. Bağlama Sadakat: Yanıtlarını KESİNLİKLE sadece sana sağlanan BAĞLAM içerisindeki verilere dayanarak oluştur. Kendi ön bilgilerini, genel kültürünü veya dış kaynaklı bilgileri yanıtına ASLA dahil etme.
-3. Bilgi Eksikliği Durumu: Eğer kullanıcının sorduğu soruya dair bağlamda herhangi bir bilgi bulunmuyorsa, sadece şu ifadeyi kullan: "İncelediğim belgeler içerisinde bu konu hakkında herhangi bir bilgi bulunmamaktadır." Bu ifadenin dışına çıkma.
-4. Kimlik Soruları: "Sen kimsin?" veya benzeri kimlik sorularına, "Sisteme yüklenen belgeler üzerinden size yardımcı olmak üzere tasarlanmış bir yapay zeka asistanıyım." şeklinde profesyonel ve kısa bir yanıt ver; bu tür sorularda dayanak belge gösterme.
-5. Etkileşimli Kapanış: Yanıtını tamamladıktan sonra, bir alt satıra geçerek kullanıcıyı iletişime teşvik eden şu nazik kapanış sorusunu mutlaka ekle: "Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?"
-
-YANIT FORMATI:
-[Profesyonel, net ve bağlama sadık cevabın]
-
-**Dayanak Belge**
-- [Bağlamda belirtilen BELGE ismi]: [Yanıtı destekleyen kısa alıntı]
-
----
-Bu belge içeriğiyle ilgili sormak istediğiniz başka bir konu var mı?
-"""
 
 def build_context(chunks: list, source_filter: Optional[str] = None) -> Tuple[str, Dict[str, Dict]]:
     return build_grounded_context(chunks, source_filter=source_filter)
@@ -743,7 +316,7 @@ class LegalGenerator:
             return self._generate_ictihat_only(session_id)
 
         # 3. ÖN KAPSAM KONTROLÜ — Retrieval'dan ÖNCE, LLM ile kapsam dışı sorguları tespit et
-        if not is_in_scope_llm(self.client, sorgu):
+        if not is_in_scope_llm(self.client, sorgu, call_groq_completion):
             log.info(f"[Ön Filtre / LLM] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
             self.memory.add_exchange(session_id, sorgu, _KAPSAM_DISI_YANITI)
             return {
@@ -771,7 +344,7 @@ class LegalGenerator:
             )
 
             # Query rewrite
-            yeni_sorgu = rewrite_query(self.client, sorgu)
+            yeni_sorgu = rewrite_query(self.client, sorgu, call_groq_completion)
 
             # Retrieval (doğrudan madde sorgusunda history devre dışı)
             history_context = self.memory.get_context_string(session_id)

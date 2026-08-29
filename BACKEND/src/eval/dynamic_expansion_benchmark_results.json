@@ -1,0 +1,24 @@
+[
+  {
+    "enable_dynamic": false,
+    "recall_at_10": 0.7833333333333332,
+    "mrr_at_10": 0.7249999999999999,
+    "hit_rate_at_10": 0.9,
+    "hit_rate_at_1": 0.6333333333333333,
+    "precision_at_10": 0.13703703703703704,
+    "avg_distinct_articles": 9.966666666666667,
+    "avg_latency_ms": 3591.9132633319045,
+    "mode_label": "Ham Sorgu (Baseline - Genisletmesiz)"
+  },
+  {
+    "enable_dynamic": true,
+    "recall_at_10": 0.8277777777777776,
+    "mrr_at_10": 0.7088888888888888,
+    "hit_rate_at_10": 0.9333333333333333,
+    "hit_rate_at_1": 0.6,
+    "precision_at_10": 0.14370370370370372,
+    "avg_distinct_articles": 9.966666666666667,
+    "avg_latency_ms": 5569.389383332843,
+    "mode_label": "Dinamik Step-Back & Legal Concept Expansion (Yeni)"
+  }
+]

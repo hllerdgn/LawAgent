@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag, Clock, Sparkles } from 'lucide-react';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 export function BlogPostPage() {
   const { slug } = useParams();

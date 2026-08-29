@@ -44,5 +44,4 @@ ENV PORT=7860
 # Port aç
 EXPOSE 7860
 
-# Başlatma komutu (PORT env var'a göre çalışır)
-CMD ["sh", "-c", "python src/generator.py --api"]
+CMD ["python", "main.py", "--api"]

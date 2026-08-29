@@ -5,4 +5,4 @@ nixPkgs = ["python311", "gcc", "libffi", "openssl"]
 cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
 
 [start]
-cmd = "python src/generator.py --api"
+cmd = "python main.py --api"

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSiteName } from '../hooks/useSiteName';
 
 const NAV_LINKS = [
   { label: "uygulama alanları", path: "/practice-areas" },
@@ -13,22 +14,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
-  const [siteName, setSiteName] = useState(() => {
-    return localStorage.getItem('lawagent_site_name') || 'lawagent';
-  });
-
-  React.useEffect(() => {
-    const handleUpdate = () => {
-      const saved = localStorage.getItem('lawagent_site_name');
-      if (saved) setSiteName(saved);
-    };
-    window.addEventListener('storage', handleUpdate);
-    window.addEventListener('lawagent_settings_updated', handleUpdate);
-    return () => {
-      window.removeEventListener('storage', handleUpdate);
-      window.removeEventListener('lawagent_settings_updated', handleUpdate);
-    };
-  }, []);
+  const siteName = useSiteName();
 
   return (
     <header className="lumen-nav" role="banner">

@@ -70,7 +70,7 @@ services:
     depends_on:
       qdrant:
         condition: service_healthy
-    command: python src/generator.py --api
+    command: python main.py --api
     restart: unless-stopped
 
 volumes:
