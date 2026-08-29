@@ -133,9 +133,3 @@ dist/
 *.swo
 *~
 
-# ════════════════════════════════════════════════
-# 12. PROJE RAPORLARI VE DOKÜMANTASYON NOTLARI
-# ════════════════════════════════════════════════
-PROJE_AKADEMIK_RAPORU.md
-GELISTIRME_ONERILERI.md
-PROJE_DETAYLI_ANLATIM_RAPORU.md
