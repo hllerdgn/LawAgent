@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════════
-# 1. PYTHON & BACKEND (FastAPI / Mürşit / RAG)
+# 1. PYTHON & BACKEND
 # ════════════════════════════════════════════════
 __pycache__/
 *.py[cod]
@@ -23,9 +23,9 @@ FRONTEND/.vite/
 .eslintcache
 
 # ════════════════════════════════════════════════
-# 3. PROJE SPESİFİK (Büyük Veri Dosyaları ve Depolama)
+# 3. PROJE SPESİFİK — Büyük Veri & Model Dosyaları
 # ════════════════════════════════════════════════
-# Corpus ve chunk dosyaları (büyük JSON dosyaları)
+# Corpus, chunk ve embedding dosyaları (yeniden üretilebilir)
 BACKEND/src/data/*.json
 BACKEND/src/data/*.pkl
 BACKEND/src/data/*.pt
@@ -35,26 +35,17 @@ qdrant_storage/
 *.parquet
 *.index
 
+# gelistirme/ scraper çıktıları
+gelistirme/data/
+gelistirme/.venv/
+
 # ════════════════════════════════════════════════
-# 4. KİŞİSEL BELGELER, TEZ, SUNUM VE MEDYA (ASSETS)
+# 4. ASSETS & DÖKÜMANLAR
 # ════════════════════════════════════════════════
 assets/
-assets/*
 *.pdf
-*.svg
 *.pptx
 *.docx
-lawagent_poster.png
-lawagent_qr.png
-poster_preview.png
-poster_preview_with_qr.png
-QR_Kodum_1-1024.png
-# Poster oluşturma araçları
-poster.html
-screenshot_chatbot.html
-take_poster_screenshot.js
-take_screenshot.js
-/package.json
 
 # ════════════════════════════════════════════════
 # 5. İŞLETİM SİSTEMİ & ARAÇLAR
@@ -65,14 +56,11 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 
 # ════════════════════════════════════════════════
-# 6. DOCKER
-# ════════════════════════════════════════════════
-# .dockerignore GitHub'a eklensin (Docker kullanıcıları için gerekli)
-
-# ════════════════════════════════════════════════
-# 7. LOG DOSYALARI VE GEÇİCİ DOSYALAR
+# 6. LOG & GEÇİCİ DOSYALAR
 # ════════════════════════════════════════════════
 *.log
 BACKEND/logs/
@@ -81,61 +69,17 @@ logs/
 *.temp
 
 # ════════════════════════════════════════════════
-# 8. AÇIKÇA TAKİP EDİLECEKLER (override)
+# 7. PAKET YÖNETİMİ
 # ════════════════════════════════════════════════
-# .env.example her zaman git'e eklensin:
-!.env.example
-!BACKEND/src/data/.gitkeep
-
-# ════════════════════════════════════════════════
-# 9. PAKET YÖNETİMİ
-# ════════════════════════════════════════════════
-# Python
 *.egg-info/
-dist/
 build/
 .eggs/
-
-# Node.js
 npm-debug.log*
-yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-report.[0-9]*.[0-9]*.[0-9]*.json
-.pnp
-.pnp.js
-.pnp.loader.mjs
 .npm
 
 # ════════════════════════════════════════════════
-# 10. CACHE VE DERLEME DOSYALARI
+# 8. AÇIKÇA TAKİP EDİLECEKLER (override)
 # ════════════════════════════════════════════════
-.cache
-.parcel-cache
-.next
-.nuxt
-.vuepress/dist
-.serverless/
-.fusebox/
-.dynamodb/
-node_modules/
-dist/
-.next/
-.vercel/
-
-# ════════════════════════════════════════════════
-# 11. EDITÖR VE IDE DOSYALARI
-# ════════════════════════════════════════════════
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# ════════════════════════════════════════════════
-# 12. PROJE RAPORLARI VE DOKÜMANTASYON NOTLARI
-# ════════════════════════════════════════════════
-PROJE_AKADEMIK_RAPORU.md
-GELISTIRME_ONERILERI.md
-PROJE_DETAYLI_ANLATIM_RAPORU.md
+!.env.example
+!BACKEND/src/data/.gitkeep

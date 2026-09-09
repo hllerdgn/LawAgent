@@ -3,21 +3,20 @@
 # ════════════════════════════════════════════════════════
 #
 # Kullanım:
-#   Sadece pipeline çalıştır (veri topla + işle + vektörleştir):
-#     docker-compose run --rm pipeline
-#
-#   Sadece API başlat (veriler hazırsa):
-#     docker-compose up api
-#
-#   Her şeyi başlat (pipeline bitince API otomatik başlar):
+#   API + Qdrant'ı başlat:
 #     docker-compose up
 #
+#   Sadece API başlat (Qdrant Cloud kullanılıyorsa):
+#     docker-compose up api
+#
+# NOT: Scraping ve embedding işlemleri gelistirme/admin_api.py
+#      üzerinden yönetilmektedir. Pipeline servisi kaldırıldı.
 # ════════════════════════════════════════════════════════
 
 version: "3.9"
 
 services:
-  # ── Qdrant Vektör Veritabanı ────────────────────────────
+  # ── Qdrant Vektör Veritabanı (yerel geliştirme için) ────
   qdrant:
     image: qdrant/qdrant:latest
     container_name: lawagent_qdrant
@@ -33,26 +32,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Pipeline (Sıralı Veri İşleme) ──────────────────────
-  pipeline:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: lawagent_pipeline
-    env_file: .env
-    environment:
-      - QDRANT_URL=http://qdrant:6333
-      - PYTHONPATH=/app
-    volumes:
-      # Oluşan corpus/chunk dosyaları host makineye yansır
-      - ./src/data:/app/src/data
-    depends_on:
-      qdrant:
-        condition: service_healthy
-    command: bash run_pipeline.sh
-    # Pipeline bir kez çalışıp biter
-    restart: "no"
-
   # ── FastAPI / Generator (Ana API) ──────────────────────
   api:
     build:
@@ -61,12 +40,9 @@ services:
     container_name: lawagent_api
     env_file: .env
     environment:
-      - QDRANT_URL=http://qdrant:6333
       - PYTHONPATH=/app
     ports:
       - "8000:8000"
-    volumes:
-      - ./src/data:/app/src/data
     depends_on:
       qdrant:
         condition: service_healthy

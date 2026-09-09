@@ -13,13 +13,10 @@ python-dotenv
 pydantic-settings
 
 # ── Embedding / ML ────────────────────────────────────────────────────────────
+# NOT: Embedding (embedder.py) gelistirme/ admin panelinden tetiklenir.
+# Production API sadece retrieval için sentence-transformers kullanır.
 sentence-transformers
 torch
-transformers
-
-# ── Veri İşleme ───────────────────────────────────────────────────────────────
-numpy
-pandas
 
 # ── PDF İşleme ────────────────────────────────────────────────────────────────
 PyMuPDF
