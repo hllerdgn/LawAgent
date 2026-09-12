@@ -3,18 +3,17 @@ src/admin/schemas.py — Admin Scraping Pydantic Şemaları
 ========================================================
 """
 
+import re
 from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator
 
 from src.admin.job_store import JobStatus
 
-# mevzuat.gov.tr SSRF koruması için izin verilen prefix'ler
-# HTML sayfaları ve PDF endpoint'lerinin ikisi de kapsanıyor
-_ALLOWED_URL_PREFIXES = (
-    "https://www.mevzuat.gov.tr/MevzuatMetin/",   # PDF endpoint'i (tercih edilen)
-    "https://www.mevzuat.gov.tr/mevzuat",          # HTML endpoint'i
-    "https://mevzuat.gov.tr/MevzuatMetin/",
-    "https://mevzuat.gov.tr/mevzuat",
+# SSRF koruması: tam URL formatı regex ile doğrulanır
+# Format: https://(www.)?mevzuat.gov.tr/MevzuatMetin/{Tur}.{Tertip}.{No}.pdf
+# Path traversal (../../), sorgu string'i ve fragment yasak.
+_MEVZUAT_PDF_RE = re.compile(
+    r"^https://(www\.)?mevzuat\.gov\.tr/MevzuatMetin/\d+\.\d+\.\d+\.pdf$"
 )
 
 
@@ -26,12 +25,17 @@ class ScrapeRequest(BaseModel):
 
     @field_validator("url")
     @classmethod
-    def url_must_be_mevzuat(cls, v: str) -> str:
-        """SSRF koruması: yalnızca mevzuat.gov.tr domain'inden URL kabul edilir."""
-        if not any(v.startswith(prefix) for prefix in _ALLOWED_URL_PREFIXES):
+    def url_must_be_mevzuat_pdf(cls, v: str) -> str:
+        """
+        SSRF + path traversal koruması.
+        Yalnızca tam eşleşen PDF URL'leri kabul edilir:
+          https://(www.)?mevzuat.gov.tr/MevzuatMetin/{N}.{N}.{N}.pdf
+        Sorgu dizisi, fragment veya ../ içeren URL'ler reddedilir.
+        """
+        if not _MEVZUAT_PDF_RE.match(v):
             raise ValueError(
-                "URL yalnızca mevzuat.gov.tr domain'inden olabilir. "
-                f"Geçerli prefix'ler: {_ALLOWED_URL_PREFIXES}"
+                "URL geçerli bir mevzuat.gov.tr PDF adresi olmalıdır. "
+                "Beklenen format: https://www.mevzuat.gov.tr/MevzuatMetin/{{Tur}}.{{Tertip}}.{{No}}.pdf"
             )
         return v
 
