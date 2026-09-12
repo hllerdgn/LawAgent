@@ -8,9 +8,6 @@
 #
 #   Sadece API başlat (Qdrant Cloud kullanılıyorsa):
 #     docker-compose up api
-#
-# NOT: Scraping ve embedding işlemleri gelistirme/admin_api.py
-#      üzerinden yönetilmektedir. Pipeline servisi kaldırıldı.
 # ════════════════════════════════════════════════════════
 
 version: "3.9"

@@ -44,7 +44,6 @@ class Settings(BaseSettings):
     # ── Qdrant Vektör Veritabanı ─────────────────────────────────────────────
     QDRANT_URL: Optional[str] = None
     QDRANT_API_KEY: Optional[str] = None
-    QDRANT_STORAGE: Optional[str] = None
     QDRANT_LOCAL_URL: str = "http://localhost:6333"
     COLLECTION_NAME: str = "lawagent_mursit"
     SITE_COLLECTION_NAME: str = "site_corpus"
@@ -81,10 +80,6 @@ class Settings(BaseSettings):
     RERANKER_TOP_K: int = 30
     RERANKER_MAX_DOC_CHARS: int = 512
     RERANKER_DEVICE: str = "cpu"
-
-    # ── Dinamik Sorgu Genişletme (Step-Back & Concept Expansion) ──────────────
-    ENABLE_DYNAMIC_EXPANSION: bool = True
-    EXPANSION_MODEL: str = "groq/compound-mini"
 
     # ── Güvenlik ──────────────────────────────────────────────────────────────
     ADMIN_API_KEY: Optional[str] = None   # Admin endpoint'leri için — boşsa uyarı
@@ -141,10 +136,6 @@ class Settings(BaseSettings):
     @property
     def CLIENTS_FILE(self) -> Path:
         return _BACKEND_DIR / "src" / "clients.json"
-
-    @property
-    def SITE_DOCS_FILE(self) -> Path:
-        return _BACKEND_DIR / "data" / "site_documents.json"
 
     @property
     def GROQ_FALLBACK_MODELS(self) -> List[str]:

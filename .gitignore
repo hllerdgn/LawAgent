@@ -35,10 +35,6 @@ qdrant_storage/
 *.parquet
 *.index
 
-# gelistirme/ scraper çıktıları
-gelistirme/data/
-gelistirme/.venv/
-
 # ════════════════════════════════════════════════
 # 4. ASSETS & DÖKÜMANLAR
 # ════════════════════════════════════════════════

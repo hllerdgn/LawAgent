@@ -1,27 +1,28 @@
 """
-api/app.py — LawAgent AI FastAPI Uygulaması ve Router Kaydı
-===========================================================
+api/app.py — LawAgent AI FastAPI Uygulaması
+============================================
 """
 
-import json
 from datetime import datetime
 from functools import lru_cache
-from typing import Dict, Any, Optional
+from typing import Optional
 from contextlib import asynccontextmanager
 
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
-from fastapi import FastAPI, Request, Response, UploadFile, File, Depends, HTTPException, Security
+from fastapi import FastAPI, Request, UploadFile, File, Depends, HTTPException, Security
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.security import APIKeyHeader
 
 from config.settings import settings
 from core.logging import log
 from api.schemas import AskRequest, AskResponse
 from src.generator import LegalGenerator, get_retriever
+from src.admin.auth import verify_admin_key, check_admin_key_at_startup
+from src.admin.routes import router as admin_router
 import src.pdf_processor as pdf_processor
 
 
@@ -40,31 +41,15 @@ if settings.SENTRY_DSN:
 
 @lru_cache()
 def get_generator() -> LegalGenerator:
-    """LegalGenerator singleton'ı döndürür — test'lerde override edilebilir."""
+    """LegalGenerator singleton — testlerde override edilebilir."""
     return LegalGenerator(k=settings.DEFAULT_ASK_K)
-
-
-# ── Admin Authentication ──────────────────────────────────────────────────────
-
-_admin_key_header = APIKeyHeader(name="X-Admin-Key", auto_error=False)
-
-
-async def verify_admin_key(key: Optional[str] = Security(_admin_key_header)) -> None:
-    """
-    X-Admin-Key header ile admin işlemlerini korur.
-    ADMIN_API_KEY ayarlanmamışsa admin endpoint'leri korumasız çalışır (dev modu).
-    """
-    if not settings.ADMIN_API_KEY:
-        # Dev ortamı: anahtar ayarlanmamış → izin ver (ama startup'ta uyarı verildi)
-        return
-    if key != settings.ADMIN_API_KEY:
-        raise HTTPException(status_code=403, detail="Geçersiz admin anahtarı.")
 
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    check_admin_key_at_startup()   # Production'da key yoksa burada RuntimeError
     get_retriever()
     get_generator()
     log.info("[Startup] LawAgent AI API başlatıldı (v6.0).")
@@ -86,7 +71,7 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # ── CORS Middleware ───────────────────────────────────────────────────────
+    # ── CORS ─────────────────────────────────────────────────────────────────
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
@@ -95,19 +80,8 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.middleware("http")
-    async def handle_options(request: Request, call_next):
-        if request.method == "OPTIONS":
-            return Response(
-                status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-                    "Access-Control-Allow-Headers": "*",
-                },
-            )
-        return await call_next(request)
-
+    # ── Admin Router ─────────────────────────────────────────────────────────
+    app.include_router(admin_router, prefix="/admin", tags=["Admin"])
     # ── Global Exception Handler ──────────────────────────────────────────────
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
@@ -117,39 +91,10 @@ def create_application() -> FastAPI:
             content={"detail": "Sunucu hatası. Lütfen tekrar deneyin."},
         )
 
-    # ── Multi-Tenant / Client Endpoints ───────────────────────────────────────
-    def _load_clients_json() -> Dict[str, Any]:
-        clients_file = settings.CLIENTS_FILE
-        if clients_file.exists():
-            try:
-                with open(clients_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception as e:
-                log.error(f"clients.json okunurken hata: {e}")
-        return {}
-
-    @app.get("/clients", tags=["Clients"])
-    async def get_clients():
-        """Tüm kayıtlı kurumsal istemcileri döndürür."""
-        clients = _load_clients_json()
-        return {"clients": list(clients.values())}
-
-    @app.get("/clients/{client_id}", tags=["Clients"])
-    async def get_client_config(client_id: str):
-        """Belirtilen client_id için marka yapılandırmasını döndürür."""
-        clients = _load_clients_json()
-        if client_id in clients:
-            return clients[client_id]
-        if "lawagent-demo" in clients:
-            return clients["lawagent-demo"]
-        raise HTTPException(status_code=404, detail=f"Client '{client_id}' bulunamadı.")
-
-    # ── RAG Generation Endpoints (Root & v1 Versioning) ───────────────────────
+    # ── RAG / Soru-Cevap ──────────────────────────────────────────────────────
     @app.post("/ask", response_model=AskResponse, tags=["RAG"])
-    @app.post("/v1/ask", response_model=AskResponse, tags=["RAG"], include_in_schema=True)
     async def ask(req: AskRequest, gen: LegalGenerator = Depends(get_generator)):
-        """Kullanıcının hukuki sorusunu yanıtlar (v1 API)."""
-        # CPU-bound generate() → threadpool (event loop serbest kalır)
+        """Kullanıcının hukuki sorusunu yanıtlar."""
         result = await run_in_threadpool(gen.generate, req.query, req.session_id, req.k)
 
         error = result.get("error")
@@ -162,8 +107,8 @@ def create_application() -> FastAPI:
 
         return result
 
-    # ── Belge / PDF Yönetimi (Admin Korumalı) ────────────────────────────────
-    @app.post("/upload-document", tags=["Documents"])
+    # ── PDF Belge Yönetimi (Admin) ────────────────────────────────────────────
+    @app.post("/admin/upload-document", tags=["Documents"])
     async def upload_document(
         file: UploadFile = File(...),
         _: None = Depends(verify_admin_key),
@@ -200,22 +145,7 @@ def create_application() -> FastAPI:
             return {"status": "ok", "message": f"{filename} silindi."}
         raise HTTPException(status_code=500, detail="Silme işlemi başarısız oldu.")
 
-    # ── Health & Stats ────────────────────────────────────────────────────────
-    @app.get("/health", tags=["Health"])
-    async def health():
-        """Hafif uptime denetim endpointi."""
-        return {"status": "ok", "version": "6.0"}
-
-    @app.get("/memory/{session_id}", tags=["Memory"])
-    async def get_memory(session_id: str, gen: LegalGenerator = Depends(get_generator)):
-        """Oturum hafızasını döndürür."""
-        history = gen.memory.get_history(session_id)
-        return {
-            "session_id": session_id,
-            "message_count": len(history),
-            "history": history,
-        }
-
+    # ── Admin İstatistikleri ──────────────────────────────────────────────────
     @app.get("/admin/stats", tags=["Admin"])
     async def get_admin_stats(
         _: None = Depends(verify_admin_key),
@@ -223,6 +153,7 @@ def create_application() -> FastAPI:
     ):
         """Sistem kullanım istatistiklerini döndürür. [Admin]"""
         retriever = get_retriever()
+
         site_docs_count = 0
         try:
             site_docs_count = retriever.qdrant.count(settings.SITE_COLLECTION_NAME).count
@@ -238,25 +169,24 @@ def create_application() -> FastAPI:
         total_questions = 0
         recent_queries = []
         for session_id, messages in gen.memory.memory.items():
-            for i in range(len(messages)):
-                if messages[i]["role"] == "user":
+            for i, msg in enumerate(messages):
+                if msg["role"] == "user":
                     total_questions += 1
                     ans = "Cevaplanmadı."
                     if i + 1 < len(messages) and messages[i + 1]["role"] == "assistant":
                         ans_text = messages[i + 1]["content"]
                         ans = ans_text[:220] + "..." if len(ans_text) > 220 else ans_text
 
-                    raw_ts = messages[i]["timestamp"]
+                    raw_ts = msg["timestamp"]
                     formatted_date = raw_ts
                     try:
-                        dt = datetime.fromisoformat(raw_ts)
-                        formatted_date = dt.strftime("%d-%m-%Y %H:%M")
+                        formatted_date = datetime.fromisoformat(raw_ts).strftime("%d-%m-%Y %H:%M")
                     except Exception:
                         pass
 
                     recent_queries.append({
                         "name": f"Oturum #{session_id[:6]}",
-                        "subject": messages[i]["content"],
+                        "subject": msg["content"],
                         "answer": ans,
                         "date": formatted_date,
                         "raw_date": raw_ts,
@@ -271,15 +201,27 @@ def create_application() -> FastAPI:
             "recent_queries": recent_queries[:10],
         }
 
-    # ── Prometheus-style Metrics ──────────────────────────────────────────────
+    # ── Oturum Hafızası ───────────────────────────────────────────────────────
+    @app.get("/memory/{session_id}", tags=["Memory"])
+    async def get_memory(session_id: str, gen: LegalGenerator = Depends(get_generator)):
+        """Belirtilen oturumun konuşma geçmişini döndürür."""
+        history = gen.memory.get_history(session_id)
+        return {
+            "session_id": session_id,
+            "message_count": len(history),
+            "history": history,
+        }
+
+    # ── Health & Metrics ──────────────────────────────────────────────────────
+    @app.get("/health", tags=["Health"])
+    async def health():
+        """Hafif uptime denetim endpointi."""
+        return {"status": "ok", "version": "6.0"}
+
     @app.get("/metrics", tags=["Health"])
     async def metrics(gen: LegalGenerator = Depends(get_generator)):
-        """
-        Temel Prometheus text formatında metrikler.
-        Üretim ortamında prometheus-client entegrasyonu ile genişletilebilir.
-        """
+        """Temel Prometheus text formatında metrikler."""
         total_sessions = len(gen.memory.memory)
-        total_messages = sum(len(msgs) for msgs in gen.memory.memory.values())
         total_questions = sum(
             sum(1 for m in msgs if m["role"] == "user")
             for msgs in gen.memory.memory.values()
