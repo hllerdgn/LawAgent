@@ -8,10 +8,13 @@ from pydantic import BaseModel, Field, field_validator
 
 from src.admin.job_store import JobStatus
 
-# mevzuat.gov.tr SSRF koruması için izin verilen domain'ler
+# mevzuat.gov.tr SSRF koruması için izin verilen prefix'ler
+# HTML sayfaları ve PDF endpoint'lerinin ikisi de kapsanıyor
 _ALLOWED_URL_PREFIXES = (
-    "https://www.mevzuat.gov.tr/",
-    "https://mevzuat.gov.tr/",
+    "https://www.mevzuat.gov.tr/MevzuatMetin/",   # PDF endpoint'i (tercih edilen)
+    "https://www.mevzuat.gov.tr/mevzuat",          # HTML endpoint'i
+    "https://mevzuat.gov.tr/MevzuatMetin/",
+    "https://mevzuat.gov.tr/mevzuat",
 )
 
 

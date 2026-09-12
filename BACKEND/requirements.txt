@@ -23,9 +23,9 @@ PyMuPDF
 requests
 python-multipart
 
-# ── Scraping (Admin Pipeline) ─────────────────────────────────────────────────
-beautifulsoup4
-lxml
+# ── Scraping (Admin Pipeline) ─────────────────────────────────────────────────────
+# PDF parse: PyMuPDF (fitz) zaten üst satırda mevcut.
+# Retry/backoff için tenacity.
 tenacity
 
 # ── Monitoring ────────────────────────────────────────────────────────────────
