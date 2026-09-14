@@ -60,17 +60,6 @@ _ARTICLE_PATTERN = re.compile(
     re.MULTILINE,
 )
 
-# Dipnot kalıpları — madde metni içine gömülen referans/değişiklik notları
-# Örn: "6 2/7/2018 tarihli ve 700 sayılı KHK'nin 156 ncı maddesiyle..."
-# Örn: "(Değişik: 10/9/2014-6552/76 md.)"
-# Örn: "(Ek: 1/3/2018-7099/25 md.)"
-# Örn: "(Mülga: 6/2/2014-6518/106 md.)"
-_DIPNOT_PATTERNS = [
-    re.compile(r"\((?:Değişik|Ek|Mülga|Bent|Fıkra)[^)]{0,200}\)"),  # parantez içi notlar
-    re.compile(r"^\d{1,2}\s+\d{1,2}/\d{1,2}/\d{4}[^\n]{0,300}", re.MULTILINE),  # numeral+tarih
-    re.compile(r"^\d{1,2}\s+(?:\d+/\d+-\d+|RG)\s+[^\n]{0,300}", re.MULTILINE),  # Resmi Gazete ref
-]
-
 
 # ── PDF İndirme ───────────────────────────────────────────────────────────────
 
@@ -91,29 +80,22 @@ def _fetch_pdf_bytes(url: str) -> bytes:
 
 # ── PDF Parse ─────────────────────────────────────────────────────────────────
 
-def _clean_footnotes(text: str) -> str:
-    """Madde metnine gömülen dipnotları/değişiklik notlarını temizler."""
-    for pattern in _DIPNOT_PATTERNS:
-        text = pattern.sub("", text)
-    # Temizlik sonrası oluşan boş satırları topla
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
 def _parse_pdf(pdf_bytes: bytes) -> tuple[str, list[dict]]:
     """
     PDF byte'larını parse ederek (law_name, articles) çifti döndürür.
 
+    Ham parse — hiçbir temizlik yapılmaz:
+    Dipnotlar, KHK şerhleri, değişiklik notları madde metnine dahil saklanır.
+    Temizlik cleaner.py'nin sorumluluundadır (preprocess adımı).
+
     Madde ayrıştırma stratejisi:
     1. Her sayfanın metnini birleştir
     2. "MADDE N-" kalıbıyla metni böl
-    3. Her parçayı madde olarak kaydet
-    4. Dipnotları temizle
+    3. Her parçayı ham madde olarak kaydet
 
     Returns:
         (law_name, articles)
-        law_name: PDF metadata'dan veya ilk sayfadan çıkarılır
-        articles: [{"no": str, "baslik": str, "metin": str}]
+        articles: [{"no": str, "baslik": str, "metin": str}]  ← ham, temizlenmemiş
     """
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
 
@@ -131,35 +113,29 @@ def _parse_pdf(pdf_bytes: bytes) -> tuple[str, list[dict]]:
                 law_name = line
                 break
 
-    # Maddeleri böl
+    # Maddeleri kaba olarak böl
     articles = []
     splits = _ARTICLE_PATTERN.split(full_text)
     # splits: [ön_metin, keyword, "1", metin1, keyword, "2", metin2, ...]
     i = 1
     while i + 2 <= len(splits):
         madde_no = splits[i + 1].strip()
-        metin_raw = splits[i + 2] if i + 2 < len(splits) else ""
+        # Ham metin — dipnotlar olduğu gibi kalır
+        metin_raw = (splits[i + 2] if i + 2 < len(splits) else "").strip()
 
-        # Dipnotları temizle
-        metin_clean = _clean_footnotes(metin_raw)
-
-        # İlk satır başlık olabilir
-        lines = metin_clean.splitlines()
+        # İlk satır başlık parse önce yapılır, temizlik değil
+        lines = metin_raw.splitlines()
         if lines and not re.match(r"^(MADDE|Madde)", lines[0]):
             baslik = lines[0].strip()
             metin = "\n".join(lines[1:]).strip()
         else:
             baslik = ""
-            metin = metin_clean
+            metin = metin_raw
 
-        articles.append({
-            "no": madde_no,
-            "baslik": baslik,
-            "metin": metin,
-        })
+        articles.append({"no": madde_no, "baslik": baslik, "metin": metin})
         i += 3
 
-    log.info(f"[Scraper] {len(articles)} madde parse edildi.")
+    log.info(f"[Scraper] {len(articles)} madde parse edildi (ham, dipnotlar dahil).")
     return law_name, articles
 
 
