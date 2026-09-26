@@ -197,84 +197,88 @@ export function AdminBlog() {
   };
 
   return (
-    <div className="space-y-6 font-sans antialiased">
+    <div className="space-y-6">
       
       {/* Top Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-slate-900 text-2xl font-bold font-serif">Blog & İçerik Yönetimi</h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+          <h1 className="admin-heading text-2xl font-normal">Blog & İçerik Yönetimi</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
             Sitede yayımlanan hukuki makaleleri ekleyin, içeriğini düzenleyin veya yayın durumunu değiştirin.
           </p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors border border-slate-800 shadow-md"
+          className="admin-btn-primary text-xs py-2.5 px-4 cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-amber-400" />
+          <Plus className="w-4 h-4" />
           <span>Yeni Makale Ekle</span>
         </button>
       </div>
 
       {/* Posts Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="admin-table-wrapper">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs font-semibold uppercase tracking-wider">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4">Makale Başlığı</th>
-                <th className="px-6 py-4">Kategori</th>
-                <th className="px-6 py-4">Yayın Durumu</th>
-                <th className="px-6 py-4">Yayın Tarihi</th>
-                <th className="px-6 py-4 text-right">İşlemler</th>
+                <th>Makale Başlığı</th>
+                <th>Kategori</th>
+                <th>Yayın Durumu</th>
+                <th>Yayın Tarihi</th>
+                <th style={{ textAlign: 'right' }}>İşlemler</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs text-slate-800">
+            <tbody>
               {posts.map((post) => (
-                <tr key={post.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-slate-900 block">{post.title}</span>
-                    <span className="text-[11px] text-slate-400 font-mono">/blog/{post.slug}</span>
+                <tr key={post.id}>
+                  <td>
+                    <span className="font-semibold block" style={{ color: 'var(--color-ink)' }}>{post.title}</span>
+                    <span className="text-[11px] font-mono" style={{ color: 'var(--color-muted)' }}>/blog/{post.slug}</span>
                   </td>
-                  <td className="px-6 py-4 font-semibold text-violet-700">
-                    <span className="bg-violet-50 border border-violet-200 px-2.5 py-1 rounded-md text-[11px]">
+                  <td>
+                    <span className="admin-badge admin-badge-accent text-[10px]">
                       {post.category || 'Mevzuat'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     <button
                       onClick={() => handleToggleStatus(post.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-all ${
+                      className={`admin-badge cursor-pointer transition-all ${
                         post.status === 'Yayında'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                          ? 'admin-badge-done'
+                          : 'admin-badge-pending'
                       }`}
                       title="Yayın durumunu değiştirmek için tıklayın"
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${post.status === 'Yayında' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
                       {post.status}
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-slate-500">{post.date}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="text-xs" style={{ color: 'var(--color-muted)' }}>{post.date}</td>
+                  <td style={{ textAlign: 'right' }}>
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         to={`/blog/${post.slug}`}
-                        className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
-                        title="Sitede Önizle"
+                        target="_blank"
+                        className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                        style={{ color: 'var(--color-ink-2)' }}
+                        title="Sitede Gör"
                       >
                         <Eye className="w-4 h-4" />
                       </Link>
                       <button
                         onClick={() => handleOpenEdit(post)}
-                        className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                        style={{ color: 'var(--color-accent)' }}
                         title="Düzenle"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(post.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                        style={{ color: '#ef4444' }}
                         title="Sil"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -290,27 +294,28 @@ export function AdminBlog() {
 
       {/* Edit / Create Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full p-6 lg:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="admin-card max-w-2xl w-full p-6 lg:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
             
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-500" />
-                <h3 className="text-slate-900 font-bold font-serif text-lg">
+            <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: 'var(--color-rule)' }}>
+              <div className="flex items-center gap-2.5">
+                <FileText className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                <h3 className="admin-heading text-lg font-normal">
                   {editingPost ? 'Makaleyi Düzenle' : 'Yeni Makale Oluştur'}
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"
+                className="p-1.5 rounded-lg border transition-colors cursor-pointer"
+                style={{ borderColor: 'var(--color-rule)', color: 'var(--color-muted)' }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmitForm} className="space-y-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Makale Başlığı *
                 </label>
                 <input
@@ -319,19 +324,19 @@ export function AdminBlog() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="örn. İş Sözleşmesi Feshi ve Kıdem Tazminatı Hakları"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="admin-input text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                     Kategori / Etiket
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    className="admin-select text-xs"
                   >
                     <option value="TTK · TİCARET">TTK · TİCARET</option>
                     <option value="TBK · İŞ">TBK · İŞ</option>
@@ -341,13 +346,13 @@ export function AdminBlog() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                     Yayın Durumu
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    className="admin-select text-xs"
                   >
                     <option value="Yayında">Yayında</option>
                     <option value="Taslak">Taslak</option>
@@ -356,7 +361,7 @@ export function AdminBlog() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Özet / Giriş Cümlesi
                 </label>
                 <input
@@ -364,12 +369,12 @@ export function AdminBlog() {
                   value={formData.excerpt}
                   onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                   placeholder="Makalenin sitede görünen 1-2 cümlelik özeti"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="admin-input text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Makale Metni (HTML / Paragraflar)
                 </label>
                 <textarea
@@ -377,23 +382,23 @@ export function AdminBlog() {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   placeholder="<p>Makale paragrafları ve içerik metni...</p>"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono leading-relaxed focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="admin-textarea text-xs font-mono leading-relaxed"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--color-rule)' }}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium"
+                  className="admin-btn-secondary text-xs py-2 px-4 cursor-pointer"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-medium shadow-md flex items-center gap-2"
+                  className="admin-btn-primary text-xs py-2 px-5 cursor-pointer"
                 >
-                  <Save className="w-4 h-4 text-amber-400" />
+                  <Save className="w-4 h-4" />
                   <span>{editingPost ? 'Değişiklikleri Kaydet' : 'Makaleyi Yayınla'}</span>
                 </button>
               </div>

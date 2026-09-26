@@ -23,7 +23,7 @@ from api.schemas import AskRequest, AskResponse
 from src.generator import LegalGenerator, get_retriever
 from src.admin.auth import verify_admin_key, check_admin_key_at_startup
 from src.admin.routes import router as admin_router
-import src.pdf_processor as pdf_processor
+from src.admin.document_routes import router as document_router
 
 
 # ── Sentry Monitoring ─────────────────────────────────────────────────────────
@@ -82,6 +82,7 @@ def create_application() -> FastAPI:
 
     # ── Admin Router ─────────────────────────────────────────────────────────
     app.include_router(admin_router, prefix="/admin", tags=["Admin"])
+    app.include_router(document_router, prefix="/admin", tags=["Documents"])
     # ── Global Exception Handler ──────────────────────────────────────────────
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
@@ -106,44 +107,6 @@ def create_application() -> FastAPI:
             raise HTTPException(status_code=500, detail=result.get("answer", "Teknik hata."))
 
         return result
-
-    # ── PDF Belge Yönetimi (Admin) ────────────────────────────────────────────
-    @app.post("/admin/upload-document", tags=["Documents"])
-    async def upload_document(
-        file: UploadFile = File(...),
-        _: None = Depends(verify_admin_key),
-    ):
-        """Kurumsal PDF belgesi yükler ve vektörleştirir. [Admin]"""
-        if not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Sadece PDF dosyaları desteklenmektedir.")
-        try:
-            contents = await file.read()
-            retriever = get_retriever()
-            added_chunks = pdf_processor.process_and_index_pdf(
-                contents,
-                file.filename,
-                retriever.embedder,
-                retriever.qdrant,
-            )
-            return {"status": "ok", "message": f"{file.filename} işlendi.", "chunks_added": added_chunks}
-        except Exception as e:
-            log.exception("PDF işleme hatası")
-            raise HTTPException(status_code=500, detail=f"Dosya işlenirken hata: {str(e)}")
-
-    @app.get("/admin/documents", tags=["Documents"])
-    async def list_documents(_: None = Depends(verify_admin_key)):
-        """Yüklenmiş kurumsal belgeleri listeler. [Admin]"""
-        docs = pdf_processor.get_uploaded_documents()
-        return {"documents": docs}
-
-    @app.delete("/admin/documents/{filename}", tags=["Documents"])
-    async def delete_document(filename: str, _: None = Depends(verify_admin_key)):
-        """Yüklenmiş bir kurumsal belgeyi siler. [Admin]"""
-        retriever = get_retriever()
-        success = pdf_processor.delete_document(filename, retriever.qdrant)
-        if success:
-            return {"status": "ok", "message": f"{filename} silindi."}
-        raise HTTPException(status_code=500, detail="Silme işlemi başarısız oldu.")
 
     # ── Admin İstatistikleri ──────────────────────────────────────────────────
     @app.get("/admin/stats", tags=["Admin"])

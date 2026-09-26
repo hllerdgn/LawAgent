@@ -67,76 +67,78 @@ export function AdminPracticeAreas() {
   };
 
   return (
-    <div className="space-y-6 font-sans antialiased">
+    <div className="space-y-6">
       
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-slate-900 text-2xl font-bold font-serif">Çalışma Alanları Yönetimi</h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+          <h1 className="admin-heading text-2xl font-normal">Çalışma Alanları Yönetimi</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
             Sitede gösterilen ve AI tarafından desteklenen uzmanlık disiplinlerini yönetin.
           </p>
         </div>
         <button
           onClick={handleAdd}
-          className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors border border-slate-800"
+          className="admin-btn-primary text-xs py-2.5 px-4 cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-amber-400" />
+          <Plus className="w-4 h-4" />
           <span>Yeni Alan Ekle</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="admin-table-wrapper">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs font-semibold uppercase tracking-wider">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4">Çalışma Alanı</th>
-                <th className="px-6 py-4">Açıklama</th>
-                <th className="px-6 py-4">Slug (URL)</th>
-                <th className="px-6 py-4 text-right">İşlemler</th>
+                <th>Çalışma Alanı</th>
+                <th>Açıklama</th>
+                <th>Slug (URL)</th>
+                <th style={{ textAlign: 'right' }}>İşlemler</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs text-slate-800">
+            <tbody>
               {areas.map((area) => (
-                <tr key={area.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={area.id}>
                   {isEditing === area.id ? (
                     <>
-                      <td className="px-6 py-4">
+                      <td>
                         <input
                           type="text"
                           value={editForm.title}
                           onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                          className="w-full px-3 py-1.5 border border-amber-500 rounded-lg text-xs bg-white focus:outline-none"
+                          className="admin-input text-xs py-1.5 px-2.5"
                         />
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         <input
                           type="text"
                           value={editForm.description}
                           onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                          className="w-full px-3 py-1.5 border border-amber-500 rounded-lg text-xs bg-white focus:outline-none"
+                          className="admin-input text-xs py-1.5 px-2.5"
                         />
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         <input
                           type="text"
                           value={editForm.slug}
                           onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
-                          className="w-full px-3 py-1.5 border border-amber-500 rounded-lg text-xs bg-white focus:outline-none"
+                          className="admin-input text-xs py-1.5 px-2.5 font-mono"
                         />
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td style={{ textAlign: 'right' }}>
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleSave(area.id)}
-                            className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                            className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                            style={{ backgroundColor: 'var(--color-accent)', color: '#ffffff' }}
                             title="Kaydet"
                           >
                             <Save className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setIsEditing(null)}
-                            className="p-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+                            className="p-1.5 rounded-lg border transition-colors cursor-pointer"
+                            style={{ borderColor: 'var(--color-rule)', color: 'var(--color-muted)' }}
                             title="İptal"
                           >
                             <X className="w-4 h-4" />
@@ -146,21 +148,23 @@ export function AdminPracticeAreas() {
                     </>
                   ) : (
                     <>
-                      <td className="px-6 py-4 font-bold text-slate-900">{area.title}</td>
-                      <td className="px-6 py-4 text-slate-600 max-w-xs truncate">{area.description}</td>
-                      <td className="px-6 py-4 font-mono text-slate-500">{area.slug}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="font-semibold" style={{ color: 'var(--color-ink)' }}>{area.title}</td>
+                      <td className="max-w-xs truncate" style={{ color: 'var(--color-ink-2)' }}>{area.description}</td>
+                      <td className="font-mono text-xs" style={{ color: 'var(--color-muted)' }}>{area.slug}</td>
+                      <td style={{ textAlign: 'right' }}>
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(area)}
-                            className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                            style={{ color: 'var(--color-ink-2)' }}
                             title="Düzenle"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(area.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                            style={{ color: '#ef4444' }}
                             title="Sil"
                           >
                             <Trash2 className="w-4 h-4" />

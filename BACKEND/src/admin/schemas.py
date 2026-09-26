@@ -21,17 +21,19 @@ class ScrapeRequest(BaseModel):
     """Scraping tetikleme isteği."""
     law_id: str = Field(..., min_length=1, max_length=64, description="Kanun kimliği (örn. '6098')")
     law_name: str = Field(..., min_length=1, max_length=256, description="Kanun adı")
-    url: str = Field(..., description="mevzuat.gov.tr URL'i")
+    url: Optional[str] = Field(None, description="mevzuat.gov.tr URL'i (boş bırakılırsa law_id'den türetilir)")
 
     @field_validator("url")
     @classmethod
-    def url_must_be_mevzuat_pdf(cls, v: str) -> str:
+    def url_must_be_mevzuat_pdf(cls, v: Optional[str]) -> Optional[str]:
         """
         SSRF + path traversal koruması.
         Yalnızca tam eşleşen PDF URL'leri kabul edilir:
           https://(www.)?mevzuat.gov.tr/MevzuatMetin/{N}.{N}.{N}.pdf
         Sorgu dizisi, fragment veya ../ içeren URL'ler reddedilir.
         """
+        if not v:
+            return v
         if not _MEVZUAT_PDF_RE.match(v):
             raise ValueError(
                 "URL geçerli bir mevzuat.gov.tr PDF adresi olmalıdır. "
@@ -53,6 +55,9 @@ class PreprocessResponse(BaseModel):
     status: JobStatus
     clean_path: Optional[str] = None
     article_count: Optional[int] = None
+    duplicate_lines_removed: Optional[int] = 0
+    dropped_article_count: Optional[int] = 0
+    dropped_article_nos: Optional[list[str]] = Field(default_factory=list)
 
 
 class JobStatusResponse(BaseModel):
@@ -66,6 +71,7 @@ class JobStatusResponse(BaseModel):
     error: Optional[str] = None
     created_at: str
     updated_at: str
+    parent_job_id: Optional[str] = None
     # Opsiyonel: raw veya clean veri (GET ?include_data=true ile)
     raw_data: Optional[dict[str, Any]] = None
     clean_data: Optional[dict[str, Any]] = None

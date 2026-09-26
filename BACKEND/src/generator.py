@@ -1,4 +1,4 @@
-﻿"""
+"""
 generator.py — LawAgent AI RAG Orchestration
 =============================================
 LegalGenerator sınıfı: Groq LLM + Qdrant retrieval pipeline yöneticisi.
@@ -17,14 +17,14 @@ from datetime import datetime
 from dotenv import load_dotenv
 from groq import Groq, APIStatusError, APITimeoutError, RateLimitError
 
-from retriever import LegalRetriever
-import pdf_processor
-from legal_normalizer import full_post_process, normalize_legal_terminology, sanitize_markdown_typography
-from citation_engine import build_grounded_context, validate_and_extract_citations
-from legal_intent import analyze_legal_query, build_legal_role_context, get_concept_distinction_rule
-from memory import ConversationMemory
-from scope_checker import is_legal_query, is_in_scope_llm, KAPSAM_DISI_YANITI as _KAPSAM_DISI_YANITI
-from query_processor import is_ictihat_request, QueryIntentRouter, rewrite_query
+from src.retriever import LegalRetriever
+from src.legal_normalizer import full_post_process, normalize_legal_terminology, sanitize_markdown_typography
+from src.citation_engine import build_grounded_context, validate_and_extract_citations
+from src.legal_intent import analyze_legal_query, build_legal_role_context, get_concept_distinction_rule
+from src.memory import ConversationMemory
+from src.scope_checker import is_legal_query, is_in_scope_llm, get_route, KAPSAM_DISI_YANITI as _KAPSAM_DISI_YANITI
+from src.pipeline.documents.doc_store import list_documents
+from src.query_processor import is_ictihat_request, QueryIntentRouter, rewrite_query
 from services.prompts import (
     SISTEM_PROMPT_TEMPLATE as _SISTEM_PROMPT_TEMPLATE,
     ICTIHAT_PROMPT_TEMPLATE as _ICTIHAT_PROMPT_TEMPLATE,
@@ -311,9 +311,18 @@ class LegalGenerator:
             log.info(f"[Aşama 2] İçtihat talebi yakalandı → session: {session_id}")
             return self._generate_ictihat_only(session_id)
 
-        # 3. ÖN KAPSAM KONTROLÜ — Retrieval'dan ÖNCE, LLM ile kapsam dışı sorguları tespit et
-        if not is_in_scope_llm(self.client, sorgu, call_groq_completion):
-            log.info(f"[Ön Filtre / LLM] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
+        # Kayıtlı şirket dokümanlarını al
+        company_docs = []
+        try:
+            company_docs = [d for d in list_documents() if d.status == "indexed"]
+        except Exception as _de:
+            log.warning(f"Doküman listesi alınamadı: {_de}")
+        company_titles = [d.filename for d in company_docs]
+
+        # 3. ÖN KAPSAM VE ROTA KONTROLÜ — LLM ile rota belirleme (company / legal / out_of_scope)
+        route = get_route(self.client, sorgu, call_groq_completion, company_titles)
+        if route == "out_of_scope":
+            log.info(f"[Ön Filtre / Route] Kapsam dışı sorgu reddedildi: '{sorgu_temiz}'")
             self.memory.add_exchange(session_id, sorgu, _KAPSAM_DISI_YANITI)
             return {
                 "answer": _KAPSAM_DISI_YANITI,
@@ -321,6 +330,46 @@ class LegalGenerator:
                 "filtered": True,
                 "intent": "OUT_OF_SCOPE",
                 "sure_ms": int((time.time() - t0) * 1000),
+            }
+
+        # Şirket / büro belgesi rotası
+        if route == "company":
+            log.info(f"[Route] Şirket belgesi sorgusu yönlendirildi: '{sorgu_temiz}'")
+            c_k = k or 5
+            company_chunks = self.retriever.retrieve_company(sorgu, k=c_k)
+            if not company_chunks:
+                no_company_res = "Sorduğunuz konuyla ilgili şirket/avukat belgelerinde ilgili bir bilgi bulunamadı."
+                self.memory.add_exchange(session_id, sorgu, no_company_res)
+                return {
+                    "answer": no_company_res,
+                    "sources": [],
+                    "intent": "COMPANY_DOCUMENTS",
+                    "sure_ms": int((time.time() - t0) * 1000),
+                    "filtered": False,
+                }
+            self.memory.save_chunks(session_id, company_chunks)
+            context_str, source_map = build_context(company_chunks)
+            sistem_prompt = _SITE_SISTEM_PROMPT_TEMPLATE.format(context=context_str)
+            yanit = call_groq_completion(
+                client=self.client,
+                messages=[
+                    {"role": "system", "content": sistem_prompt},
+                    {"role": "user", "content": f"SORU: {sorgu}"},
+                ],
+                temperature=0.1,
+                max_tokens=2500,
+            )
+            yanit = full_post_process(yanit)
+            sanitized_yanit, validated_sources, is_grounded = validate_and_extract_citations(
+                yanit, source_map, fallback_chunks=company_chunks
+            )
+            self.memory.add_exchange(session_id, sorgu, sanitized_yanit)
+            return {
+                "answer": sanitized_yanit,
+                "sources": validated_sources,
+                "intent": "COMPANY_DOCUMENTS",
+                "sure_ms": int((time.time() - t0) * 1000),
+                "filtered": False,
             }
 
         try:
@@ -359,6 +408,21 @@ class LegalGenerator:
 
             chunks = self.retriever.retrieve(retrieval_sorgu, k=k)
 
+            # Hybrid Retrieval: Sadece sorguda şirket/avukat/büro sinyali varsa veya şirket dokümanı ismi geçiyorsa company_corpus'tan top-2 chunk eklenir
+            is_hybrid_query = any(
+                kw in sorgu.lower()
+                for kw in ["avukat", "şirket", "büro", "müvekkil", "danışman", "tarafımız", "bizim", "iç tüzük", "politika"]
+                + [t.lower() for t in company_titles]
+            )
+            if company_titles and is_hybrid_query:
+                try:
+                    comp_hybrid = self.retriever.retrieve_company(sorgu, k=2)
+                    for ch in comp_hybrid:
+                        if ch.get("skor", 0) > 0.35:
+                            chunks.append(ch)
+                except Exception as _he:
+                    log.warning(f"Hybrid retrieval hatası: {_he}")
+
             # Fallback
             if len(chunks) < 3 and yeni_sorgu != sorgu:
                 ek = self.retriever.retrieve(sorgu, k=k)
@@ -369,7 +433,7 @@ class LegalGenerator:
                 chunks = chunks[:k]
 
             # Site document kontrolü
-            has_site_doc = any(c.get("source") == "site_document" for c in chunks)
+            has_site_doc = any(c.get("source") in ("site_document", "company_document") for c in chunks)
 
             # OUT_OF_SCOPE
             if not chunks:

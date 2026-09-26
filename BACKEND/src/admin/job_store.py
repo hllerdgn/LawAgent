@@ -30,6 +30,7 @@ class JobStatus(str, Enum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+    CANCELED = "canceled"
 
 
 @dataclass
@@ -43,6 +44,7 @@ class JobRecord:
     error: Optional[str] = None
     created_at: str = field(default_factory=lambda: _now())
     updated_at: str = field(default_factory=lambda: _now())
+    parent_job_id: Optional[str] = None
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,21 +65,28 @@ def _get_conn() -> sqlite3.Connection:
 def _create_table(conn: sqlite3.Connection) -> None:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS jobs (
-            id          TEXT PRIMARY KEY,
-            law_id      TEXT NOT NULL,
-            law_name    TEXT NOT NULL,
-            status      TEXT NOT NULL,
-            raw_path    TEXT,
-            clean_path  TEXT,
-            error       TEXT,
-            created_at  TEXT NOT NULL,
-            updated_at  TEXT NOT NULL
+            id              TEXT PRIMARY KEY,
+            law_id          TEXT NOT NULL,
+            law_name        TEXT NOT NULL,
+            status          TEXT NOT NULL,
+            raw_path        TEXT,
+            clean_path      TEXT,
+            error           TEXT,
+            created_at      TEXT NOT NULL,
+            updated_at      TEXT NOT NULL,
+            parent_job_id   TEXT
         )
     """)
+    # Migration for existing database
+    cursor = conn.execute("PRAGMA table_info(jobs)")
+    cols = [r[1] for r in cursor.fetchall()]
+    if "parent_job_id" not in cols:
+        conn.execute("ALTER TABLE jobs ADD COLUMN parent_job_id TEXT")
     conn.commit()
 
 
 def _row_to_record(row: sqlite3.Row) -> JobRecord:
+    keys = row.keys()
     return JobRecord(
         id=row["id"],
         law_id=row["law_id"],
@@ -88,28 +97,32 @@ def _row_to_record(row: sqlite3.Row) -> JobRecord:
         error=row["error"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+        parent_job_id=row["parent_job_id"] if "parent_job_id" in keys else None,
     )
 
 
 # ── CRUD ─────────────────────────────────────────────────────────────────────
 
-def create_job(law_id: str, law_name: str) -> JobRecord:
+def create_job(
+    law_id: str, law_name: str, parent_job_id: Optional[str] = None
+) -> JobRecord:
     """Yeni bir job kaydı oluşturur ve döndürür."""
     record = JobRecord(
         id=str(uuid.uuid4()),
         law_id=law_id,
         law_name=law_name,
         status=JobStatus.PENDING,
+        parent_job_id=parent_job_id,
     )
     with _lock:
         conn = _get_conn()
         conn.execute(
             """INSERT INTO jobs
-               (id, law_id, law_name, status, raw_path, clean_path, error, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (id, law_id, law_name, status, raw_path, clean_path, error, created_at, updated_at, parent_job_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (record.id, record.law_id, record.law_name, record.status.value,
              record.raw_path, record.clean_path, record.error,
-             record.created_at, record.updated_at),
+             record.created_at, record.updated_at, record.parent_job_id),
         )
         conn.commit()
     return record
@@ -134,6 +147,10 @@ def update_job(job_id: str, **fields) -> None:
         return
     updates["updated_at"] = _now()
 
+    # status Enum ise value'sunu al
+    if "status" in updates and isinstance(updates["status"], Enum):
+        updates["status"] = updates["status"].value
+
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [job_id]
 
@@ -141,6 +158,15 @@ def update_job(job_id: str, **fields) -> None:
         conn = _get_conn()
         conn.execute(f"UPDATE jobs SET {set_clause} WHERE id = ?", values)
         conn.commit()
+
+
+def delete_job(job_id: str) -> bool:
+    """Job kaydını veritabanından siler. Silinirse True döner."""
+    with _lock:
+        conn = _get_conn()
+        cur = conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+        conn.commit()
+        return cur.rowcount > 0
 
 
 def list_jobs(limit: int = 50) -> list[JobRecord]:

@@ -1,0 +1,320 @@
+/* Hallmark Admin Portal Styles
+ * Tokens: --color-paper, --color-paper-2, --color-ink, --color-ink-2,
+ *         --color-muted, --color-accent, --color-rule, --font-display,
+ *         --font-body, --font-label, etc.
+ * Supports dynamic switching between Hallmark themes (Lumen, Cobalt, Hum, Grid, Carnival).
+ */
+
+/* ── Admin Shell & Core Layout ────────────────────────────── */
+.admin-shell {
+  min-height: 100vh;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  display: flex;
+  position: relative;
+  overflow-x: clip;
+}
+
+.admin-sidebar {
+  background-color: var(--color-paper-2);
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-rule);
+  transition: width var(--dur-base) var(--ease-soft), transform var(--dur-base) var(--ease-soft);
+}
+
+.admin-header {
+  background-color: color-mix(in oklch, var(--color-paper) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-rule);
+  color: var(--color-ink);
+}
+
+.admin-main {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  flex: 1;
+}
+
+/* ── Typography Components ────────────────────────────────── */
+.admin-brand-title {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.admin-heading {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.admin-eyebrow,
+.admin-label,
+.admin-mono {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ── Cards & Containers ──────────────────────────────────── */
+.admin-card {
+  background-color: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 4px 24px -12px color-mix(in oklch, var(--color-ink) 8%, transparent);
+}
+
+.admin-card-inner {
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-lg, 12px);
+}
+
+/* ── Navigation Links ─────────────────────────────────────── */
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md, 10px);
+  color: var(--color-ink-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--dur-fast) var(--ease-soft);
+  border: 1px solid transparent;
+}
+
+.admin-nav-link:hover {
+  background-color: color-mix(in oklch, var(--color-accent) 7%, transparent);
+  color: var(--color-ink);
+}
+
+.admin-nav-link.active {
+  background-color: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  border-color: color-mix(in oklch, var(--color-accent) 28%, transparent);
+  font-weight: 600;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.admin-btn-primary {
+  background-color: var(--color-accent);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.6rem 1.2rem;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--dur-fast) var(--ease-soft);
+  box-shadow: 0 2px 8px -2px color-mix(in oklch, var(--color-accent) 40%, transparent);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background-color: var(--color-accent-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -3px color-mix(in oklch, var(--color-accent) 50%, transparent);
+}
+
+.admin-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-btn-secondary {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all var(--dur-fast) var(--ease-soft);
+}
+
+.admin-btn-secondary:hover:not(:disabled) {
+  background-color: color-mix(in oklch, var(--color-accent) 8%, transparent);
+  border-color: color-mix(in oklch, var(--color-accent) 35%, transparent);
+  color: var(--color-accent);
+}
+
+.admin-btn-danger {
+  background-color: color-mix(in oklch, red 8%, transparent);
+  color: #ef4444;
+  font-family: var(--font-body);
+  font-weight: 500;
+  border: 1px solid color-mix(in oklch, red 20%, transparent);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all var(--dur-fast) var(--ease-soft);
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background-color: color-mix(in oklch, red 16%, transparent);
+}
+
+/* ── Form Inputs ──────────────────────────────────────────── */
+.admin-input,
+.admin-textarea,
+.admin-select {
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  color: var(--color-ink);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  width: 100%;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 0.7;
+}
+
+.admin-input:focus,
+.admin-textarea:focus,
+.admin-select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-accent) 18%, transparent);
+}
+
+/* ── Tables ───────────────────────────────────────────────── */
+.admin-table-wrapper {
+  background-color: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-xl, 16px);
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.admin-table th {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-rule);
+  background-color: color-mix(in oklch, var(--color-paper-2) 80%, var(--color-paper));
+  font-weight: 600;
+}
+
+.admin-table td {
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid var(--color-rule-2);
+  color: var(--color-ink);
+  transition: background-color var(--dur-fast);
+}
+
+.admin-table tr:hover td {
+  background-color: color-mix(in oklch, var(--color-accent) 4%, transparent);
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Badges & Status Pills ────────────────────────────────── */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.admin-badge-pending {
+  background-color: color-mix(in oklch, #f59e0b 14%, transparent);
+  color: #b45309;
+  border-color: color-mix(in oklch, #f59e0b 30%, transparent);
+}
+
+.admin-badge-running {
+  background-color: color-mix(in oklch, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+  border-color: color-mix(in oklch, var(--color-accent) 30%, transparent);
+}
+
+.admin-badge-done {
+  background-color: color-mix(in oklch, #10b981 14%, transparent);
+  color: #059669;
+  border-color: color-mix(in oklch, #10b981 30%, transparent);
+}
+
+.admin-badge-failed {
+  background-color: color-mix(in oklch, #ef4444 14%, transparent);
+  color: #dc2626;
+  border-color: color-mix(in oklch, #ef4444 30%, transparent);
+}
+
+.admin-badge-canceled {
+  background-color: color-mix(in oklch, var(--color-muted) 14%, transparent);
+  color: var(--color-muted);
+  border-color: color-mix(in oklch, var(--color-muted) 25%, transparent);
+}
+
+.admin-badge-accent {
+  background-color: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  border-color: color-mix(in oklch, var(--color-accent) 26%, transparent);
+}
+
+/* ── Accordion & Code/JSON Previews ───────────────────────── */
+.admin-json-viewer {
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-lg, 12px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-ink-2);
+}
+
+.admin-diff-box {
+  background-color: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-xl, 16px);
+}

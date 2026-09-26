@@ -102,7 +102,7 @@ async def test_upload_without_admin_key_returns_403(client, monkeypatch):
 
     # httpx ile multipart/form-data gönderi
     response = await client.post(
-        "/upload-document",
+        "/admin/documents",
         files={"file": ("test.pdf", b"%PDF-1.4 test", "application/pdf")},
     )
     assert response.status_code == 403

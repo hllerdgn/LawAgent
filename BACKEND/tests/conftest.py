@@ -76,7 +76,9 @@ def app(mock_generator, mock_retriever):
         "sentence_transformers": MagicMock(),
         "torch": MagicMock(),
         "transformers": MagicMock(),
-        "qdrant_client": MagicMock(),
+        "qdrant_client": MagicMock(__path__=[]),
+        "qdrant_client.http": MagicMock(__path__=[]),
+        "qdrant_client.http.models": MagicMock(),
         "groq": MagicMock(),
     }):
         from api.app import create_application, get_generator, get_retriever

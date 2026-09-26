@@ -50,8 +50,9 @@ _DEFAULT_TUR    = "1"   # Kanun
 _DEFAULT_TERTIP = "5"   # 5. Tertip (Cumhuriyet dönemi)
 
 _HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; LawAgentBot/1.0; academic-research)",
-    "Accept": "application/pdf,*/*",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/pdf,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
 }
 
 # Madde satırı kalıbı: "MADDE 1-", "Madde 23:", "MADDE 4 –" vb.
@@ -61,7 +62,8 @@ _ARTICLE_PATTERN = re.compile(
 )
 
 
-# ── PDF İndirme ───────────────────────────────────────────────────────────────
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @retry(
     stop=stop_after_attempt(5),
@@ -73,7 +75,7 @@ _ARTICLE_PATTERN = re.compile(
 def _fetch_pdf_bytes(url: str) -> bytes:
     """PDF'yi indirir. RequestException → retry tetiklenir."""
     log.info(f"[Scraper] PDF indiriliyor: {url}")
-    response = requests.get(url, headers=_HEADERS, timeout=_REQUEST_TIMEOUT)
+    response = requests.get(url, headers=_HEADERS, timeout=_REQUEST_TIMEOUT, verify=False)
     response.raise_for_status()
     return response.content
 
@@ -102,8 +104,10 @@ def _parse_pdf(pdf_bytes: bytes) -> tuple[str, list[dict]]:
     # Kanun adı: önce metadata, sonra ilk sayfa ilk satır
     law_name = doc.metadata.get("title", "").strip()
 
-    # Tüm sayfaları birleştir
-    full_text = "\n".join(page.get_text() for page in doc)
+    # Tüm sayfaları birleştir (blocks modu: justify ve duplicate glyph riskini azaltır)
+    full_text = "\n".join(
+        b[4] for page in doc for b in page.get_text("blocks") if b[4]
+    )
     doc.close()
 
     if not law_name:

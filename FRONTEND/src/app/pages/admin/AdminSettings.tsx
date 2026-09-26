@@ -102,23 +102,30 @@ export function AdminSettings() {
 
 
   return (
-    <div className="space-y-8 font-sans antialiased">
+    <div className="space-y-8">
       
       {/* Top Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-slate-900 text-2xl font-bold font-serif">Sistem & White-Label Ayarları</h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+          <h1 className="admin-heading text-2xl font-normal">Sistem & White-Label Ayarları</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
             Multi-Tenant müşteri seçimi, Hallmark teması ve AI asistan RAG parametrelerini buradan yönetebilirsiniz.
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 lg:p-8">
+      <div className="admin-card p-6 lg:p-8">
         
         {savedSuccess && (
-          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex items-center gap-3 text-xs">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <div 
+            className="mb-6 p-4 rounded-xl flex items-center gap-3 text-xs border"
+            style={{
+              backgroundColor: 'color-mix(in oklch, #10b981 10%, transparent)',
+              borderColor: 'color-mix(in oklch, #10b981 30%, transparent)',
+              color: '#059669',
+            }}
+          >
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
             <span className="font-semibold">Sistem ve Hallmark tema ayarları başarıyla kaydedildi!</span>
           </div>
         )}
@@ -126,23 +133,23 @@ export function AdminSettings() {
         <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
           
           {/* 1. Multi-Tenant & Theme Section */}
-          <div className="pb-6 border-b border-slate-100 space-y-6">
-            <h3 className="text-slate-900 font-bold font-serif text-base flex items-center gap-2">
-              <Palette className="w-4 h-4 text-violet-600" />
+          <div className="pb-6 border-b space-y-6" style={{ borderColor: 'var(--color-rule)' }}>
+            <h3 className="admin-heading text-base font-normal flex items-center gap-2">
+              <Palette className="w-4.5 h-4.5" style={{ color: 'var(--color-accent)' }} />
               <span>Hallmark Tema & White-Label Yapılandırması</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--color-ink-2)' }}>
+                  <Building2 className="w-3.5 h-3.5" style={{ color: 'var(--color-muted)' }} />
                   <span>Aktif Müşteri / Tenant (Client ID)</span>
                 </label>
                 <select
                   name="clientId"
                   value={settings.clientId}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="admin-select text-xs font-medium"
                 >
                   <option value="lawagent-demo">lawagent-demo (LawAgent AI — Default)</option>
                   <option value="yildiz-hukuk">yildiz-hukuk (Yıldız & Ortakları)</option>
@@ -152,15 +159,15 @@ export function AdminSettings() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--color-ink-2)' }}>
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
                   <span>Atanmış Hallmark Teması</span>
                 </label>
                 <select
                   name="themeId"
                   value={settings.themeId}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="admin-select text-xs font-medium"
                 >
                   {IMPLEMENTED_THEMES.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -172,21 +179,24 @@ export function AdminSettings() {
             </div>
 
             {/* Live Theme Preview Badge */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="admin-card-inner p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <div className="text-xs font-semibold text-slate-800 flex items-center gap-2">
+                <div className="text-xs font-semibold flex items-center gap-2" style={{ color: 'var(--color-ink)' }}>
                   <span>Seçili Tema:</span>
                   <span className="px-2 py-0.5 rounded-md text-white text-[11px] font-mono uppercase" style={{ backgroundColor: theme.colors.accent }}>
                     {theme.id} ({theme.genre})
                   </span>
                 </div>
-                <p className="text-slate-500 text-xs mt-1">{theme.description}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>{theme.description}</p>
               </div>
 
               {/* Color Swatches */}
-              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200">
-                <span className="text-[10px] text-slate-400 font-mono">RENKLER:</span>
-                <span className="w-4 h-4 rounded-full border border-slate-300 shadow-xs" style={{ backgroundColor: theme.colors.paper }} title="Paper (Arka Plan)" />
+              <div 
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border"
+                style={{ backgroundColor: 'var(--color-paper)', borderColor: 'var(--color-rule)' }}
+              >
+                <span className="text-[10px] font-mono" style={{ color: 'var(--color-muted)' }}>RENKLER:</span>
+                <span className="w-4 h-4 rounded-full border shadow-xs" style={{ backgroundColor: theme.colors.paper, borderColor: 'var(--color-rule)' }} title="Paper (Arka Plan)" />
                 <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.ink }} title="Ink (Metin)" />
                 <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.accent }} title="Accent (Vurgu)" />
                 <span className="w-4 h-4 rounded-full shadow-xs" style={{ backgroundColor: theme.colors.accent2 }} title="Accent 2 (İkincil Vurgu)" />
@@ -195,25 +205,25 @@ export function AdminSettings() {
           </div>
 
           {/* 2. Büro Genel Bilgileri */}
-          <div className="pb-6 border-b border-slate-100 space-y-4">
-            <h3 className="text-slate-900 font-bold font-serif text-base">
+          <div className="pb-6 border-b space-y-4" style={{ borderColor: 'var(--color-rule)' }}>
+            <h3 className="admin-heading text-base font-normal">
               <span>Büro & Marka Bilgileri</span>
             </h3>
             
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                 Büro / Proje Adı (White-Label Markası)
               </label>
-              <Input
+              <input
                 name="siteName"
                 value={settings.siteName}
                 onChange={handleChange}
-                className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                className="admin-input text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                 Chatbot Karşılama Mesajı
               </label>
               <textarea
@@ -221,68 +231,68 @@ export function AdminSettings() {
                 rows={2}
                 value={settings.welcomeMessage}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="admin-textarea text-xs font-medium"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   İletişim E-Posta
                 </label>
-                <Input
+                <input
                   type="email"
                   name="email"
                   value={settings.email}
                   onChange={handleChange}
-                  className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                  className="admin-input text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Telefon
                 </label>
-                <Input
+                <input
                   type="tel"
                   name="phone"
                   value={settings.phone}
                   onChange={handleChange}
-                  className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                  className="admin-input text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                 Adres Bilgisi
               </label>
-              <Input
+              <input
                 name="address"
                 value={settings.address}
                 onChange={handleChange}
-                className="w-full rounded-xl bg-slate-50 border-slate-300 text-sm"
+                className="admin-input text-sm"
               />
             </div>
           </div>
 
           {/* 3. AI Asistan & RAG Parametreleri */}
           <div className="pb-4 space-y-4">
-            <h3 className="text-slate-900 font-bold font-serif text-base flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-amber-500" />
+            <h3 className="admin-heading text-base font-normal flex items-center gap-2">
+              <Sliders className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
               <span>AI Asistan & RAG Parametreleri</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Getirilecek Vektör Parçası (k Değeri)
                 </label>
                 <select
                   name="ragK"
                   value={settings.ragK}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="admin-select text-xs font-medium"
                 >
                   <option value="3">k = 3 (Hızlı Özet)</option>
                   <option value="5">k = 5 (Standart & Önerilen)</option>
@@ -292,14 +302,14 @@ export function AdminSettings() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-2)' }}>
                   Aktif LLM Modeli
                 </label>
                 <select
                   name="aiModel"
                   value={settings.aiModel}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="admin-select text-xs font-medium"
                 >
                   <option value="llama-3.3-70b-versatile">Groq Llama-3.3-70B (Production)</option>
                   <option value="Meta-Llama-3-8B-Instruct">Meta Llama-3-8B-Instruct</option>
@@ -311,9 +321,9 @@ export function AdminSettings() {
           <div className="flex justify-end pt-2">
             <button 
               type="submit"
-              className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer border border-slate-800"
+              className="admin-btn-primary text-xs py-2.5 px-6 cursor-pointer"
             >
-              <Save className="w-4 h-4 text-amber-400" />
+              <Save className="w-4 h-4" />
               <span>Ayarları Kaydet</span>
             </button>
           </div>

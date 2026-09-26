@@ -90,25 +90,25 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8 font-sans antialiased">
+    <div className="space-y-8">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="admin-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-slate-900 text-2xl font-bold font-serif">SaaS Yönetim Paneli</h1>
-            <span className="bg-amber-500/10 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-500/20">
+          <div className="flex items-center gap-3 mb-1.5">
+            <h1 className="admin-heading text-2xl font-normal">SaaS Yönetim Paneli</h1>
+            <span className="admin-badge admin-badge-accent text-[10px]">
               Live RAG Telemetry
             </span>
           </div>
-          <p className="text-slate-500 text-xs sm:text-sm">
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--color-muted)' }}>
             AI asistan performansını, RAG indeks durumunu ve canlı kullanıcı sorularını buradan anlık izleyin.
           </p>
         </div>
 
         <button
           onClick={fetchStats}
-          className="inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 transition-colors cursor-pointer w-fit"
+          className="admin-btn-secondary text-xs py-2 px-3.5 w-fit cursor-pointer"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Verileri Yenile</span>
@@ -120,17 +120,30 @@ export function AdminDashboard() {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center border border-slate-800">
-                  <Icon className="w-5 h-5 text-amber-400" />
+            <div key={index} className="admin-card p-6 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                    border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                  }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
                 </div>
-                <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                <span 
+                  className="admin-badge text-[9.5px]"
+                  style={{
+                    backgroundColor: 'var(--color-paper)',
+                    color: 'var(--color-muted)',
+                    border: '1px solid var(--color-rule)',
+                  }}
+                >
                   {stat.badge}
                 </span>
               </div>
-              <h3 className="text-3xl font-bold font-serif text-slate-900 mb-1">{stat.value}</h3>
-              <p className="text-slate-500 text-xs font-medium">{stat.label}</p>
+              <h3 className="admin-heading text-3xl font-normal mb-1">{stat.value}</h3>
+              <p className="admin-label text-[11px]">{stat.label}</p>
             </div>
           );
         })}
@@ -139,80 +152,116 @@ export function AdminDashboard() {
       {/* Quick Action Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        <Link to="/admin/dashboard/documents" className="group">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs group-hover:shadow-lg group-hover:border-amber-500/40 transition-all flex flex-col justify-between h-full">
+        <Link to="/admin/dashboard/documents" className="group text-inherit no-underline">
+          <div className="admin-card p-6 transition-all group-hover:border-[var(--color-accent)] flex flex-col justify-between h-full">
             <div>
-              <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center mb-4 border border-amber-500/20">
-                <FileUp className="w-5 h-5 text-amber-600" />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{
+                  backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <FileUp className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
               </div>
-              <h4 className="text-slate-900 font-bold text-base font-sans mb-1 group-hover:text-amber-600 transition-colors">
+              <h4 className="font-semibold text-base mb-1 group-hover:text-[var(--color-accent)] transition-colors" style={{ color: 'var(--color-ink)' }}>
                 Site Belgeleri (RAG)
               </h4>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
                 Yapay zekanın eğitilmesi ve kaynak gösterimi için PDF yükleyin
               </p>
             </div>
-            <div className="pt-4 flex items-center text-xs font-semibold text-amber-600 gap-1 group-hover:gap-2 transition-all">
+            <div 
+              className="pt-4 flex items-center text-xs font-semibold gap-1 group-hover:gap-2 transition-all"
+              style={{ color: 'var(--color-accent)' }}
+            >
               <span>Yönetim Ekranı</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/dashboard/practice-areas" className="group">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs group-hover:shadow-lg group-hover:border-amber-500/40 transition-all flex flex-col justify-between h-full">
+        <Link to="/admin/dashboard/practice-areas" className="group text-inherit no-underline">
+          <div className="admin-card p-6 transition-all group-hover:border-[var(--color-accent)] flex flex-col justify-between h-full">
             <div>
-              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center mb-4 border border-slate-800">
-                <Briefcase className="w-5 h-5 text-amber-400" />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{
+                  backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <Briefcase className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
               </div>
-              <h4 className="text-slate-900 font-bold text-base font-sans mb-1 group-hover:text-amber-600 transition-colors">
+              <h4 className="font-semibold text-base mb-1 group-hover:text-[var(--color-accent)] transition-colors" style={{ color: 'var(--color-ink)' }}>
                 Çalışma Alanları
               </h4>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
                 Uzmanlık alanlarını ekleyin ve mevzuat tanımlarını yönetin
               </p>
             </div>
-            <div className="pt-4 flex items-center text-xs font-semibold text-amber-600 gap-1 group-hover:gap-2 transition-all">
+            <div 
+              className="pt-4 flex items-center text-xs font-semibold gap-1 group-hover:gap-2 transition-all"
+              style={{ color: 'var(--color-accent)' }}
+            >
               <span>Düzenle</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/dashboard/blog" className="group">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs group-hover:shadow-lg group-hover:border-amber-500/40 transition-all flex flex-col justify-between h-full">
+        <Link to="/admin/dashboard/blog" className="group text-inherit no-underline">
+          <div className="admin-card p-6 transition-all group-hover:border-[var(--color-accent)] flex flex-col justify-between h-full">
             <div>
-              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center mb-4 border border-slate-800">
-                <FileText className="w-5 h-5 text-amber-400" />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{
+                  backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <FileText className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
               </div>
-              <h4 className="text-slate-900 font-bold text-base font-sans mb-1 group-hover:text-amber-600 transition-colors">
+              <h4 className="font-semibold text-base mb-1 group-hover:text-[var(--color-accent)] transition-colors" style={{ color: 'var(--color-ink)' }}>
                 Blog & İçerikler
               </h4>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
                 Hukuki makaleler oluşturun, yayımlayın ve SEO içerikleri yönetin
               </p>
             </div>
-            <div className="pt-4 flex items-center text-xs font-semibold text-amber-600 gap-1 group-hover:gap-2 transition-all">
+            <div 
+              className="pt-4 flex items-center text-xs font-semibold gap-1 group-hover:gap-2 transition-all"
+              style={{ color: 'var(--color-accent)' }}
+            >
               <span>Yazıları Aç</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/dashboard/messages" className="group">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs group-hover:shadow-lg group-hover:border-amber-500/40 transition-all flex flex-col justify-between h-full">
+        <Link to="/admin/dashboard/messages" className="group text-inherit no-underline">
+          <div className="admin-card p-6 transition-all group-hover:border-[var(--color-accent)] flex flex-col justify-between h-full">
             <div>
-              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center mb-4 border border-slate-800">
-                <MessageSquare className="w-5 h-5 text-amber-400" />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{
+                  backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <MessageSquare className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
               </div>
-              <h4 className="text-slate-900 font-bold text-base font-sans mb-1 group-hover:text-amber-600 transition-colors">
+              <h4 className="font-semibold text-base mb-1 group-hover:text-[var(--color-accent)] transition-colors" style={{ color: 'var(--color-ink)' }}>
                 Müşteri Mesajları
               </h4>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
                 Form üzerinden gelen geribildirimleri inceleyin ve yanıtlayın
               </p>
             </div>
-            <div className="pt-4 flex items-center text-xs font-semibold text-amber-600 gap-1 group-hover:gap-2 transition-all">
+            <div 
+              className="pt-4 flex items-center text-xs font-semibold gap-1 group-hover:gap-2 transition-all"
+              style={{ color: 'var(--color-accent)' }}
+            >
               <span>Mesajları Gör</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
@@ -222,50 +271,81 @@ export function AdminDashboard() {
       </div>
 
       {/* Live Recent User Queries Feed */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <h3 className="text-slate-900 font-serif font-bold text-lg">Canlı Kullanıcı Soru-Cevap Akışı</h3>
+      <div className="admin-card overflow-hidden">
+        <div 
+          className="p-6 border-b flex justify-between items-center"
+          style={{ borderColor: 'var(--color-rule)', backgroundColor: 'var(--color-paper)' }}
+        >
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4.5 h-4.5" style={{ color: 'var(--color-accent)' }} />
+            <h3 className="admin-heading text-lg font-normal">Canlı Kullanıcı Soru-Cevap Akışı</h3>
           </div>
-          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+          <span 
+            className="admin-badge text-[10px] px-2.5 py-1"
+            style={{
+              backgroundColor: 'color-mix(in oklch, #10b981 12%, transparent)',
+              color: '#059669',
+              border: '1px solid color-mix(in oklch, #10b981 25%, transparent)',
+            }}
+          >
             • Realtime Telemetry
           </span>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y" style={{ borderColor: 'var(--color-rule-2)' }}>
           {statsData?.recent_queries && statsData.recent_queries.length > 0 ? (
             statsData.recent_queries.map((query, index) => (
-              <div key={index} className="p-6 hover:bg-slate-50/80 transition-colors">
+              <div 
+                key={index} 
+                className="p-6 transition-colors"
+                style={{ backgroundColor: 'transparent' }}
+              >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
-                    <span className="text-xs font-semibold text-slate-500">{query.name}</span>
-                    <p className="text-slate-900 font-bold text-sm mt-0.5">{query.subject}</p>
+                    <span className="admin-eyebrow text-[10px]">{query.name}</span>
+                    <p className="font-semibold text-sm mt-0.5" style={{ color: 'var(--color-ink)' }}>{query.subject}</p>
                   </div>
-                  <span className="text-xs text-slate-400 whitespace-nowrap bg-slate-100 px-2.5 py-1 rounded-md">
+                  <span 
+                    className="admin-badge text-[10px] whitespace-nowrap"
+                    style={{
+                      backgroundColor: 'var(--color-paper)',
+                      color: 'var(--color-muted)',
+                      border: '1px solid var(--color-rule)',
+                    }}
+                  >
                     {query.date}
                   </span>
                 </div>
-                <div className="mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-                  <p className="text-slate-700 text-xs leading-relaxed font-sans">
-                    <strong className="text-amber-800 font-semibold">AI Yanıtı: </strong>
+                <div 
+                  className="mt-3 admin-card-inner p-4"
+                >
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--color-ink-2)' }}>
+                    <strong className="font-semibold" style={{ color: 'var(--color-accent)' }}>AI Yanıtı: </strong>
                     {query.answer}
                   </p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="p-12 text-center text-slate-400 text-sm">
+            <div className="p-12 text-center text-sm" style={{ color: 'var(--color-muted)' }}>
               Henüz kaydedilmiş canlı soru bulunmuyor. Chatbot üzerinden yeni bir soru ileterek test edebilirsiniz.
             </div>
           )}
         </div>
 
-        <div className="p-5 border-t border-slate-100 bg-slate-50/30 flex justify-between items-center text-xs">
-          <span className="text-slate-500">RAG Veritabanı İndeksi: Tam Senkronize</span>
+        <div 
+          className="p-5 border-t flex justify-between items-center text-xs"
+          style={{ 
+            borderColor: 'var(--color-rule)', 
+            backgroundColor: 'var(--color-paper)',
+            color: 'var(--color-muted)'
+          }}
+        >
+          <span>RAG Veritabanı İndeksi: Tam Senkronize</span>
           <Link 
             to="/admin/dashboard/documents"
-            className="text-amber-700 font-semibold hover:text-amber-600 flex items-center gap-1"
+            className="font-semibold flex items-center gap-1 hover:underline"
+            style={{ color: 'var(--color-accent)' }}
           >
             <span>Yeni PDF Dokümanı Yükle</span>
             <ArrowUpRight className="w-3.5 h-3.5" />

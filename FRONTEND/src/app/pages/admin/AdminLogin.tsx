@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import { Scale, Lock, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Scale, Key, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { saveAdminKey } from '../../../admin/api/adminClient';
 
 export function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,92 +15,117 @@ export function AdminLogin() {
     setIsLoading(true);
 
     try {
-      if (email === 'admin@lawagent.ai' && password === 'demo123') {
-        localStorage.setItem('adminToken', 'demo-token');
-        navigate('/admin/dashboard');
-      } else {
-        setError('Geçersiz e-posta veya şifre (Demo: admin@lawagent.ai / demo123)');
+      // Verilen key ile /admin/scrape'e GET atarak doğrulama
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL ?? 'http://localhost:7860'}/admin/scrape`,
+        {
+          headers: { 'X-Admin-Key': apiKey.trim() },
+        }
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        setError('Geçersiz API anahtarı. Lütfen .env dosyanızdaki ADMIN_API_KEY değerini girin.');
+        return;
       }
+
+      // Key geçerli — sessionStorage'a kaydet (sekme kapanınca silinir)
+      saveAdminKey(apiKey.trim());
+      navigate('/admin/dashboard');
+    } catch {
+      setError('Sunucuya bağlanılamadı. Backend çalışıyor mu?');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFillDemo = () => {
-    setEmail('admin@lawagent.ai');
-    setPassword('demo123');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 relative overflow-hidden font-sans antialiased">
-      
-      {/* Glow Effects */}
-      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-slate-800/40 rounded-full blur-3xl pointer-events-none" />
+    <div 
+      className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
+      style={{
+        backgroundColor: 'var(--color-paper)',
+        color: 'var(--color-ink)',
+        fontFamily: 'var(--font-body)',
+      }}
+    >
+      {/* Hallmark Ambient Glow */}
+      <div 
+        className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-40"
+        style={{ backgroundColor: 'var(--color-glow)' }}
+      />
 
       <div className="max-w-md w-full relative z-10">
-        <div className="bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-slate-800 p-8 lg:p-10 shadow-2xl">
-          
+        <div className="admin-card p-8 lg:p-10">
+
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mb-4 shadow-md">
-              <Scale className="w-7 h-7 text-amber-400" />
+            <div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-105"
+              style={{
+                backgroundColor: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                border: '1px solid color-mix(in oklch, var(--color-accent) 30%, transparent)',
+              }}
+            >
+              <Scale className="w-7 h-7" style={{ color: 'var(--color-accent)' }} />
             </div>
-            <h1 className="text-white text-2xl font-bold font-serif">Admin Portalı</h1>
-            <p className="text-slate-400 text-xs mt-1">LawAgent AI SaaS Paneli</p>
+            <h1 className="admin-heading text-3xl font-normal tracking-tight">yönetim portalı</h1>
+            <p className="admin-eyebrow text-xs mt-2">LawAgent AI Karar Destek Sistemi</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            
+
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-xl text-xs flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+              <div 
+                className="p-3.5 rounded-xl text-xs flex items-start gap-2 border"
+                style={{
+                  backgroundColor: 'color-mix(in oklch, #ef4444 10%, transparent)',
+                  borderColor: 'color-mix(in oklch, #ef4444 30%, transparent)',
+                  color: '#dc2626',
+                }}
+              >
+                <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-slate-300 mb-1.5">
-                E-Posta Adresi
+              <label 
+                htmlFor="api-key" 
+                className="block text-xs font-semibold mb-1.5"
+                style={{ color: 'var(--color-ink-2)' }}
+              >
+                Admin API Anahtarı
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@lawagent.ai"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none rounded-xl text-sm transition-colors"
-                  required
+                <Key 
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" 
+                  style={{ color: 'var(--color-muted)' }}
                 />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Yönetici Şifresi
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  id="password"
+                  id="api-key"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none rounded-xl text-sm transition-colors"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="ADMIN_API_KEY değerini girin"
+                  className="admin-input pl-11 pr-4 py-3 text-sm"
                   required
+                  autoComplete="current-password"
                 />
               </div>
+              <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
+                Backend <code className="px-1.5 py-0.5 rounded font-mono text-[11px]" style={{ backgroundColor: 'var(--color-paper)', border: '1px solid var(--color-rule)' }}>.env</code> dosyasındaki{' '}
+                <code className="px-1.5 py-0.5 rounded font-mono text-[11px]" style={{ backgroundColor: 'var(--color-paper)', border: '1px solid var(--color-rule)' }}>ADMIN_API_KEY</code> değeri
+              </p>
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer border border-amber-400/20 disabled:opacity-50"
+              disabled={isLoading || !apiKey.trim()}
+              className="admin-btn-primary w-full py-3.5 text-sm cursor-pointer shadow-md"
             >
               {isLoading ? (
-                <span>Giriş Yapılıyor...</span>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Doğrulanıyor...
+                </>
               ) : (
                 <>
                   <span>Sisteme Giriş Yap</span>
@@ -110,20 +134,10 @@ export function AdminLogin() {
               )}
             </button>
 
-            <div className="pt-3 border-t border-slate-800 text-center">
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="text-xs text-amber-400/80 hover:text-amber-400 transition-colors underline cursor-pointer"
-              >
-                Demo Bilgilerini Otomatik Doldur (admin@lawagent.ai / demo123)
-              </button>
-            </div>
-
           </form>
-
         </div>
       </div>
     </div>
   );
 }
+

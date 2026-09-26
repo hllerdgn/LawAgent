@@ -11,7 +11,10 @@ Bu modül:
 import os
 import re
 from typing import Dict, List, Tuple, Any, Optional
-from legal_normalizer import CANONICAL_LAW_NAMES
+try:
+    from src.legal_normalizer import CANONICAL_LAW_NAMES
+except ImportError:
+    from legal_normalizer import CANONICAL_LAW_NAMES
 
 
 def get_canonical_law_title(law_code: str) -> str:
@@ -41,12 +44,12 @@ def build_grounded_context(chunks: List[Dict], source_filter: Optional[str] = No
         key = f"K{k_index}"
         source_map[key] = c
         
-        if source_type == "SITE_DOCUMENT":
+        if source_type in ("SITE_DOCUMENT", "COMPANY_DOCUMENT"):
             doc_name = c.get("filename", "Bilinmeyen Belge")
             page_info = f" (Sayfa {c.get('page')})" if c.get("page") else ""
             lines.append(
                 f"[KAYNAK {key}]\n"
-                f"Tür: Özel Belge\n"
+                f"Tür: Şirket/Büro Belgesi\n"
                 f"Belge: {doc_name}{page_info}\n"
                 f"Metin: {c.get('text', '').strip()}"
             )
@@ -112,7 +115,7 @@ def validate_and_extract_citations(
             if source_key not in seen_source_keys:
                 seen_source_keys.add(source_key)
                 validated_sources.append({
-                    "kanun": get_canonical_law_title(law_name) if chunk.get("source") != "site_document" else law_name,
+                    "kanun": get_canonical_law_title(law_name) if str(chunk.get("source", "")).lower() not in ("site_document", "company_document") else law_name,
                     "madde": art_no,
                     "ozet": chunk.get("text", "")[:300],
                     "citation_key": tag,
@@ -136,7 +139,7 @@ def validate_and_extract_citations(
                 if source_key not in seen_source_keys:
                     seen_source_keys.add(source_key)
                     validated_sources.append({
-                        "kanun": get_canonical_law_title(law_name) if c.get("source") != "site_document" else law_name,
+                        "kanun": get_canonical_law_title(law_name) if str(c.get("source", "")).lower() not in ("site_document", "company_document") else law_name,
                         "madde": c_art,
                         "ozet": c.get("text", "")[:300],
                         "citation_key": "auto_matched",
@@ -157,7 +160,7 @@ def validate_and_extract_citations(
             if source_key_fb not in seen_source_keys:
                 seen_source_keys.add(source_key_fb)
                 validated_sources.append({
-                    "kanun": get_canonical_law_title(law_name) if c.get("source") != "site_document" else law_name,
+                    "kanun": get_canonical_law_title(law_name) if str(c.get("source", "")).lower() not in ("site_document", "company_document") else law_name,
                     "madde": art_no,
                     "ozet": c.get("text", "")[:300],
                     "citation_key": "top_retrieved",

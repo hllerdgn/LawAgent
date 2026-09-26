@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     QDRANT_LOCAL_URL: str = "http://localhost:6333"
     COLLECTION_NAME: str = "lawagent_mursit"
     SITE_COLLECTION_NAME: str = "site_corpus"
+    COMPANY_COLLECTION_NAME: str = "company_corpus"
 
     # ── Retrieval ve Ağırlık Ayarları ─────────────────────────────────────────
     TOP_K_DENSE: int = 200

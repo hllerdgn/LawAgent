@@ -78,33 +78,43 @@ export function AdminMessages() {
   };
 
   return (
-    <div className="space-y-6 font-sans antialiased">
+    <div className="space-y-6">
       
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-slate-900 text-2xl font-bold font-serif">Müşteri Mesajları & Talepler</h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
+          <h1 className="admin-heading text-2xl font-normal">Müşteri Mesajları & Talepler</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
             İletişim formundan gelen müşteri mesajlarını görüntüleyin, okundu işaretleyin ve yanıtlayın.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200">
-          <span>Okunmamış: {messages.filter(m => !m.read).length} Mesaj</span>
+        <div className="admin-badge admin-badge-accent text-xs py-1.5 px-3">
+          <span>Okunmamış: {messages.filter((m: any) => !m.read).length} Mesaj</span>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="divide-y divide-slate-100">
-          {messages.map((msg) => (
+      <div className="admin-card overflow-hidden">
+        <div className="divide-y" style={{ borderColor: 'var(--color-rule-2)' }}>
+          {messages.map((msg: any) => (
             <div 
               key={msg.id} 
-              className={`p-6 hover:bg-slate-50/80 transition-colors ${!msg.read ? 'bg-amber-500/5' : ''}`}
+              className="p-6 transition-colors"
+              style={{
+                backgroundColor: !msg.read 
+                  ? 'color-mix(in oklch, var(--color-accent) 4%, transparent)' 
+                  : 'transparent',
+              }}
             >
               <div className="flex items-start gap-4">
                 <button 
                   onClick={() => toggleRead(msg.id)}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer ${
-                    msg.read ? 'bg-slate-100 text-slate-400' : 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
-                  }`}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer border"
+                  style={{
+                    backgroundColor: msg.read 
+                      ? 'var(--color-paper)' 
+                      : 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
+                    color: msg.read ? 'var(--color-muted)' : 'var(--color-accent)',
+                    borderColor: msg.read ? 'var(--color-rule)' : 'color-mix(in oklch, var(--color-accent) 30%, transparent)',
+                  }}
                   title={msg.read ? "Okunmadı İşaretle" : "Okundu İşaretle"}
                 >
                   {msg.read ? <MailOpen className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
@@ -113,26 +123,27 @@ export function AdminMessages() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4 mb-1">
                     <div>
-                      <span className="text-slate-900 font-bold text-sm">{msg.name}</span>
-                      <span className="text-slate-400 text-xs ml-2">({msg.email})</span>
+                      <span className="font-semibold text-sm" style={{ color: 'var(--color-ink)' }}>{msg.name}</span>
+                      <span className="text-xs ml-2 font-mono" style={{ color: 'var(--color-muted)' }}>({msg.email})</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">{msg.date}</span>
+                    <span className="text-xs font-mono" style={{ color: 'var(--color-muted)' }}>{msg.date}</span>
                   </div>
 
-                  <h4 className="text-slate-800 font-semibold text-xs mb-2 font-sans">{msg.subject}</h4>
-                  <p className="text-slate-600 text-xs leading-relaxed mb-4">{msg.message}</p>
+                  <h4 className="font-semibold text-xs mb-2" style={{ color: 'var(--color-ink)' }}>{msg.subject}</h4>
+                  <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--color-ink-2)' }}>{msg.message}</p>
 
                   <div className="flex items-center gap-3">
                     <a
                       href={`mailto:${msg.email}?subject=RE: ${encodeURIComponent(msg.subject)}`}
-                      className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-medium transition-colors border border-slate-800"
+                      className="admin-btn-secondary text-xs py-1.5 px-3 no-underline"
                     >
-                      <Reply className="w-3.5 h-3.5 text-amber-400" />
+                      <Reply className="w-3.5 h-3.5" />
                       <span>E-Posta İle Yanıtla</span>
                     </a>
                     <button 
                       onClick={() => handleDelete(msg.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                      style={{ color: '#ef4444' }}
                       title="Mesajı Sil"
                     >
                       <Trash2 className="w-4 h-4" />
