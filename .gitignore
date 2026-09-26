@@ -79,3 +79,25 @@ yarn-error.log*
 # ════════════════════════════════════════════════
 !.env.example
 !BACKEND/src/data/.gitkeep
+.cache
+.parcel-cache
+.next
+.nuxt
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+node_modules/
+dist/
+.next/
+.vercel/
+
+# ════════════════════════════════════════════════
+# 11. EDITÖR VE IDE DOSYALARI
+# ════════════════════════════════════════════════
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
