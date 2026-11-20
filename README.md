@@ -154,48 +154,6 @@ Girdi   : retrieval chunk listesi
 Güvence : Kaynak uydurma → engellendi · Mükerrer atıf → temizlendi
 ```
 
----
-
-## 📸 Arayüz Görselleri
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="assets/screenshots/01_anasayfa_hero.png" alt="Ana Sayfa Hero" width="100%"/>
-      <sub><b>🏠 Ana Sayfa – Hero Bölümü</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="assets/screenshots/02_anasayfa_metrikler.png" alt="Metrikler" width="100%"/>
-      <sub><b>📊 Başarı Metrikleri ve Sistem Bilgileri</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="assets/screenshots/03_anasayfa_hukuk_alanlari.png" alt="Hukuk Alanları" width="100%"/>
-      <sub><b>⚖️ Kapsanan Hukuk Alanları</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="assets/images/lawagent_chatbot_screenshot.png" alt="Chatbot Arayüzü" width="100%"/>
-      <sub><b>💬 Hukuki Sohbet ve Atıf Görünümü</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="assets/screenshots/08_uygulama_alanlari.png" alt="Uygulama Alanları" width="100%"/>
-      <sub><b>🔍 Uygulama Alanları ve Modüller</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="assets/screenshots/09_hakkinda.png" alt="Hakkında" width="100%"/>
-      <sub><b>ℹ️ Proje Hakkında</b></sub>
-    </td>
-  </tr>
-</table>
-
-|                       Tam Sayfa Görünümü                       |
-| :------------------------------------------------------------: |
-| ![Tam Görünüm](assets/screenshots/04_anasayfa_tam_gorunum.png) |
-
----
 
 ## 🚀 Hızlı Başlangıç
 
@@ -640,13 +598,9 @@ Bitirme-projesi/
 | Alan                | Bilgi                                              |
 | ------------------- | -------------------------------------------------- |
 | **Proje Türü**      | Lisans Bitirme Tezi                                |
-| **Bölüm**           | Bilgisayar Mühendisliği                            |
+| **Bölüm**           | Yazılım Mühendisliği                            |
 | **Geliştirici**     | Halil Erdoğan                                      |
-| **Öğrenci No**      | 427623                                             |
 | **İlgili Program**  | TÜBİTAK Üniversite Öğrencileri Araştırma Projeleri |
-| **Tez Belgesi**     | [`assets/docs/Bitirme Tezim.docx`](assets/docs/)   |
-| **Akademik Poster** | [`assets/presentation/`](assets/presentation/)     |
-
 ---
 
 ## 📄 Lisans
